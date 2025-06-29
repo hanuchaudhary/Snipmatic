@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+yt-dlp
+whisperx
+google-generativeai
+ffmpeg-python
+boto3
+python-dotenv
+pydantic
+python-multipart
+torch
+torchaudio

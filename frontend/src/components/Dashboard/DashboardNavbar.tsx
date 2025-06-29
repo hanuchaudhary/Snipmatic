@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export function DashboardNavbar() {
   return (
-    <div className="w-full flex items-center justify-between py-4 px-6">
+    <div className="w-full flex items-center justify-between py-4 px-6 fixed top-0 left-1/2 -translate-x-1/2 max-w-7xl">
       <Link
         href={"/"}
         className="relative flex  items-center justify-center gap-1.5"
@@ -16,7 +16,7 @@ export function DashboardNavbar() {
       </Link>
       <div className="flex items-center gap-2">
         <button className="border flex px-7 py-3 rounded-full transition-colors font-semibold bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer border-primary">
-          User <span className="md:block hidden">{" "}profile goes here...</span>
+          User <span className="md:block hidden"> profile goes here...</span>
         </button>
         <Logo />
       </div>

@@ -12,7 +12,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-      <div className={`dark:bg-black bg-white w-full`}>
+      <div className={`dark:bg-black/50 bg-white w-full`}>
         <DashboardNavbar />
         <div className="max-w-5xl mx-auto px-4">{children}</div>
       </div>

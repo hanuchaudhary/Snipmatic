@@ -11,7 +11,7 @@ export function DashboardNavbar() {
       >
         <Logo />
         <h1 className="text-xl font-semibold leading-none relative z-20">
-          Lumora.
+          Snipmatic.
         </h1>
       </Link>
       <div className="flex items-center gap-2">

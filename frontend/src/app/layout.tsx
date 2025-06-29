@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lumora.",
+  title: "Snipmatic.",
   description: "Prototype",
 };
 
@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased dark:bg-black bg-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased dark:bg-black/60 bg-neutral-50`}
       >
         <ThemeProvider
           attribute="class"

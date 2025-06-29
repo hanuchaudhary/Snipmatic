@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+pytube
+pytubefix
+opencv-python
+ffmpeg-python
+pymongo
+python-multipart
+python-dotenv
+transformers
+torch
+youtube-transcript-api

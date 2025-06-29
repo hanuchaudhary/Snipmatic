@@ -1,0 +1,3 @@
+[submodule "backend/app/active-speaker-detection"]
+	path = backend/app/active-speaker-detection
+	url = https://github.com/Junhua-Liao/Light-ASD

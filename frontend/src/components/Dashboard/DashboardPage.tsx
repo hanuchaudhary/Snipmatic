@@ -15,6 +15,7 @@ import { CliptypeSwitch } from "./ClipType";
 import { AnimatePresence, motion } from "framer-motion";
 import { IconArrowUpRight, IconCircleXFilled } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { BACKEND_URL } from "../../../config";
 
 const formSchema = z.object({
   url: z
@@ -113,7 +114,30 @@ export function DashboardPage() {
         }
       }
 
-      toast.success(`Processing your video...`);
+      const response = await axios.post(
+        `${BACKEND_URL}/clip`,
+        {
+          url: data.url,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          aspectRatio: data.aspectRatio,
+          subtitles: data.subtitles,
+          clipType: data.clipType,
+          multipleClips: data.multipleClips,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        const { message } = response.data;
+        toast.success(message || "Video processing started successfully!");
+      } else {
+        toast.error("Failed to process video. Please try again.");
+      }
     } catch (error) {
       toast.error(
         `An error occurred: ${
@@ -157,7 +181,7 @@ export function DashboardPage() {
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="text-center md:text-4xl text-2xl md:mb-8 mb-6 font-serif-instrumental font-thin"
+              className="text-center md:text-4xl text-2xl md:mb-8 mb-6 font-instrumental font-thin"
             >
               Ready to Snip Something{" "}
               <span className="dark:text-orange-500 text-orange-600">

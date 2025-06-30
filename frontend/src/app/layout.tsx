@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif, Jost } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { GradientBackground } from "@/components/ui/noisy-gradient-backgrounds";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,6 +19,18 @@ export const metadata: Metadata = {
   description: "Prototype",
 };
 
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrumental",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const jost = Jost({
+  variable: "--font-jost",
+  subsets: ["latin"],
+  weight: "400",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} relative antialiased `}
+        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${jost.variable} relative antialiased `}
       >
         <ThemeProvider
           attribute="class"

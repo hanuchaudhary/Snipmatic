@@ -9,12 +9,12 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { ContainerScroll } from "../ui/ContainerScroll";
-import LandingNavbar from "./LandingNavbar";
+import { Navbar } from "./Navbar";
 
 export function HeroSection() {
   return (
     <section className="relative flex flex-col justify-center">
-      <LandingNavbar />
+      <Navbar />
       <ContainerScroll
         titleComponent={
           <div className="mx-auto z-10 relative md:pt-0 pt-40">

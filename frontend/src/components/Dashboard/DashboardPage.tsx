@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,27 +11,33 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { CliptypeSwitch } from "./ClipType";
+import { AnimatePresence, motion } from "framer-motion";
+import { IconArrowUpRight, IconCircleXFilled } from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
-  url: z.string().url("Please enter a valid video URL").min(1, "URL is required"),
+  url: z
+    .string()
+    .url("Please enter a valid video URL")
+    .min(1, "URL is required"),
   startTime: z.string().regex(/^\d{2}:\d{2}:\d{2}$/, "Invalid time format"),
   endTime: z.string().regex(/^\d{2}:\d{2}:\d{2}$/, "Invalid time format"),
   aspectRatio: z.enum(["original", "vertical", "square"]),
   subtitles: z.boolean(),
-  clipWithAI: z.boolean(),
+  clipType: z.enum(["AI", "MANUAL"]).optional(),
   multipleClips: z.boolean().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export function DashboardPage() {
-  const [clipWithAI, setClipWithAI] = useState(false);
-
   const {
     control,
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<FormValues>({
     defaultValues: {
       url: "",
@@ -39,7 +45,7 @@ export function DashboardPage() {
       endTime: "00:00:00",
       aspectRatio: "original",
       subtitles: false,
-      clipWithAI: false,
+      clipType: "MANUAL",
       multipleClips: false,
     },
     resolver: zodResolver(formSchema),
@@ -47,36 +53,122 @@ export function DashboardPage() {
 
   const watchUrl = watch("url");
   const watchMultiple = watch("multipleClips");
+  const watchClipType = watch("clipType");
+
+  const [thumbnail, setThumbnail] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const extractYouTubeVideoId = (url: string): string | null => {
+      const match = url.match(
+        /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/
+      );
+      return match ? match[1] : null;
+    };
+
+    const id = extractYouTubeVideoId(watchUrl);
+    if (id) {
+      setThumbnail(`https://img.youtube.com/vi/${id}/hqdefault.jpg`);
+    } else {
+      setThumbnail(null);
+    }
+  }, [watchUrl]);
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const response = await axios.post("/api/process-video", {
-        ...data,
-        clipWithAI,
-      });
+      // Form Check
+      if (watchClipType === "MANUAL") {
+        if (
+          watch("startTime") === "00:00:00" &&
+          watch("endTime") === "00:00:00"
+        ) {
+          toast.error("Please enter a valid start and end time");
+          return;
+        }
 
-      toast.success("Processing started", {
-        description: "Your video is being processed",
-      });
+        function timeToSeconds(timeStr: string): number {
+          const [hours, minutes, seconds] = timeStr.split(":").map(Number);
+          return hours * 3600 + minutes * 60 + seconds;
+        }
 
-      console.log("Response data: ", response.data);
+        const startTime = watch("startTime");
+        const endTime = watch("endTime");
+        const startSeconds = timeToSeconds(startTime);
+        const endSeconds = timeToSeconds(endTime);
+
+        if (startSeconds >= endSeconds) {
+          toast.error("Start time must be before end time");
+          return;
+        }
+
+        if (watchMultiple) {
+          setValue("multipleClips", false);
+        }
+      } else if (watchClipType === "AI") {
+        if (
+          !watchUrl ||
+          !watchUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)/)
+        ) {
+          toast.error("Please enter a valid YouTube URL for AI processing");
+          return;
+        }
+      }
+
+      toast.success(`Processing your video...`);
     } catch (error) {
-      toast.error("Error", {
-        description: "Something went wrong while processing",
-      });
+      toast.error(
+        `An error occurred: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
   return (
-    <div className="min-h-screen md:pt-0 pt-20 p-4 flex items-center justify-center">
-      <div className="container max-w-2xl mx-auto">
-        <h1 className="text-center md:text-4xl text-2xl md:mb-8 mb-6 font-serif-instrumental font-thin">
-          Ready to Snip Something Viral?
-        </h1>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Card>
-            <CardContent className="space-y-6">
-              {/* Video URL */}
+    <div className="min-h-screen md:pt-0 pt-16 p-4 flex items-center justify-center">
+      <div className="container max-w-2xl mx-auto space-y-4">
+        <AnimatePresence mode="wait">
+          {thumbnail ? (
+            <motion.div
+              key="thumbnail"
+              initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
+              animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+              exit={{ opacity: 0, filter: "blur(20px)", y: -10 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="relative h-60 mt-10 rounded-xl w-full overflow-hidden border-2 shadow"
+            >
+              <div
+                onClick={() => {
+                  setValue("url", "");
+                }}
+                className="absolute top-3 right-3"
+              >
+                <IconCircleXFilled className="h-7 w-7 shadow opacity-80 hover:opacity-100 hover:scale-105 transition-transform cursor-pointer" />
+              </div>
+              <img
+                src={thumbnail}
+                alt="YouTube Thumbnail"
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="title"
+              initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="text-center md:text-4xl text-2xl md:mb-8 mb-6 font-serif-instrumental font-thin"
+            >
+              Ready to Snip Something{" "}
+              <span className="dark:text-orange-500 text-orange-600">
+                Viral?
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <Card>
+          <CardContent className="font-jost">
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-2">
                 <Controller
                   control={control}
@@ -87,94 +179,87 @@ export function DashboardPage() {
                       id="url"
                       type="url"
                       placeholder="Paste any YouTube link..."
-                      className="border-none focus-visible:ring-0"
+                      className="border-none focus-visible:ring-0 shadow-none"
                     />
                   )}
                 />
                 {errors.url && (
-                  <p className="text-sm text-destructive">{errors.url.message}</p>
-                )}
-              </div>
-
-              {/* Clip with AI Toggle */}
-              <div className="flex items-center justify-between">
-                <Label htmlFor="clipWithAI">Auto Clip with AI</Label>
-                <Controller
-                  control={control}
-                  name="clipWithAI"
-                  render={({ field }) => (
-                    <Switch
-                      id="clipWithAI"
-                      checked={field.value}
-                      onCheckedChange={(checked) => {
-                        field.onChange(checked);
-                        setClipWithAI(checked);
-                      }}
-                    />
-                  )}
-                />
-              </div>
-
-              {/* Multiple Clips (AI Only) */}
-              <div className="flex items-center justify-between">
-                <Label htmlFor="multipleClips">Generate Multiple Clips</Label>
-                <Controller
-                  control={control}
-                  name="multipleClips"
-                  render={({ field }) => (
-                    <Switch
-                      id="multipleClips"
-                      checked={field.value}
-                      disabled={!clipWithAI}
-                      onCheckedChange={(checked) => field.onChange(checked)}
-                    />
-                  )}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-4">
-                  <Controller
-                    control={control}
-                    name="startTime"
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        placeholder="Start - 00:00:00"
-                        disabled={clipWithAI}
-                        className="flex-1 font-mono"
-                      />
-                    )}
-                  />
-                  <span className="text-muted-foreground">to</span>
-                  <Controller
-                    control={control}
-                    name="endTime"
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        placeholder="End - 00:00:00"
-                        disabled={clipWithAI}
-                        className="flex-1 font-mono"
-                      />
-                    )}
-                  />
-                </div>
-                {clipWithAI && (
-                  <p className="text-sm text-muted-foreground">
-                    Time range is auto-detected by Snipmatic AI.
+                  <p className="text-sm text-destructive">
+                    {errors.url.message}
                   </p>
                 )}
               </div>
 
-              {/* Aspect Ratio */}
+              <div className="inline-block">
+                <CliptypeSwitch
+                  clipType={watchClipType || "MANUAL"}
+                  setClipType={() => {
+                    const currentType = watchClipType;
+                    setValue(
+                      "clipType",
+                      currentType === "AI" ? "MANUAL" : "AI"
+                    );
+                  }}
+                />
+              </div>
+
+              <AnimatePresence>
+                {watchClipType === "AI" && (
+                  <motion.div className="flex items-center justify-between py-2.5">
+                    <Label htmlFor="multipleClips" className="">
+                      Generate Multiple Clips with AI
+                    </Label>
+                    <Controller
+                      control={control}
+                      name="multipleClips"
+                      render={({ field }) => (
+                        <Switch
+                          id="multipleClips"
+                          checked={field.value}
+                          disabled={watchClipType !== "AI"}
+                          onCheckedChange={(checked) => field.onChange(checked)}
+                        />
+                      )}
+                    />
+                  </motion.div>
+                )}
+                {watchClipType === "MANUAL" && (
+                  <motion.div className="space-y-2">
+                    <div className="flex items-center gap-4">
+                      <Controller
+                        control={control}
+                        name="startTime"
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            placeholder="Start - 00:00:00"
+                            className="flex-1 font-mono"
+                          />
+                        )}
+                      />
+                      <span className="text-muted-foreground">-</span>
+                      <Controller
+                        control={control}
+                        name="endTime"
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            placeholder="End - 00:00:00"
+                            className="flex-1 font-mono"
+                          />
+                        )}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="space-y-2">
-                <Label>Clip Format</Label>
                 <Controller
                   control={control}
                   name="aspectRatio"
                   render={({ field }) => (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 border p-2 rounded-2xl bg-secondary/50">
                       {[
                         { value: "original", label: "Original" },
                         { value: "vertical", label: "Vertical (9:16)" },
@@ -188,7 +273,12 @@ export function DashboardPage() {
                             field.value === option.value ? "default" : "outline"
                           }
                           onClick={() => field.onChange(option.value)}
-                          className="flex-1"
+                          className={cn(
+                            "flex-1 justify-center md:h-15 md:text-base",
+                            field.value === option.value
+                              ? "bg-primary"
+                              : "text-muted-foreground"
+                          )}
                         >
                           {option.label}
                         </Button>
@@ -198,43 +288,35 @@ export function DashboardPage() {
                 />
               </div>
 
-              {/* Subtitles */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subtitles">Add Subtitles</Label>
-                  <Controller
-                    control={control}
-                    name="subtitles"
-                    render={({ field }) => (
-                      <div className="flex items-center space-x-2 pt-2">
-                        <Switch
-                          id="subtitles"
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                        <Label htmlFor="subtitles" className="text-sm">
-                          English only
-                        </Label>
-                      </div>
-                    )}
-                  />
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="subtitles">Subtitles</Label>
+                <Controller
+                  control={control}
+                  name="subtitles"
+                  render={({ field }) => (
+                    <div className="flex items-center space-x-2 pt-2">
+                      <Switch
+                        id="subtitles"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <Label htmlFor="subtitles" className="text-sm">
+                        English only
+                      </Label>
+                    </div>
+                  )}
+                />
               </div>
-            </CardContent>
-          </Card>
 
-          <div className="w-full flex items-center justify-center mt-4">
-            <button
-              style={{
-                boxShadow: "rgba(255, 255, 255, 0.16) 0px 2px 6px -2px inset",
-              }}
-              className="border transition-transform px-7 py-3 rounded-xl font-semibold bg-neutral-100 text-primary-foreground cursor-pointer flex items-center gap-2"
-              type="submit"
-            >
-              Process Video
-            </button>
-          </div>
-        </form>
+              <div className="w-full flex items-center justify-end mt-4">
+                <Button type="submit" disabled={!watchUrl}>
+                  Process Video
+                  <IconArrowUpRight />
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

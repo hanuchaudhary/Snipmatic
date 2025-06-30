@@ -1,6 +1,7 @@
 import React from "react";
 import { Logo } from "../Logo";
 import Link from "next/link";
+import { ThemeSwitcher } from "../ThemeToggle";
 
 export function DashboardNavbar() {
   return (
@@ -15,9 +16,7 @@ export function DashboardNavbar() {
         </h1>
       </Link>
       <div className="flex items-center gap-2">
-        <button className="border flex px-7 py-3 rounded-full transition-colors font-semibold bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer border-primary">
-          User <span className="md:block hidden"> profile goes here...</span>
-        </button>
+        <ThemeSwitcher />
         <Logo />
       </div>
     </div>

@@ -89,7 +89,7 @@ export function HeroSection() {
             <div className="col-span-6 space-y-4">
               {/* Video Preview */}
               <div className="bg-background/50 rounded-xl border h-64 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20" />
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-purple-500/20" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto backdrop-blur-sm">
@@ -121,7 +121,7 @@ export function HeroSection() {
                   <span className="text-sm text-green-500">Complete</span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-2">
-                  <div className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full w-full"></div>
+                  <div className="bg-gradient-to-r from-green-500 to-orange-500 h-2 rounded-full w-full"></div>
                 </div>
                 <div className="text-xs text-muted-foreground mt-2">
                   Found 8 viral moments • Generated 12 clips
@@ -160,7 +160,7 @@ export function HeroSection() {
 
               {/* Square Clip */}
               <div className="bg-background/50 rounded-xl border p-3 h-32">
-                <div className="bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-lg h-full relative overflow-hidden">
+                <div className="bg-gradient-to-br from-green-500/20 to-orange-500/20 rounded-lg h-full relative overflow-hidden">
                   <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm rounded px-2 py-1">
                     <span className="text-white text-xs">1:1</span>
                   </div>

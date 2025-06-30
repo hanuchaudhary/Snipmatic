@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { GradientBackground } from "@/components/ui/noisy-gradient-backgrounds";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased dark:bg-black/60 bg-neutral-50`}
+        className={`${geistSans.variable} ${geistMono.variable} relative antialiased `}
       >
         <ThemeProvider
           attribute="class"
@@ -36,6 +37,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <main>{children}</main>
+        
           <Toaster position="top-center" className="border-none" />
         </ThemeProvider>
       </body>

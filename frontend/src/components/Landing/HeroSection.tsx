@@ -22,14 +22,14 @@ export function HeroSection() {
               Snip Your Way
             </h1>
             <h1 className="md:w-4xl md:text-[5rem] text-5xl mx-auto font-instrumental text-center leading-none">
-              to Virality with Snipmatic.
+              to Virality with Snipmatic
             </h1>
             <p className="md:text-lg font-jost md:px-0 px-4 text-muted-foreground my-8 text-center mx-auto max-w-2xl">
               Snip viral-ready shorts from any YouTube video — fast, effortless,
               and powered by Snipmatic AI.
             </p>
             <div className="flex flex-wrap gap-2 font-jost tracking-wider items-center justify-center">
-              <Link href="/dashboard">
+              <Link href="/clip">
                 <button
                   style={{
                     boxShadow:

@@ -15,8 +15,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Snipmatic.",
-  description: "Prototype",
+  title: "Snipmatic – Instantly Create Viral Shorts from YouTube Videos",
+  description:
+    "Snipmatic is an AI-powered tool that turns YouTube videos into viral social media clips. Create 30–60s shorts with AI or manual selection. Perfect for TikTok, Reels, and YouTube Shorts.",
+  keywords: [
+    "YouTube shorts generator",
+    "AI video clipper",
+    "viral video maker",
+    "shorts editor",
+    "social media content tool",
+    "ffmpeg clipping",
+    "YouTube video cutter",
+  ],
+  authors: [{ name: "Kush Chaudhary", url: "https://kushchaudhary.com" }],
+  creator: "Kush Chaudhary",
+  publisher: "Snipmatic",
+  robots: "index, follow",
+  viewport: "width=device-width, initial-scale=1",
+
+  openGraph: {
+    title: "Snipmatic – AI-Powered YouTube Shorts Generator",
+    description:
+      "Generate viral YouTube Shorts using AI. Snipmatic finds and clips high-impact moments automatically or lets you clip manually.",
+    url: "https://snipmatic.vercel.app",
+    siteName: "Snipmatic",
+    locale: "en_US",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Snipmatic – AI YouTube Shorts Tool",
+    description:
+      "Clip your next viral moment from any YouTube video in seconds. Powered by AI, optimized for social.",
+    creator: "@KushChaudharyOg",
+    images: ["https://snipmatic.vercel.app/favicon.ico"],
+  },
 };
 
 const instrumentSerif = Instrument_Serif({
@@ -37,7 +71,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${jost.variable} relative antialiased `}
       >

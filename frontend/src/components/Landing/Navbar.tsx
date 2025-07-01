@@ -17,9 +17,9 @@ export function Navbar() {
       <div className="md:px-8 px-4 flex items-center justify-between">
         <div className="flex items-center">
           <Link className="flex items-center justify-center" href={"/"}>
-            <img src="/logo.png" className="h-16" alt="Snipmatic Logo" />
+            <img src="/icon.png" className="h-16" alt="Snipmatic Logo" />
             <span className="md:text-2xl text-lg font-semibold font-jost">
-              Snipmatic.
+              Snipmatic
             </span>
           </Link>
         </div>

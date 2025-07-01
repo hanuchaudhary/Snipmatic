@@ -3,11 +3,11 @@ import { GradientBackground } from "@/components/ui/noisy-gradient-backgrounds";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Snipmatic. | Dashboard",
-  description: "Dashboard for Snipmatic.",
+  title: "Snipmatic | Create Clip",
+  description: "Create and manage your content clips with Snipmatic - the ultimate clipping tool for creators, developers, and everyone",
 };
 
-export default function DashboardLayout({
+export default function ClipLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

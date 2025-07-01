@@ -36,7 +36,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function DashboardPage() {
+export function CreateClipPage() {
   const {
     control,
     handleSubmit,
@@ -82,23 +82,22 @@ export function DashboardPage() {
   const onSubmit = async (data: FormValues) => {
     try {
       setIsProcessing(true);
-      toast.loading("Processing your video...");
-
+      
       if (!watchUrl) {
         toast.error("Please enter a valid YouTube URL");
         return;
       }
-
+      
       if (watchClipType === "MANUAL" && !watch("startTime")) {
         toast.error("Please enter a valid start time");
         return;
       }
-
+      
       if (watchClipType === "MANUAL" && !watch("endTime")) {
         toast.error("Please enter a valid end time");
         return;
       }
-
+      
       if (watchClipType === "MANUAL") {
         if (
           watch("startTime") === "00:00:00" &&
@@ -107,22 +106,22 @@ export function DashboardPage() {
           toast.error("Please enter a valid start and end time");
           return;
         }
-
+        
         function timeToSeconds(timeStr: string): number {
           const [hours, minutes, seconds] = timeStr.split(":").map(Number);
           return hours * 3600 + minutes * 60 + seconds;
         }
-
+        
         const startTime = watch("startTime");
         const endTime = watch("endTime");
         const startSeconds = timeToSeconds(startTime);
         const endSeconds = timeToSeconds(endTime);
-
+        
         if (startSeconds >= endSeconds) {
           toast.error("Start time must be before end time");
           return;
         }
-
+        
         if (watchMultiple) {
           setValue("multipleClips", false);
         }
@@ -135,7 +134,9 @@ export function DashboardPage() {
           return;
         }
       }
-
+      
+      toast.success("Processing your video...");
+      
       const response = await axios.post(
         `${BACKEND_URL}/clip`,
         {

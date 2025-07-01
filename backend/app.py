@@ -14,9 +14,7 @@ import torch
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv
-
-
-# TODO: if multiple  clips then maybe convert it to zip then put to S3
+import zipfile
 
 load_dotenv()
 
@@ -68,10 +66,9 @@ class ViralMoment(BaseModel):
 class ClipResponse(BaseModel):
     success: bool
     message: str
-    clip_url: Optional[list[str]] = None
+    clip_url: Optional[str] = None
     viral_moments: Optional[List[ViralMoment]] = None
 
-# Helper functions
 def time_to_seconds(time_str: str) -> float:
     """Convert HH:MM:SS format to seconds"""
     try:
@@ -163,7 +160,6 @@ def transcribe_audio_whisperx(audio_path: str) -> List[Dict[str, Any]]:
 
 def find_viral_moments(segments: List[Dict[str, Any]], video_info: Dict[str, Any]) -> List[ViralMoment]:
     """Use Gemini to find viral moments in transcription"""
-    # Prepare transcript
     transcript = "\n".join([
         f"[{seg['start']:.1f}s - {seg['end']:.1f}s] {seg['text']}"
         for seg in segments
@@ -279,9 +275,18 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
         video = ffmpeg.filter(video, 'pad', 1080, 1080, '(ow-iw)/2', '(oh-ih)/2', color='black')
     else:  # original
         video = input_video
+
+    audio = input_video
     
+    if duration > 2:
+        video = ffmpeg.filter(video, 'fade', type='in', start_time=0, duration=0.5)
+        video = ffmpeg.filter(video, 'fade', type='out', start_time=duration-1, duration=0.5)
+        audio = ffmpeg.filter(input_video, 'afade', type='in', start_time=0, duration=0.5)
+        audio = ffmpeg.filter(audio, 'afade', type='out', start_time=duration-1, duration=0.5)
+
     out = ffmpeg.output(
         video,
+        audio,
         output_path,
         vcodec='libx264',
         acodec='aac',
@@ -295,9 +300,15 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
     print(f"Clip created successfully: {output_path}")
     return output_path
 
-def upload_to_s3(file_path: str, clip_id: str) -> str:
+def upload_to_s3(file_path: str, clip_id: str, is_zip: bool = False) -> str:
     """Upload clip to S3 and return URL"""
-    s3_key = f"clips/{clip_id}.mp4"
+    if is_zip:
+        s3_key = f"clips/{clip_id}.zip"
+        content_type = 'application/zip'
+    else:
+        s3_key = f"clips/{clip_id}.mp4"
+        content_type = 'video/mp4'
+    
     print(f"Uploading {file_path} to S3 bucket {S3_BUCKET_NAME} with key {s3_key}")
     
     try:
@@ -305,7 +316,7 @@ def upload_to_s3(file_path: str, clip_id: str) -> str:
             file_path,
             S3_BUCKET_NAME,
             s3_key,
-            ExtraArgs={'ContentType': 'video/mp4'}
+            ExtraArgs={'ContentType': content_type}
         )
     except Exception as e:
         raise Exception(f"Failed to upload to S3: {str(e)}")
@@ -325,7 +336,6 @@ def cleanup_files(*file_paths):
                     import shutil
                     shutil.rmtree(file_path)
                 
-                # Clean up parent temp directory
                 parent_dir = os.path.dirname(file_path)
                 if parent_dir.startswith('/tmp/tmp') and os.path.exists(parent_dir):
                     import shutil
@@ -350,7 +360,6 @@ def get_video_info(url: str) -> Dict[str, Any]:
             'description': info.get('description', '')[:200]
         }
 
-# API Endpoints
 @app.get("/")
 async def root():
     return {"message": "Clipper API with WhisperX", "status": "running"}
@@ -360,7 +369,8 @@ async def create_video_clip(request: ClipRequest):
     """Create video clip from YouTube URL"""
     video_path = None
     audio_path = None
-    clip_paths = []  # Changed to list to track multiple clips
+    clip_paths = []
+    zip_path = None 
 
     print(f"Received clip request: {request}")
     
@@ -381,24 +391,32 @@ async def create_video_clip(request: ClipRequest):
             # if request.multipleClips is true then handle all clips else only best ranked clip
             if request.multipleClips:
                 if len(viral_moments) > 1:
-                    clips_urls = []
-                    for i, moment in enumerate(viral_moments):  # Fixed: iterate through moments properly
+                    for i, moment in enumerate(viral_moments):
                         clip_start_time = moment.start_time
-                        clip_end_time = moment.end_time  # Fixed: was using start_time twice
+                        clip_end_time = moment.end_time
                         
                         print(f"Creating clip {i+1}/{len(viral_moments)}: {moment.content[:50]}... from {clip_start_time}s to {clip_end_time}s")
                         
                         clip_path = create_clip(video_path, clip_start_time, clip_end_time, request.aspectRatio)
-                        clip_paths.append(clip_path)  # Track for cleanup
-                        
-                        clip_id = str(uuid.uuid4())
-                        clip_url = upload_to_s3(clip_path, clip_id)
-                        clips_urls.append(clip_url)  # Fixed: use append instead of index assignment
+                        clip_paths.append(clip_path)
+
+                    # Create ZIP file of all videos
+                    zip_path = 'clipper_clips/viral_clips.zip'
+                    with zipfile.ZipFile(zip_path, 'w') as zipf:
+                        for i, clip in enumerate(clip_paths):
+                            clip_name = f"viral_moment_{i+1}_{os.path.basename(clip)}"
+                            zipf.write(clip, clip_name)
+                    
+                    print(f"Created ZIP file with {len(clip_paths)} videos")
+
+                    # Upload ZIP file to S3
+                    clip_id = str(uuid.uuid4())
+                    clip_url = upload_to_s3(zip_path, clip_id, is_zip=True)
                         
                     return ClipResponse(
                         success=True,
-                        message=f"{len(clips_urls)} clips created successfully",
-                        clip_url=clips_urls,
+                        message=f"{len(clip_paths)} clips created and packaged successfully",
+                        clip_url=clip_url,
                         viral_moments=viral_moments
                     )
                 else:
@@ -418,11 +436,11 @@ async def create_video_clip(request: ClipRequest):
                     return ClipResponse(
                         success=True,
                         message="Single clip created successfully",
-                        clip_url=[clip_url],
+                        clip_url=clip_url,
                         viral_moments=viral_moments
                     )
             else:
-                # Single clip - use best moment
+                # best moment only
                 best_moment = max(viral_moments, key=lambda x: x.confidence_score)
                 clip_start_time = best_moment.start_time
                 clip_end_time = best_moment.end_time
@@ -438,7 +456,7 @@ async def create_video_clip(request: ClipRequest):
                 return ClipResponse(
                     success=True,
                     message="Clip created successfully",
-                    clip_url=[clip_url],
+                    clip_url=clip_url,
                     viral_moments=viral_moments
                 )
 
@@ -451,6 +469,9 @@ async def create_video_clip(request: ClipRequest):
             
             if clip_start_time == 0 and clip_end_time == 0:
                 raise HTTPException(status_code=400, detail="Please provide valid start and end times for manual clipping")
+            
+            if clip_start_time >= clip_end_time:
+                raise HTTPException(status_code=400, detail="Start time must be before end time")
         
             print("Start creating manual clip...")
             clip_path = create_clip(video_path, clip_start_time, clip_end_time, request.aspectRatio)
@@ -462,7 +483,7 @@ async def create_video_clip(request: ClipRequest):
             return ClipResponse(
                 success=True,
                 message="Clip created successfully",
-                clip_url=[clip_url],
+                clip_url=clip_url,
                 viral_moments=viral_moments
             )
         
@@ -474,5 +495,5 @@ async def create_video_clip(request: ClipRequest):
         )
     
     finally:
-        # Cleanup all created clips
-        cleanup_files(video_path, audio_path, *clip_paths)
+        # Cleanup all created clips and ZIP file
+        cleanup_files(video_path, audio_path, zip_path, *clip_paths)

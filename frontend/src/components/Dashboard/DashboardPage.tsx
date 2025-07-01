@@ -13,8 +13,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { CliptypeSwitch } from "./ClipType";
 import { AnimatePresence, motion } from "framer-motion";
-import { IconArrowUpRight, IconCircleXFilled } from "@tabler/icons-react";
-import { cn, downloadVideo } from "@/lib/utils";
+import {
+  IconArrowUpRight,
+  IconCircleXFilled,
+  IconLoader2,
+} from "@tabler/icons-react";
+import { cn, downloadFile } from "@/lib/utils";
 import { BACKEND_URL } from "../../../config";
 
 const formSchema = z.object({
@@ -39,6 +43,7 @@ export function DashboardPage() {
     formState: { errors },
     watch,
     setValue,
+    reset,
   } = useForm<FormValues>({
     defaultValues: {
       url: "",
@@ -57,7 +62,6 @@ export function DashboardPage() {
   const watchClipType = watch("clipType");
   const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
   const [thumbnail, setThumbnail] = React.useState<string | null>(null);
-  const [clipUrl, setClipUrl] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const extractYouTubeVideoId = (url: string): string | null => {
@@ -77,8 +81,24 @@ export function DashboardPage() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      // Form Check
       setIsProcessing(true);
+      toast.loading("Processing your video...");
+
+      if (!watchUrl) {
+        toast.error("Please enter a valid YouTube URL");
+        return;
+      }
+
+      if (watchClipType === "MANUAL" && !watch("startTime")) {
+        toast.error("Please enter a valid start time");
+        return;
+      }
+
+      if (watchClipType === "MANUAL" && !watch("endTime")) {
+        toast.error("Please enter a valid end time");
+        return;
+      }
+
       if (watchClipType === "MANUAL") {
         if (
           watch("startTime") === "00:00:00" &&
@@ -135,18 +155,14 @@ export function DashboardPage() {
       );
 
       const resData = response.data;
-      if (resData.clipUrl) {
-        setClipUrl(resData.clipUrl);
+      if (resData.clip_url) {
+        toast.dismiss();
         toast.success("Video processed successfully!");
-        // download the clip
-        downloadVideo(resData.clipUrl, `Snipmatic_Clip_${Date.now()}.mp4`);
-      } else {
-        toast.error("Failed to process video. Please try again.");
-      }
 
-      if (response.status === 200) {
-        const { message } = response.data;
-        toast.success(message || "Video processing started successfully!");
+        toast.loading("Downloading your clip...");
+        await downloadFile(resData.clip_url, `Snipmatic_Clip_${Date.now()}.mp4`);
+        toast.dismiss();
+        toast.success("Clip downloaded successfully!");
       } else {
         toast.error("Failed to process video. Please try again.");
       }
@@ -372,8 +388,17 @@ export function DashboardPage() {
 
               <div className="w-full flex items-center justify-end mt-4">
                 <Button type="submit" disabled={!watchUrl || isProcessing}>
-                  Process Video
-                  <IconArrowUpRight />
+                  {isProcessing ? (
+                    <span className="flex items-center gap-2">
+                      Processing
+                      <IconLoader2 className="animate-spin h-4 w-4" />
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      Process Video
+                      <IconArrowUpRight />
+                    </span>
+                  )}
                 </Button>
               </div>
             </form>

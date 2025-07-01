@@ -2,7 +2,7 @@ fastapi
 uvicorn
 yt-dlp
 whisperx
-google-generativeai
+google-genai
 ffmpeg-python
 boto3
 python-dotenv

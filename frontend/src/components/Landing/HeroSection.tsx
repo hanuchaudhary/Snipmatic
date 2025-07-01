@@ -24,11 +24,11 @@ export function HeroSection() {
             <h1 className="md:w-4xl md:text-[5rem] text-5xl mx-auto font-instrumental text-center leading-none">
               to Virality with Snipmatic.
             </h1>
-            <p className="md:text-lg md:px-0 px-4 text-muted-foreground my-8 text-center mx-auto max-w-2xl">
+            <p className="md:text-lg font-jost md:px-0 px-4 text-muted-foreground my-8 text-center mx-auto max-w-2xl">
               Snip viral-ready shorts from any YouTube video — fast, effortless,
               and powered by Snipmatic AI.
             </p>
-            <div className="flex flex-wrap gap-2 items-center justify-center">
+            <div className="flex flex-wrap gap-2 font-jost tracking-wider items-center justify-center">
               <Link href="/dashboard">
                 <button
                   style={{
@@ -215,8 +215,8 @@ export function HeroSection() {
           </div>
         </div>
       </ContainerScroll>
-      <div className="w-full fixed -bottom-10 left-1/2 -translate-x-1/2 bg-black/70 h-20 blur-2xl" />
-      <div className="w-full fixed -bottom-10 left-1/2 -translate-x-1/2 bg-black/50 h-20 blur-2xl" />
+      <div className="w-full fixed -bottom-10 left-1/2 -translate-x-1/2 bg-white/70 dark:bg-black/70 h-20 blur-2xl" />
+      <div className="w-full fixed -bottom-10 left-1/2 -translate-x-1/2 bg-white/50 dark:bg-black/50 h-20 blur-2xl" />
     </section>
   );
 }

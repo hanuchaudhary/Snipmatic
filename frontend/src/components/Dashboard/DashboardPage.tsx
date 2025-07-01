@@ -3,7 +3,7 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { set, z } from "zod";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { CliptypeSwitch } from "./ClipType";
 import { AnimatePresence, motion } from "framer-motion";
 import { IconArrowUpRight, IconCircleXFilled } from "@tabler/icons-react";
-import { cn } from "@/lib/utils";
+import { cn, downloadVideo } from "@/lib/utils";
 import { BACKEND_URL } from "../../../config";
 
 const formSchema = z.object({
@@ -55,8 +55,9 @@ export function DashboardPage() {
   const watchUrl = watch("url");
   const watchMultiple = watch("multipleClips");
   const watchClipType = watch("clipType");
-
+  const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
   const [thumbnail, setThumbnail] = React.useState<string | null>(null);
+  const [clipUrl, setClipUrl] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const extractYouTubeVideoId = (url: string): string | null => {
@@ -77,6 +78,7 @@ export function DashboardPage() {
   const onSubmit = async (data: FormValues) => {
     try {
       // Form Check
+      setIsProcessing(true);
       if (watchClipType === "MANUAL") {
         if (
           watch("startTime") === "00:00:00" &&
@@ -132,6 +134,16 @@ export function DashboardPage() {
         }
       );
 
+      const resData = response.data;
+      if (resData.clipUrl) {
+        setClipUrl(resData.clipUrl);
+        toast.success("Video processed successfully!");
+        // download the clip
+        downloadVideo(resData.clipUrl, `Snipmatic_Clip_${Date.now()}.mp4`);
+      } else {
+        toast.error("Failed to process video. Please try again.");
+      }
+
       if (response.status === 200) {
         const { message } = response.data;
         toast.success(message || "Video processing started successfully!");
@@ -144,6 +156,8 @@ export function DashboardPage() {
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -158,13 +172,13 @@ export function DashboardPage() {
               animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
               exit={{ opacity: 0, filter: "blur(20px)", y: -10 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="relative h-60 mt-10 rounded-xl w-full overflow-hidden border-2 shadow"
+              className="relative h-60 mt-10 bg-secondary/50 rounded-xl w-full overflow-hidden border-2 shadow"
             >
               <div
                 onClick={() => {
                   setValue("url", "");
                 }}
-                className="absolute top-3 right-3"
+                className="absolute z-[99] top-3 right-3"
               >
                 <IconCircleXFilled className="h-7 w-7 shadow opacity-80 hover:opacity-100 hover:scale-105 transition-transform cursor-pointer" />
               </div>
@@ -285,28 +299,52 @@ export function DashboardPage() {
                   render={({ field }) => (
                     <div className="flex flex-wrap gap-2 border p-2 rounded-2xl bg-secondary/50">
                       {[
-                        { value: "original", label: "Original" },
-                        { value: "vertical", label: "Vertical (9:16)" },
-                        { value: "square", label: "Square (1:1)" },
-                      ].map((option) => (
-                        <Button
-                          key={option.value}
-                          type="button"
-                          size={"lg"}
-                          variant={
-                            field.value === option.value ? "default" : "outline"
-                          }
-                          onClick={() => field.onChange(option.value)}
-                          className={cn(
-                            "flex-1 justify-center md:h-15 md:text-base",
-                            field.value === option.value
-                              ? "bg-primary"
-                              : "text-muted-foreground"
-                          )}
-                        >
-                          {option.label}
-                        </Button>
-                      ))}
+                        {
+                          value: "original",
+                          label: "Original",
+                        },
+                        {
+                          value: "vertical",
+                          label: "Vertical (9:16)",
+                        },
+                        {
+                          value: "square",
+                          label: "Square (1:1)",
+                        },
+                      ].map((option) => {
+                        const isActive = option.value === watch("aspectRatio");
+
+                        return (
+                          <button
+                            onClick={() => field.onChange(option.value)}
+                            key={option.value}
+                            type="button"
+                            className={cn(
+                              "flex-1 relative border bg-secondary justify-center md:h-15 md:text-base cursor-pointer rounded-xl"
+                            )}
+                          >
+                            {isActive && (
+                              <motion.div
+                                layoutId={"active"}
+                                className={`absolute inset-0 z-20 rounded-xl bg-primary`}
+                                transition={{ duration: 0.3, type: "spring" }}
+                              />
+                            )}
+                            {
+                              <span
+                                className={cn(
+                                  "relative m-auto px-4 z-30 font-[500]",
+                                  isActive
+                                    ? "text-primary-foreground"
+                                    : "text-muted-foreground"
+                                )}
+                              >
+                                {option.label}
+                              </span>
+                            }
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 />
@@ -333,7 +371,7 @@ export function DashboardPage() {
               </div>
 
               <div className="w-full flex items-center justify-end mt-4">
-                <Button type="submit" disabled={!watchUrl}>
+                <Button type="submit" disabled={!watchUrl || isProcessing}>
                   Process Video
                   <IconArrowUpRight />
                 </Button>

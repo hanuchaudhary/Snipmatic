@@ -10,7 +10,7 @@ export function Navbar() {
   const pathname = usePathname();
   return (
     <header
-      className={`fixed w-full left-1/2 -translate-x-1/2 my-4 rounded-3xl top-0 -z-0 ${
+      className={`fixed w-full left-1/2 -translate-x-1/2 my-4 rounded-3xl top-0 -z-[0] ${
         pathname === "/" ? "dark:bg-neutral-950/30 bg-white/80 backdrop-blur-xl" : "bg-none"
       } max-w-7xl mx-auto`}
     >

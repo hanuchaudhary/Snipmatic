@@ -77,17 +77,41 @@ export const Card = ({
   translate: MotionValue<number>;
   children: React.ReactNode;
 }) => {
+  const imageVariants = {
+    hidden: {
+      y: 40,
+      opacity: 0,
+      filter: "blur(20px)",
+      scale: 0.95,
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      filter: "blur(0px)",
+      scale: 1,
+      transition: {
+        duration: 1,
+        ease: "easeOut",
+      },
+    },
+  };
+
   return (
     <motion.div
       style={{
         rotateX: rotate,
         scale,
       }}
-      className="max-w-5xl mt-20 mx-auto h-[30rem] md:h-[40rem] w-full border rounded-[2rem] shadow-2xl"
+      className="max-w-5xl md:mt-20 mx-auto h-[30rem] md:h-[40rem] w-full border rounded-[2rem] shadow-2xl"
     >
-      <div className=" h-full w-full  overflow-hidden rounded-2xl md:rounded-2xl md:p-4 ">
+      <motion.div
+        variants={imageVariants}
+        initial="hidden"
+        animate="visible"
+        className=" h-full w-full  overflow-hidden rounded-3xl md:rounded-3xl md:p-2 bg-secondary "
+      >
         {children}
-      </div>
+      </motion.div>
     </motion.div>
   );
 };

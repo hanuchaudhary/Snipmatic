@@ -29,28 +29,6 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Kush Chaudhary", url: "https://kushchaudhary.com" }],
   creator: "Kush Chaudhary",
-  publisher: "Snipmatic",
-  robots: "index, follow",
-  viewport: "width=device-width, initial-scale=1",
-
-  openGraph: {
-    title: "Snipmatic – AI-Powered YouTube Shorts Generator",
-    description:
-      "Generate viral YouTube Shorts using AI. Snipmatic finds and clips high-impact moments automatically or lets you clip manually.",
-    url: "https://snipmatic.vercel.app",
-    siteName: "Snipmatic",
-    locale: "en_US",
-    type: "website",
-  },
-
-  twitter: {
-    card: "summary_large_image",
-    title: "Snipmatic – AI YouTube Shorts Tool",
-    description:
-      "Clip your next viral moment from any YouTube video in seconds. Powered by AI, optimized for social.",
-    creator: "@KushChaudharyOg",
-    images: ["https://snipmatic.vercel.app/favicon.ico"],
-  },
 };
 
 const instrumentSerif = Instrument_Serif({
@@ -73,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${jost.variable} relative antialiased `}
+        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${jost.variable} relative antialiased`}
       >
         <ThemeProvider
           attribute="class"

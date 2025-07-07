@@ -321,7 +321,7 @@ def upload_to_s3(file_path: str, clip_id: str, is_zip: bool = False) -> str:
     except Exception as e:
         raise Exception(f"Failed to upload to S3: {str(e)}")
 
-    print(f"File uploaded to S3: https://{S3_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{s3_key}")
+    print(f"Clip URL: https://d10d2f3sgu39wn.cloudfront.net/{s3_key}")
     
     return f"https://d10d2f3sgu39wn.cloudfront.net/{s3_key}"
 

@@ -23,7 +23,7 @@ export const ThemeSwitcher = () => {
     <div
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
       className={cn(
-        "cursor-pointer relative flex h-8 rounded-full bg-background p-1 ring-1 ring-border"
+        "cursor-pointer relative z-40 flex h-8 rounded-full bg-background p-1 ring-1 ring-border"
       )}
     >
       {themes.map(({ key, icon: Icon, label }) => {

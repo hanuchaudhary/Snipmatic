@@ -161,7 +161,9 @@ export function CreateClipPage() {
         toast.success("Video processed successfully!");
 
         toast.loading("Downloading your clip...");
-        await downloadFile(resData.clip_url, `Snipmatic_Clip_${Date.now()}.mp4`);
+        const fileExtension = resData.clip_url.split(".").pop();
+        const fileName = `Snipmatic_Clip_${Date.now()}.${fileExtension}`;
+        await downloadFile(resData.clip_url, fileName);
         toast.dismiss();
         toast.success("Clip downloaded successfully!");
       } else {

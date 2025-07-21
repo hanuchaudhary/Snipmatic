@@ -20,10 +20,10 @@ load_dotenv()
 
 # Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+# AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+# AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+# AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+# S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 
 # Create necessary directories
 os.makedirs('clipper_videos', exist_ok=True)
@@ -300,30 +300,30 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
     print(f"Clip created successfully: {output_path}")
     return output_path
 
-def upload_to_s3(file_path: str, clip_id: str, is_zip: bool = False) -> str:
-    """Upload clip to S3 and return URL"""
-    if is_zip:
-        s3_key = f"clips/{clip_id}.zip"
-        content_type = 'application/zip'
-    else:
-        s3_key = f"clips/{clip_id}.mp4"
-        content_type = 'video/mp4'
+# def upload_to_s3(file_path: str, clip_id: str, is_zip: bool = False) -> str:
+#     """Upload clip to S3 and return URL"""
+#     if is_zip:
+#         s3_key = f"clips/{clip_id}.zip"
+#         content_type = 'application/zip'
+#     else:
+#         s3_key = f"clips/{clip_id}.mp4"
+#         content_type = 'video/mp4'
     
-    print(f"Uploading {file_path} to S3 bucket {S3_BUCKET_NAME} with key {s3_key}")
+#     print(f"Uploading {file_path} to S3 bucket {S3_BUCKET_NAME} with key {s3_key}")
     
-    try:
-        s3_client.upload_file(
-            file_path,
-            S3_BUCKET_NAME,
-            s3_key,
-            ExtraArgs={'ContentType': content_type}
-        )
-    except Exception as e:
-        raise Exception(f"Failed to upload to S3: {str(e)}")
+#     try:
+#         s3_client.upload_file(
+#             file_path,
+#             S3_BUCKET_NAME,
+#             s3_key,
+#             ExtraArgs={'ContentType': content_type}
+#         )
+#     except Exception as e:
+#         raise Exception(f"Failed to upload to S3: {str(e)}")
 
-    print(f"Clip URL: https://d10d2f3sgu39wn.cloudfront.net/{s3_key}")
+#     print(f"Clip URL: https://d10d2f3sgu39wn.cloudfront.net/{s3_key}")
     
-    return f"https://d10d2f3sgu39wn.cloudfront.net/{s3_key}"
+#     return f"https://d10d2f3sgu39wn.cloudfront.net/{s3_key}"
 
 def cleanup_files(*file_paths):
     """Clean up temporary files and directories"""
@@ -410,13 +410,13 @@ async def create_video_clip(request: ClipRequest):
                     print(f"Created ZIP file with {len(clip_paths)} videos")
 
                     # Upload ZIP file to S3
-                    clip_id = str(uuid.uuid4())
-                    clip_url = upload_to_s3(zip_path, clip_id, is_zip=True)
+                    # clip_id = str(uuid.uuid4())
+                    # clip_url = upload_to_s3(zip_path, clip_id, is_zip=True)
                         
                     return ClipResponse(
                         success=True,
                         message=f"{len(clip_paths)} clips created and packaged successfully",
-                        clip_url=clip_url,
+                        # clip_url=clip_url,
                         viral_moments=viral_moments
                     )
                 else:
@@ -430,13 +430,13 @@ async def create_video_clip(request: ClipRequest):
                     clip_path = create_clip(video_path, clip_start_time, clip_end_time, request.aspectRatio)
                     clip_paths.append(clip_path)
                     
-                    clip_id = str(uuid.uuid4())
-                    clip_url = upload_to_s3(clip_path, clip_id)
+                    # clip_id = str(uuid.uuid4())
+                    # clip_url = upload_to_s3(clip_path, clip_id)
                     
                     return ClipResponse(
                         success=True,
                         message="Single clip created successfully",
-                        clip_url=clip_url,
+                        # clip_url=clip_url,
                         viral_moments=viral_moments
                     )
             else:
@@ -450,13 +450,13 @@ async def create_video_clip(request: ClipRequest):
                 clip_path = create_clip(video_path, clip_start_time, clip_end_time, request.aspectRatio)
                 clip_paths.append(clip_path)
                 
-                clip_id = str(uuid.uuid4())
-                clip_url = upload_to_s3(clip_path, clip_id)
+                # clip_id = str(uuid.uuid4())
+                # clip_url = upload_to_s3(clip_path, clip_id)
                 
                 return ClipResponse(
                     success=True,
                     message="Clip created successfully",
-                    clip_url=clip_url,
+                    # clip_url=clip_url,
                     viral_moments=viral_moments
                 )
 
@@ -477,13 +477,13 @@ async def create_video_clip(request: ClipRequest):
             clip_path = create_clip(video_path, clip_start_time, clip_end_time, request.aspectRatio)
             clip_paths.append(clip_path)
             
-            clip_id = str(uuid.uuid4())
-            clip_url = upload_to_s3(clip_path, clip_id)
+            # clip_id = str(uuid.uuid4())
+            # clip_url = upload_to_s3(clip_path, clip_id)
             
             return ClipResponse(
                 success=True,
                 message="Clip created successfully",
-                clip_url=clip_url,
+                # clip_url=clip_url,
                 viral_moments=viral_moments
             )
         
@@ -496,4 +496,5 @@ async def create_video_clip(request: ClipRequest):
     
     finally:
         # Cleanup all created clips and ZIP file
-        cleanup_files(video_path, audio_path, zip_path, *clip_paths)
+        # cleanup_files(video_path, audio_path, zip_path, *clip_paths)
+        print("yay")

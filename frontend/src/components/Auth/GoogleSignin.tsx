@@ -1,14 +1,17 @@
 import React from "react";
 import { Button } from "../ui/button";
-
+import { signIn } from "next-auth/react";
 export function GoogleSignin() {
+  
   const handleGoogleSignin = () => {
-    console.log("Google signin clicked");
+    signIn("google", {
+      redirectTo: "/clip",
+    });
   };
   return (
     <Button
       variant="secondary"
-      className="w-full py-7 rounded-full dark:bg-primary-foreground bg-primary border-2 dark:border-neutral-700 dark:hover:bg-primary-foreground/90"
+      className="w-full py-7 rounded-full bg-primary-foreground border-2 dark:border-neutral-700 dark:hover:bg-primary-foreground/90"
       onClick={handleGoogleSignin}
     >
       <svg className="h-8 w-8" viewBox="0 0 24 24">

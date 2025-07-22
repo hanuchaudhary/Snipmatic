@@ -8,7 +8,8 @@ from helper import (
     find_viral_moments,
     create_clip,
     get_video_info,
-    cleanup_files
+    cleanup_files,
+    time_to_seconds
 )
 import os
 import uuid
@@ -29,10 +30,11 @@ celery_app.conf.task_routes = {
     'tasks.clip_task': {'queue': 'clip'}
 }
 
+# In-memory task status (replace with Redis in production)
+
 task_status_store = {}
 
 
-# In-memory task status (replace with Redis in production)
 
 def update_task_status(task_id, status, progress=0, message="", result=None):
     """Update task status in storage"""
@@ -56,7 +58,7 @@ def download_task(task_id, url):
         raise
 
 @celery_app.task(
-    name='tasks.transcribe_task',task_status_store = {},
+    name='tasks.transcribe_task',
     rate_limit='2/m'  # Max 2 transcriptions per minute per worker
 )
 def transcribe_task(task_id, video_path):

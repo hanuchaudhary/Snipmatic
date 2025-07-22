@@ -22,15 +22,11 @@ async def root():
 async def create_video_clip(request: ClipRequest, background_tasks: BackgroundTasks):
     """Create video clip - queues task for processing"""
     task_id = str(uuid.uuid4())
-    
-    # Store initial task status
     task_status_store[task_id] = {
         "status": "QUEUED",
         "progress": 0,
         "message": "Task queued for processing"
     }
-    
-    # Queue the appropriate task type
     if request.clipType == "AI":
         background_tasks.add_task(create_ai_clip_task, task_id, request)
     else:

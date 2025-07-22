@@ -1,4 +1,3 @@
-# tasks.py (Celery tasks and processing logic)
 from celery import Celery, chain
 from models import ClipRequest, ViralMoment, ClipResponse
 from status_store import update_task_status
@@ -134,21 +133,13 @@ def transcribe_task(task_id, video_path, original_url, aspect_ratio, multiple_cl
             logger.info(f"[TRANSCRIBE] Task {task_id}: Loading audio file for transcription")
             logger.info(f"[TRANSCRIBE] Task {task_id}: Audio file size: {os.path.getsize(audio_path)} bytes")
             
-            # Add timeout for transcription (10 minutes max)
-            @with_timeout(600)  # 10 minutes timeout
-            def transcribe_with_timeout():
-                logger.info(f"[TRANSCRIBE] Task {task_id}: About to call transcribe_audio_whisperx")
-                try:
-                    return transcribe_audio_whisperx(audio_path)
-                except Exception as whisperx_error:
-                    logger.warning(f"[TRANSCRIBE] Task {task_id}: WhisperX failed: {str(whisperx_error)}")
-                    logger.info(f"[TRANSCRIBE] Task {task_id}: Attempting CPU fallback transcription")
-                    # Import CPU fallback function
-                    from helper import transcribe_audio_cpu_fallback
-                    return transcribe_audio_cpu_fallback(audio_path)
-            
+            # # Add timeout for transcription (10 minutes max)
+            # @with_timeout(600)  # 10 minutes timeout
+            # def transcribe_with_timeout():
+            segments = transcribe_audio_whisperx(audio_path)
+
             logger.info(f"[TRANSCRIBE] Task {task_id}: Starting transcription with 10-minute timeout")
-            segments = transcribe_with_timeout()
+            # segments = transcribe_with_timeout()
             logger.info(f"[TRANSCRIBE] Task {task_id}: Transcription completed successfully, found {len(segments)} segments")
             
         except TimeoutError:

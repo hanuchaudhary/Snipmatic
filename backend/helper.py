@@ -94,7 +94,8 @@ def transcribe_audio_whisperx(audio_path: str) -> list:
     print(f"Transcribing audio from {audio_path}")
     # Load audio
     audio = whisperx.load_audio(audio_path)
-    
+
+    print("Model loaded, starting transcription")
     # Transcribe with WhisperX
     result = whisperx_model.transcribe(audio, batch_size=16)
 

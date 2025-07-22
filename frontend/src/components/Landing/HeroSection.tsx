@@ -101,7 +101,7 @@ export function HeroSection() {
               className="flex flex-wrap gap-2 md:text-base text-sm font-jost tracking-wider items-center justify-center"
               variants={buttonVariants}
             >
-              <Link href="/clip">
+              <Link href="/signin">
                 <motion.button
                   style={{
                     boxShadow:

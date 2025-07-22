@@ -15,7 +15,7 @@ export default function ClipLayout({
   return (
       <div className={`dark:bg-black/10 bg-white/30 w-full`}>
         <Navbar />
-        <div className="max-w-5xl mx-auto px-4">{children}</div>
+        <div className="px-4">{children}</div>
           <div className="fixed inset-0 z-[-1]">
             <GradientBackground
               gradientOrigin="bottom-middle"

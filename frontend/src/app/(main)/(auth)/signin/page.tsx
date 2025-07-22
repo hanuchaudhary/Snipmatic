@@ -1,7 +1,10 @@
-import React from 'react'
+import React from "react";
+import SigninForm from "@/components/Auth/SigninForm";
 
-export default function Page() {
+export default function SigninPage() {
   return (
-    <div>Page</div>
-  )
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <SigninForm />
+    </div>
+  );
 }

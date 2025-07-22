@@ -90,66 +90,31 @@ def extract_audio(video_path: str) -> str:
 
 def transcribe_audio_whisperx(audio_path: str) -> list:
     """Transcribe audio using WhisperX"""
-    logger.info(f"[WHISPERX] Starting transcription for audio file: {audio_path}")
+    """Transcribe audio using WhisperX with better timestamps"""
+    print(f"Transcribing audio from {audio_path}")
+    # Load audio
+    audio = whisperx.load_audio(audio_path)
     
-    # Check if model is loaded
-    if whisperx_model is None:
-        logger.error(f"[WHISPERX] WhisperX model is not loaded!")
-        raise Exception("WhisperX model is not initialized")
+    # Transcribe with WhisperX
+    result = whisperx_model.transcribe(audio, batch_size=16)
+
+    print(f"Transcription completed: {len(result['segments'])} segments found")
     
-    # Check if audio file exists
-    if not os.path.exists(audio_path):
-        logger.error(f"[WHISPERX] Audio file does not exist: {audio_path}")
-        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+    # Align whisper output for better timestamps
+    model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
+    result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
     
-    # Get audio file info
-    file_size = os.path.getsize(audio_path)
-    logger.info(f"[WHISPERX] Audio file size: {file_size} bytes")
-    
-    try:
-        logger.info(f"[WHISPERX] Loading audio file")
-        audio = whisperx.load_audio(audio_path)
-        logger.info(f"[WHISPERX] Audio loaded successfully, duration: {len(audio)/16000:.2f} seconds")
-        
-        logger.info(f"[WHISPERX] Starting transcription with model")
-        result = whisperx_model.transcribe(audio, batch_size=16)
-        logger.info(f"[WHISPERX] Transcription completed, language detected: {result.get('language', 'unknown')}")
-        logger.info(f"[WHISPERX] Found {len(result.get('segments', []))} segments")
-        
-        # Align whisper output for better timestamps
-        logger.info(f"[WHISPERX] Loading alignment model for language: {result['language']}")
-        model_a, metadata = whisperx.load_align_model(
-            language_code=result["language"], 
-            device=device
-        )
-        logger.info(f"[WHISPERX] Alignment model loaded successfully")
-        
-        logger.info(f"[WHISPERX] Starting alignment process")
-        result = whisperx.align(
-            result["segments"], 
-            model_a, 
-            metadata, 
-            audio, 
-            device, 
-            return_char_alignments=False
-        )
-        logger.info(f"[WHISPERX] Alignment completed successfully")
-        
-        # Convert to our format
-        segments = [{
+    # Convert to our format
+    segments = []
+    for segment in result["segments"]:
+        segments.append({
             'start': segment['start'],
             'end': segment['end'],
             'text': segment['text'].strip()
-        } for segment in result["segments"]]
-        
-        logger.info(f"[WHISPERX] Transcription process completed, returning {len(segments)} segments")
-        return segments
-        
-    except Exception as e:
-        logger.error(f"[WHISPERX] Transcription failed with error: {str(e)}")
-        logger.error(f"[WHISPERX] Error type: {type(e).__name__}")
-        raise
-
+        })
+    print(f"Transcription segments: {segments}")
+    return segments
+    
 def find_viral_moments(segments: list, video_info: dict) -> list:
     """Use Gemini to find viral moments in transcription"""
     transcript = "\n".join(

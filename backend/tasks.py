@@ -56,7 +56,7 @@ def download_task(task_id, url):
         raise
 
 @celery_app.task(
-    name='tasks.transcribe_task',task_status_store = {}
+    name='tasks.transcribe_task',task_status_store = {},
     rate_limit='2/m'  # Max 2 transcriptions per minute per worker
 )
 def transcribe_task(task_id, video_path):

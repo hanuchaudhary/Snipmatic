@@ -25,6 +25,13 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 compute_type = "float16" if torch.cuda.is_available() else "int8"
 whisperx_model = whisperx.load_model("base", device, compute_type=compute_type)
 
+class ViralMoment(BaseModel):
+    start_time: float
+    end_time: float
+    content: str
+    reason: str
+    confidence_score: float
+    
 class AudioProcessor:
     def __init__(self):
         pass
@@ -68,7 +75,7 @@ class AudioProcessor:
             Identify moments from the transcript that:
             - Are emotionally engaging (funny, shocking, inspiring, heartfelt)
             - Contain strong hooks or quotable lines
-            - Can stand alone as compelling 30–60 second clips
+            - Can stand alone as compelling 30-60 second clips
             - Would likely generate shares, comments, or reactions
 
             ## Video Information:

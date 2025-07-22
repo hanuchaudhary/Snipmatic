@@ -1,11 +1,73 @@
+version: '3.8'
+
 services:
+  redis:
+    image: redis
+    container_name: clipper-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
   clipper:
     build: .
     ports:
       - "8000:8000"
     volumes:
       - .:/app
-    working_dir: /app
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
     restart: unless-stopped
+
+  celery-worker-download:
+    build: .
+    command: celery -A tasks worker -Q download --loglevel=info
+    volumes:
+      - ./clipper_videos:/app/clipper_videos
+      - ./clipper_audio:/app/clipper_audio
+      - ./clipper_clips:/app/clipper_clips
+      - .env:/app/.env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  celery-worker-transcribe:
+    build: .
+    command: celery -A tasks worker -Q transcribe --loglevel=info
+    volumes:
+      - ./clipper_videos:/app/clipper_videos
+      - ./clipper_audio:/app/clipper_audio
+      - ./clipper_clips:/app/clipper_clips
+      - .env:/app/.env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  celery-worker-clip:
+    build: .
+    command: celery -A tasks worker -Q clip --loglevel=info
+    volumes:
+      - ./clipper_videos:/app/clipper_videos
+      - ./clipper_audio:/app/clipper_audio
+      - ./clipper_clips:/app/clipper_clips
+      - .env:/app/.env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redis_data:

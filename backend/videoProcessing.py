@@ -16,20 +16,23 @@ from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv
 import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from Queues.video import video_queue
+from threading import Lock
 class ViralMoment(BaseModel):
     start_time: float
     end_time: float
     content: str
     reason: str
     confidence_score: float
-
+thread_lock= Lock()
 class VideoProcessor:
     def __init__(self):
         pass
-    def download_video(url: str) -> str:
+    def download_video(self) -> str:
+        with thread_lock:
+            self.url = video_queue.popleft()
         """Download video in highest quality"""
-        print(f"Downloading video from {url}")
+        print(f"Downloading video from {self.url}")
         temp_dir = tempfile.mkdtemp(prefix='clipper_video_')
         video_id = str(uuid.uuid4())[:8]
         output_path = os.path.join(temp_dir, f"video_{video_id}.%(ext)s")
@@ -42,7 +45,7 @@ class VideoProcessor:
         
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
+                ydl.download([self.url])
             print(f"Video downloaded to {temp_dir}")
             # Find the downloaded file
             for file in os.listdir(temp_dir):
@@ -58,7 +61,7 @@ class VideoProcessor:
                 pass
             raise Exception(f"Video download failed: {str(e)}")
 
-    def extract_audio(video_path: str) -> str:
+    def extract_audio(self,video_path: str) -> str:
         """Extract audio from video for transcription"""
         print(f"Extracting audio from {video_path}")
 
@@ -76,11 +79,11 @@ class VideoProcessor:
         
         return audio_path    
     
-    def get_video_info(url: str) -> Dict[str, Any]:
+    def get_video_info(self) -> Dict[str, Any]:
         """Get video information"""
         ydl_opts = {'quiet': True}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
+            info = ydl.extract_info(self.url, download=False)
             if info is None:
                 return {
                     'title': '',

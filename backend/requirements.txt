@@ -10,3 +10,5 @@ pydantic
 python-multipart
 torch
 torchaudio
+celery 
+redis

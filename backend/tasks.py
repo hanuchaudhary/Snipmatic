@@ -12,6 +12,7 @@ from helper import (
     time_to_seconds
 )
 import os
+from dataclasses import asdict
 import uuid
 import zipfile
 import logging
@@ -150,7 +151,7 @@ def transcribe_task(task_id, video_path, original_url, aspect_ratio, multiple_cl
             logger.error(f"[TRANSCRIBE] Task {task_id}: Audio file path: {audio_path}")
             logger.error(f"[TRANSCRIBE] Task {task_id}: Audio file exists: {os.path.exists(audio_path) if audio_path else False}")
             if audio_path and os.path.exists(audio_path):
-                logger.error(f"[TRANSCRIBE] Task {task_id}: Audio file size: {os.path.getsize(audio_path)} bytes")
+                logger.error(f"[TRANSCRIBE] Task {task_id}: Audio file size: {os.path.getsize(audio_path)} bytes")  
             raise transcribe_error
         
         logger.info(f"[TRANSCRIBE] Task {task_id}: Updating status to ANALYZING")
@@ -162,11 +163,28 @@ def transcribe_task(task_id, video_path, original_url, aspect_ratio, multiple_cl
         
         logger.info(f"[TRANSCRIBE] Task {task_id}: Finding viral moments using AI")
         viral_moments = find_viral_moments(segments, video_info)
+        # Handle both Pydantic v1 (.dict()) and v2 (.model_dump()) methods
+        viral_moments_serialized = []
+        for m in viral_moments:
+            if hasattr(m, 'model_dump'):
+                viral_moments_serialized.append(m.model_dump())
+            elif hasattr(m, 'dict'):
+                viral_moments_serialized.append(m.dict())
+            else:
+                # Fallback to manual serialization if neither method is available
+                viral_moments_serialized.append({
+                    'start_time': m.start_time,
+                    'end_time': m.end_time,
+                    'content': m.content,
+                    'reason': m.reason,
+                    'confidence_score': m.confidence_score
+                })
+
         logger.info(f"[TRANSCRIBE] Task {task_id}: Found {len(viral_moments)} viral moments")
 
         logger.info(f"[TRANSCRIBE] Task {task_id}: Queuing clip task to clip queue")
         clip_task.apply_async(
-            args=[task_id, video_path, viral_moments, aspect_ratio, multiple_clips],
+            args=[task_id, video_path, viral_moments_serialized, aspect_ratio, multiple_clips],
             queue='clip'
         )
         logger.info(f"[TRANSCRIBE] Task {task_id}: Clip task queued successfully")
@@ -202,8 +220,8 @@ def clip_task(task_id, video_path, viral_moments, aspect_ratio, multiple_clips):
                     executor.submit(
                         create_clip, 
                         video_path, 
-                        moment.start_time, 
-                        moment.end_time, 
+                        moment['start_time'], 
+                        moment['end_time'], 
                         aspect_ratio
                     )
                     for moment in viral_moments
@@ -218,13 +236,13 @@ def clip_task(task_id, video_path, viral_moments, aspect_ratio, multiple_clips):
             # Process only the best viral moment
             best_moment = max(
                 viral_moments, 
-                key=lambda x: x.confidence_score
+                key=lambda x: x['confidence_score']
             )
-            logger.info(f"[CLIP] Task {task_id}: Best moment selected: {best_moment.start_time}-{best_moment.end_time}s (score: {best_moment.confidence_score})")
+            logger.info(f"[CLIP] Task {task_id}: Best moment selected: {best_moment['start_time']}-{best_moment['end_time']}s (score: {best_moment['confidence_score']})")
             clip_path = create_clip(
                 video_path, 
-                best_moment.start_time, 
-                best_moment.end_time, 
+                best_moment['start_time'], 
+                best_moment['end_time'], 
                 aspect_ratio
             )
             clip_paths.append(clip_path)

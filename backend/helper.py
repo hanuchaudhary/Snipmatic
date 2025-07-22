@@ -18,14 +18,7 @@ logger = logging.getLogger(__name__)
 GEMINI_API_KEY = "AIzaSyDEFuu_5nl0zc7o7qK7z7ocEx9EqcI9z0E"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 compute_type = "float16" if torch.cuda.is_available() else "int8"
-
-logger.info(f"[HELPER] Initializing WhisperX with device: {device}, compute_type: {compute_type}")
-try:
-    whisperx_model = whisperx.load_model("base", device, compute_type=compute_type)
-    logger.info(f"[HELPER] WhisperX model loaded successfully")
-except Exception as e:
-    logger.error(f"[HELPER] Failed to load WhisperX model: {str(e)}")
-    whisperx_model = None
+whisperx_model = whisperx.load_model("base", device, compute_type=compute_type)
 
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
@@ -124,28 +117,78 @@ def find_viral_moments(segments: list, video_info: dict) -> list:
     )
 
     prompt = f"""
-        You are an expert viral content analyst. Your task is to analyze a YouTube video transcript and extract moments that are highly engaging and suitable for short-form content.
-        
+        You are an expert viral content analyst. Your task is to analyze a YouTube video transcript and extract moments that are highly engaging and suitable for short-form content on platforms like TikTok, YouTube Shorts, and Instagram Reels.
+
+        ## Goal:
+        Identify moments from the transcript that:
+        - Are emotionally engaging (funny, shocking, inspiring, heartfelt)
+        - Contain strong hooks or quotable lines
+        - Can stand alone as compelling 30–60 second clips
+        - Would likely generate shares, comments, or reactions
+
         ## Video Information:
         Title: {video_info.get('title', 'Unknown')}
         Duration: {video_info.get('duration', 'Unknown')} seconds
-        
+
+        ## Guidelines:
+
+        1. Read the full transcript.
+        2. Identify up to 3 of the most compelling moments that meet the criteria above.
+        - If the video is **short (<10 minutes)**: Extract 1–2 clips, ideally 30–45 seconds.
+        - If the video is **medium (10–30 minutes)**: Extract 2–3 clips, ideally 45–60 seconds.
+        - If the video is **long (>30 minutes)**: Extract 3 or more clips, but prioritize quality.
+        3. Each clip must include:
+        - `start_time`: float (in seconds)
+        - `end_time`: float (in seconds)
+        - `content`: the transcript excerpt
+        - `reason`: why this moment is compelling/viral
+        - `confidence_score`: float (0.0–1.0) based on your certainty
+
+        ## Format:
+        Respond with a JSON array:
+        [
+            {{
+                "start_time": 102.5,
+                "end_time": 141.0,
+                "content": "This moment blew my mind because...",
+                "reason": "It includes a surprising reveal that hooks the viewer.",
+                "confidence_score": 0.92
+            }},
+            ...
+        ]
+
+        ## Example Output:
+        [
+            {{
+                "start_time": 45.2,
+                "end_time": 75.0,
+                "content": "I never told anyone this before, but here's what happened...",
+                "reason": "This is a vulnerable and shocking moment likely to resonate emotionally.",
+                "confidence_score": 0.89
+            }},
+            {{
+                "start_time": 300.0,
+                "end_time": 340.0,
+                "content": "And then I said to him, 'You're not even real!'",
+                "reason": "This moment is humorous, has good pacing, and includes a memorable quote.",
+                "confidence_score": 0.83
+            }}
+        ]
+
         ## Transcript:
         {transcript}
-        
-        ## Format:
-        Respond with a JSON array of viral moments
         """
     
     response = gemini_client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt
     )
-    
+
     if not response or not response.text:
         raise Exception("No response from Gemini API")
-    
+    print(f"Gemini response received: {response}")
     text = response.text.strip()
+    print(f"Gemini response: {text}")
     if text.startswith('```json'):
         text = text[7:-3]
     elif text.startswith('```'):

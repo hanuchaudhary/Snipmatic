@@ -7,15 +7,27 @@ import tempfile
 import torch
 import os
 import shutil
+import logging
 from google import genai
-from .models import ViralMoment
+from models import ViralMoment
+
+# Configure logging for helper functions
+logger = logging.getLogger(__name__)
 
 # Configuration
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = "AIzaSyDEFuu_5nl0zc7o7qK7z7ocEx9EqcI9z0E"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 compute_type = "float16" if torch.cuda.is_available() else "int8"
-whisperx_model = whisperx.load_model("base", device, compute_type=compute_type)
-gemini_client = genai.Client()
+
+logger.info(f"[HELPER] Initializing WhisperX with device: {device}, compute_type: {compute_type}")
+try:
+    whisperx_model = whisperx.load_model("base", device, compute_type=compute_type)
+    logger.info(f"[HELPER] WhisperX model loaded successfully")
+except Exception as e:
+    logger.error(f"[HELPER] Failed to load WhisperX model: {str(e)}")
+    whisperx_model = None
+
+gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Create necessary directories
 os.makedirs('clipper_videos', exist_ok=True)
@@ -78,29 +90,65 @@ def extract_audio(video_path: str) -> str:
 
 def transcribe_audio_whisperx(audio_path: str) -> list:
     """Transcribe audio using WhisperX"""
-    audio = whisperx.load_audio(audio_path)
-    result = whisperx_model.transcribe(audio, batch_size=16)
+    logger.info(f"[WHISPERX] Starting transcription for audio file: {audio_path}")
     
-    # Align whisper output for better timestamps
-    model_a, metadata = whisperx.load_align_model(
-        language_code=result["language"], 
-        device=device
-    )
-    result = whisperx.align(
-        result["segments"], 
-        model_a, 
-        metadata, 
-        audio, 
-        device, 
-        return_char_alignments=False
-    )
+    # Check if model is loaded
+    if whisperx_model is None:
+        logger.error(f"[WHISPERX] WhisperX model is not loaded!")
+        raise Exception("WhisperX model is not initialized")
     
-    # Convert to our format
-    return [{
-        'start': segment['start'],
-        'end': segment['end'],
-        'text': segment['text'].strip()
-    } for segment in result["segments"]]
+    # Check if audio file exists
+    if not os.path.exists(audio_path):
+        logger.error(f"[WHISPERX] Audio file does not exist: {audio_path}")
+        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+    
+    # Get audio file info
+    file_size = os.path.getsize(audio_path)
+    logger.info(f"[WHISPERX] Audio file size: {file_size} bytes")
+    
+    try:
+        logger.info(f"[WHISPERX] Loading audio file")
+        audio = whisperx.load_audio(audio_path)
+        logger.info(f"[WHISPERX] Audio loaded successfully, duration: {len(audio)/16000:.2f} seconds")
+        
+        logger.info(f"[WHISPERX] Starting transcription with model")
+        result = whisperx_model.transcribe(audio, batch_size=16)
+        logger.info(f"[WHISPERX] Transcription completed, language detected: {result.get('language', 'unknown')}")
+        logger.info(f"[WHISPERX] Found {len(result.get('segments', []))} segments")
+        
+        # Align whisper output for better timestamps
+        logger.info(f"[WHISPERX] Loading alignment model for language: {result['language']}")
+        model_a, metadata = whisperx.load_align_model(
+            language_code=result["language"], 
+            device=device
+        )
+        logger.info(f"[WHISPERX] Alignment model loaded successfully")
+        
+        logger.info(f"[WHISPERX] Starting alignment process")
+        result = whisperx.align(
+            result["segments"], 
+            model_a, 
+            metadata, 
+            audio, 
+            device, 
+            return_char_alignments=False
+        )
+        logger.info(f"[WHISPERX] Alignment completed successfully")
+        
+        # Convert to our format
+        segments = [{
+            'start': segment['start'],
+            'end': segment['end'],
+            'text': segment['text'].strip()
+        } for segment in result["segments"]]
+        
+        logger.info(f"[WHISPERX] Transcription process completed, returning {len(segments)} segments")
+        return segments
+        
+    except Exception as e:
+        logger.error(f"[WHISPERX] Transcription failed with error: {str(e)}")
+        logger.error(f"[WHISPERX] Error type: {type(e).__name__}")
+        raise
 
 def find_viral_moments(segments: list, video_info: dict) -> list:
     """Use Gemini to find viral moments in transcription"""

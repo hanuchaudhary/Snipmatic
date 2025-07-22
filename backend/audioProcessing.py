@@ -35,7 +35,7 @@ class ViralMoment(BaseModel):
 class AudioProcessor:
     def __init__(self):
         pass
-    def transcribe_audio_whisperx(audio_path: str) -> List[Dict[str, Any]]:
+    def transcribe_audio_whisperx(audio_path:str) -> List[Dict[str, Any]]:
         """Transcribe audio using WhisperX with better timestamps"""
         print(f"Transcribing audio from {audio_path}")
         # Load audio

@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  # Redis - Message Broker and Result Backend
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # API Gateway - FastAPI application
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_BASE_PATH=/app/storage
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Download Workers - Handle video downloading (I/O bound)
+  download-worker:
+    build:
+      context: .
+      dockerfile: download-worker/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_BASE_PATH=/app/storage
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      replicas: 2  # 2 workers × 10 concurrency = 20 concurrent downloads
+    restart: unless-stopped
+
+  # Transcribe Workers - Handle audio transcription and AI analysis (GPU bound)
+  transcribe-worker:
+    build:
+      context: .
+      dockerfile: transcribe-worker/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_BASE_PATH=/app/storage
+      - GEMINI_API_KEY=AIzaSyDEFuu_5nl0zc7o7qK7z7ocEx9EqcI9z0E
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      replicas: 2  # 2 workers × 2 concurrency = 4 concurrent transcriptions (1 per GPU)
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Clip Workers - Handle video clip generation (CPU bound)
+  clip-worker:
+    build:
+      context: .
+      dockerfile: clip-worker/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_BASE_PATH=/app/storage
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      replicas: 3  # 3 workers × 4 concurrency = 12 concurrent clip creations
+    restart: unless-stopped
+
+  # Celery Flower - Web-based monitoring tool
+  flower:
+    image: mher/flower:0.9.7
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - FLOWER_PORT=5555
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Nginx - Reverse proxy and file serving
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./storage:/usr/share/nginx/html/storage:ro
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local

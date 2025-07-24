@@ -3,6 +3,12 @@ import tempfile
 import uuid
 import yt_dlp
 import logging
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from shared.celery_config import celery_app, VIDEO_STORAGE_PATH
 from shared.models import TaskStatus
 from shared.utils import update_task_status, cleanup_files
@@ -15,7 +21,7 @@ def download_video(url: str) -> tuple[str, dict]:
     """Download video in highest quality and return path + video info"""
     video_id = str(uuid.uuid4())[:8]
     output_path = os.path.join(VIDEO_STORAGE_PATH, f"video_{video_id}.%(ext)s")
-    
+    print("hi this was executed")
     ydl_opts = {
         'format': 'best[ext=mp4]/best',
         'outtmpl': output_path,
@@ -46,7 +52,7 @@ def download_video(url: str) -> tuple[str, dict]:
         logger.info(f"Video downloaded: {video_path}, size: {os.path.getsize(video_path)} bytes")
         return video_path, video_info
 
-@celery_app.task(name='download_worker.tasks.download_task', bind=True)
+@celery_app.task(name='download_task', bind=True)
 def download_task(self, task_id, url, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None):
     """Download video task - handles queuing of next task to appropriate queue"""
     logger.info(f"[DOWNLOAD_WORKER] Starting download task for task_id: {task_id}, url: {url}")
@@ -66,7 +72,7 @@ def download_task(self, task_id, url, aspect_ratio=None, multiple_clips=None, cl
             logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Queuing transcribe task to 'transcribe' queue")
             # Queue to transcribe queue
             celery_app.send_task(
-                'transcribe_worker.tasks.transcribe_task',
+                'transcribe_task',
                 args=[task_id, video_path, url, aspect_ratio, multiple_clips, video_info],
                 queue='transcribe',
                 routing_key='transcribe'
@@ -77,7 +83,7 @@ def download_task(self, task_id, url, aspect_ratio=None, multiple_clips=None, cl
             logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Manual clip params - start: {start_time}, end: {end_time}")
             # Queue to clip queue
             celery_app.send_task(
-                'clip_worker.tasks.manual_clip_task',
+                'manual_clip_task',
                 args=[task_id, video_path, start_time, end_time, aspect_ratio],
                 queue='clip',
                 routing_key='clip'

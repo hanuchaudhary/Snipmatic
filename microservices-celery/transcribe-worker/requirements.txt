@@ -4,5 +4,5 @@ whisperx
 torch
 torchaudio
 ffmpeg-python
-google-generativeai
+google-genai
 pydantic

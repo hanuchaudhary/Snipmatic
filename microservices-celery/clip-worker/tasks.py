@@ -4,6 +4,11 @@ import zipfile
 import ffmpeg
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.celery_config import celery_app, CLIP_STORAGE_PATH
 from shared.models import TaskStatus, ViralMoment
 from shared.utils import update_task_status, cleanup_files, time_to_seconds
@@ -62,7 +67,7 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
         logger.error(f"FFmpeg error during clip creation: {e}")
         raise Exception(f"Clip creation failed: {str(e)}")
 
-@celery_app.task(name='clip_worker.tasks.clip_task', bind=True)
+@celery_app.task(name='clip_task', bind=True)
 def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_clips):
     """Clip generation task for AI-identified viral moments"""
     logger.info(f"[CLIP_WORKER] Starting AI clip task for task_id: {task_id}, video_path: {video_path}")
@@ -151,7 +156,7 @@ def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_c
             logger.info(f"[CLIP_WORKER] Task {task_id}: Cleaning up video file: {video_path}")
             cleanup_files(video_path)
 
-@celery_app.task(name='clip_worker.tasks.manual_clip_task', bind=True)
+@celery_app.task(name='manual_clip_task', bind=True)
 def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_ratio):
     """Manual clip creation task"""
     logger.info(f"[CLIP_WORKER] Starting manual clip task for task_id: {task_id}")

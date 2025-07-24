@@ -2,6 +2,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
 import logging
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from shared.models import ClipRequest, ClipResponse, TaskStatus
 from shared.utils import update_task_status, get_task_status
 from shared.celery_config import celery_app
@@ -39,8 +45,8 @@ async def create_video_clip(request: ClipRequest):
             # Queue AI workflow starting with download task
             logger.info(f"[API] Queuing download task for AI workflow - task {task_id}")
             celery_app.send_task(
-                'download_worker.tasks.download_task',
-                args=[task_id, request.url, request.aspectRatio, request.multipleClips, "AI"],
+                'download_task',
+                args=[task_id, request.url, request.aspectRatio, request.multipleClips, "AI", None, None],
                 queue='download',
                 routing_key='download'
             )
@@ -50,7 +56,7 @@ async def create_video_clip(request: ClipRequest):
             # Queue manual workflow starting with download task
             logger.info(f"[API] Queuing download task for manual workflow - task {task_id}")
             celery_app.send_task(
-                'download_worker.tasks.download_task',
+                'download_task',
                 args=[task_id, request.url, request.aspectRatio, None, "MANUAL", request.startTime, request.endTime],
                 queue='download',
                 routing_key='download'

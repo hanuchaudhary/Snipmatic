@@ -3,6 +3,11 @@ import json
 import logging
 from typing import Optional
 from datetime import datetime
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.models import TaskStatus
 from shared.celery_config import REDIS_URL
 

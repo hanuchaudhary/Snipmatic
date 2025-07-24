@@ -2,28 +2,23 @@ from celery import Celery
 import os
 
 # Redis/Message Broker Configuration
-REDIS_URL = os.getenv('REDIS_URL', 'rediss://default:AbMlAAIjcDEwY2E3NTBjOGM1MmQ0OTVhYjY5OTZkNmRmYjU5NGYzZHAxMA@summary-molly-45861.upstash.io:6379?ssl_cert_reqs=CERT_NONE')
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/')
 
 # Celery application instance
 celery_app = Celery(
     'clipper_workers',
     broker=REDIS_URL,
-    backend=REDIS_URL,
-    include=[
-        'download_worker.tasks',
-        'transcribe_worker.tasks', 
-        'clip_worker.tasks'
-    ]
+    backend=REDIS_URL
 )
 
 # Celery configuration
 celery_app.conf.update(
-    # Task routing - Different queues for different workers
+    # Task routing - Use simple task names that work across containers
     task_routes={
-        'download_worker.tasks.download_task': {'queue': 'download'},
-        'transcribe_worker.tasks.transcribe_task': {'queue': 'transcribe'},
-        'clip_worker.tasks.clip_task': {'queue': 'clip'},
-        'clip_worker.tasks.manual_clip_task': {'queue': 'clip'},
+        'download_task': {'queue': 'download'},
+        'transcribe_task': {'queue': 'transcribe'},
+        'clip_task': {'queue': 'clip'},
+        'manual_clip_task': {'queue': 'clip'},
     },
     
     # Worker configuration
@@ -51,13 +46,16 @@ celery_app.conf.update(
     
     # Rate limiting and concurrency
     task_annotations={
-        'transcribe_worker.tasks.transcribe_task': {
+        'transcribe_task': {
             'rate_limit': '2/m',  # Max 2 transcriptions per minute
         },
-        'download_worker.tasks.download_task': {
+        'download_task': {
             'rate_limit': '10/m',  # Max 10 downloads per minute
         },
-        'clip_worker.tasks.clip_task': {
+        'clip_task': {
+            'rate_limit': '20/m',  # Max 20 clips per minute
+        },
+        'manual_clip_task': {
             'rate_limit': '20/m',  # Max 20 clips per minute
         },
     },

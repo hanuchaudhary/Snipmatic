@@ -6,6 +6,11 @@ import torch
 import logging
 import json
 from google import genai
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.celery_config import celery_app, AUDIO_STORAGE_PATH, GEMINI_API_KEY
 from shared.models import TaskStatus, ViralMoment
 from shared.utils import update_task_status, cleanup_files
@@ -142,7 +147,7 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
         raise Exception(f"AI analysis failed: {str(e)}")
 
 @celery_app.task(
-    name='transcribe_worker.tasks.transcribe_task', 
+    name='transcribe_task', 
     bind=True,
     rate_limit='2/m'  # Max 2 transcriptions per minute per worker
 )
@@ -195,7 +200,7 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
         logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Queuing clip task to 'clip' queue")
         # Queue to clip queue
         celery_app.send_task(
-            'clip_worker.tasks.clip_task',
+            'clip_task',
             args=[task_id, video_path, viral_moments_serialized, aspect_ratio, multiple_clips],
             queue='clip',
             routing_key='clip'

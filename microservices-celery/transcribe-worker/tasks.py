@@ -9,8 +9,7 @@ from google import genai
 import sys
 import os
 
-# Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from shared.celery_config import celery_app, AUDIO_STORAGE_PATH, GEMINI_API_KEY
 from shared.models import TaskStatus, ViralMoment
 from shared.utils import update_task_status, cleanup_files

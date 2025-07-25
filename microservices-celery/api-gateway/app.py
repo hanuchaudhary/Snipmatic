@@ -6,7 +6,7 @@ import sys
 import os
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 from shared.models import ClipRequest, ClipResponse, TaskStatus
 from shared.utils import update_task_status, get_task_status

@@ -6,8 +6,7 @@ import logging
 import sys
 import os
 
-# Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 from shared.celery_config import celery_app, VIDEO_STORAGE_PATH
 from shared.models import TaskStatus

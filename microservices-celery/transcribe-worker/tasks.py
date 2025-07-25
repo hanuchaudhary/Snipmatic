@@ -79,34 +79,67 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
     transcript_text = "\n".join([f"[{seg['start']:.1f}s - {seg['end']:.1f}s]: {seg['text']}" for seg in segments])
     
     prompt = f"""
-    Analyze this video transcript and identify the most viral/engaging moments. Consider:
-    - Funny, surprising, or emotional content
-    - Key insights or revelations  
-    - Quotable moments
-    - Peak engagement points
-    - Dramatic or climactic moments
+        You are an expert viral content analyst. Your task is to analyze a YouTube video transcript and extract moments that are highly engaging and suitable for short-form content on platforms like TikTok, YouTube Shorts, and Instagram Reels.
 
-    Video Info:
-    Title: {video_info.get('title', 'Unknown')}
-    Description: {video_info.get('description', '')[:200]}...
-    Duration: {video_info.get('duration', 0)} seconds
+        ## Goal:
+        Identify moments from the transcript that:
+        - Are emotionally engaging (funny, shocking, inspiring, heartfelt)
+        - Contain strong hooks or quotable lines
+        - Can stand alone as compelling 30–60 second clips
+        - Would likely generate shares, comments, or reactions
 
-    Transcript:
-    {transcript_text}
+        ## Video Information:
+        Title: {video_info.get('title', 'Unknown')}
+        Duration: {video_info.get('duration', 'Unknown')} seconds
 
-    Return up to 5 viral moments in this JSON format:
-    [
-        {{
-            "start_time": 123.5,
-            "end_time": 156.2, 
-            "content": "Brief description of what happens",
-            "reason": "Why this moment is viral/engaging",
-            "confidence_score": 0.85
-        }}
-    ]
-    
-    Make sure start_time < end_time and moments are 15-60 seconds long.
-    """
+        ## Guidelines:
+
+        1. Read the full transcript.
+        2. Identify up to 3 of the most compelling moments that meet the criteria above.
+        - If the video is **short (<10 minutes)**: Extract 1–2 clips, ideally 30–45 seconds.
+        - If the video is **medium (10–30 minutes)**: Extract 2–3 clips, ideally 45–60 seconds.
+        - If the video is **long (>30 minutes)**: Extract 3 or more clips, but prioritize quality.
+        3. Each clip must include:
+        - `start_time`: float (in seconds)
+        - `end_time`: float (in seconds)
+        - `content`: the transcript excerpt
+        - `reason`: why this moment is compelling/viral
+        - `confidence_score`: float (0.0–1.0) based on your certainty
+
+        ## Format:
+        Respond with a JSON array:
+        [
+            {{
+                "start_time": 102.5,
+                "end_time": 141.0,
+                "content": "This moment blew my mind because...",
+                "reason": "It includes a surprising reveal that hooks the viewer.",
+                "confidence_score": 0.92
+            }},
+            ...
+        ]
+
+        ## Example Output:
+        [
+            {{
+                "start_time": 45.2,
+                "end_time": 75.0,
+                "content": "I never told anyone this before, but here's what happened...",
+                "reason": "This is a vulnerable and shocking moment likely to resonate emotionally.",
+                "confidence_score": 0.89
+            }},
+            {{
+                "start_time": 300.0,
+                "end_time": 340.0,
+                "content": "And then I said to him, 'You're not even real!'",
+                "reason": "This moment is humorous, has good pacing, and includes a memorable quote.",
+                "confidence_score": 0.83
+            }}
+        ]
+
+        ## Transcript:
+        {transcript_text}
+        """
     
     try:
         response = gemini_client.models.generate_content(
@@ -217,7 +250,7 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
         # Cleanup audio file immediately
         if audio_path and os.path.exists(audio_path):
             logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Cleaning up audio file: {audio_path}")
-            cleanup_files(audio_path)
+            # cleanup_files(audio_path)
 
 if __name__ == "__main__":
     # Run as Celery worker - GPU bound, limit to 1-2 per GPU

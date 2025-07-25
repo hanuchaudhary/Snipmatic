@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+yt-dlp
+whisperx
+google-genai
+ffmpeg-python
+boto3
+python-dotenv
+pydantic
+python-multipart
+torch
+torchaudio
+celery[redis]
+redis

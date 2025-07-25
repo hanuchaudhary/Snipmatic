@@ -88,7 +88,7 @@ QUEUE_CONFIG = {
 }
 
 # Storage paths
-STORAGE_BASE_PATH = os.getenv('STORAGE_BASE_PATH', '/tmp/clipper')
+STORAGE_BASE_PATH = os.getenv('STORAGE_BASE_PATH', '/home/kush-chaudhary/CodeGround/SystemProj/Clipper/microservices-celery/storage')
 VIDEO_STORAGE_PATH = os.path.join(STORAGE_BASE_PATH, 'videos')
 AUDIO_STORAGE_PATH = os.path.join(STORAGE_BASE_PATH, 'audio')
 CLIP_STORAGE_PATH = os.path.join(STORAGE_BASE_PATH, 'clips')

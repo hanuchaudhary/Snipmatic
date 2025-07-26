@@ -103,8 +103,8 @@ if __name__ == "__main__":
         'worker', 
         '-Q', 'download',
         '--loglevel=info', 
-        '--pool=prefork',
-        '--concurrency=10', 
-        '--prefetch-multiplier=2',
+        '-P', 'gevent,
+        '--concurrency=30', 
+        '--prefetch-multiplier=1',
         '-n', 'download_worker@%h'
     ])

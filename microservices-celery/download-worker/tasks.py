@@ -1,12 +1,10 @@
+from gevent import monkey
+monkey.patch_all()
 import os
-import tempfile
 import uuid
 import yt_dlp
 import logging
-import sys
 import os
-
-
 
 from shared.celery_config import celery_app, VIDEO_STORAGE_PATH
 from shared.models import TaskStatus
@@ -103,8 +101,8 @@ if __name__ == "__main__":
         'worker', 
         '-Q', 'download',
         '--loglevel=info', 
-        '--pool=prefork',
-        '--concurrency=10', 
-        '--prefetch-multiplier=2',
+        '-P', 'gevent',
+        '--concurrency=30', 
+        '--prefetch-multiplier=1',
         '-n', 'download_worker@%h'
     ])

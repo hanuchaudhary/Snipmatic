@@ -82,22 +82,22 @@ export function CreateClipPage() {
   const onSubmit = async (data: FormValues) => {
     try {
       setIsProcessing(true);
-      
+
       if (!watchUrl) {
         toast.error("Please enter a valid YouTube URL");
         return;
       }
-      
+
       if (watchClipType === "MANUAL" && !watch("startTime")) {
         toast.error("Please enter a valid start time");
         return;
       }
-      
+
       if (watchClipType === "MANUAL" && !watch("endTime")) {
         toast.error("Please enter a valid end time");
         return;
       }
-      
+
       if (watchClipType === "MANUAL") {
         if (
           watch("startTime") === "00:00:00" &&
@@ -106,22 +106,21 @@ export function CreateClipPage() {
           toast.error("Please enter a valid start and end time");
           return;
         }
-        
+
         function timeToSeconds(timeStr: string): number {
           const [hours, minutes, seconds] = timeStr.split(":").map(Number);
           return hours * 3600 + minutes * 60 + seconds;
         }
-        
+
         const startTime = watch("startTime");
         const endTime = watch("endTime");
         const startSeconds = timeToSeconds(startTime);
         const endSeconds = timeToSeconds(endTime);
-        
+
         if (startSeconds >= endSeconds) {
           toast.error("Start time must be before end time");
           return;
         }
-        
         if (watchMultiple) {
           setValue("multipleClips", false);
         }
@@ -134,9 +133,9 @@ export function CreateClipPage() {
           return;
         }
       }
-      
+
       toast.success("Processing your video...");
-      
+
       const response = await axios.post(
         `${BACKEND_URL}/clip`,
         {
@@ -180,9 +179,32 @@ export function CreateClipPage() {
     }
   };
 
+  const handlefetchStatus = async () => {
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/status/8b86e4b2-3014-40e3-b4b4-45916b1106bd`
+      );
+      const status = response.data.status;
+      console.log("Current status:", response.data);
+      if (status === "processing") {
+        toast.error("Video is already being processed. Please wait.");
+        return;
+      }
+    } catch (error) {
+      toast.error(
+        `An error occurred while fetching status: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen md:pt-0 pt-16 p-4 flex items-center justify-center">
       <div className="container max-w-2xl mx-auto space-y-4">
+      <Button onClick={handlefetchStatus} className="">
+        Reset Form
+      </Button>
         <AnimatePresence mode="wait">
           {thumbnail ? (
             <motion.div

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Moon, Sun } from "lucide-react";
 import { motion } from "motion/react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
 
 const themes = [
   { key: "light", icon: Sun, label: "Light theme" },
@@ -13,11 +13,11 @@ const themes = [
 
 export const ThemeSwitcher = () => {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  // const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  // useEffect(() => setMounted(true), []);
 
-  if (!mounted) return null;
+  // if (!mounted) return null;
 
   return (
     <div
@@ -36,7 +36,7 @@ export const ThemeSwitcher = () => {
             aria-label={label}
           >
             {isActive && (
-              <motion.div
+              <motion.span
                 layoutId="activeTheme"
                 className="absolute inset-0 rounded-full bg-secondary"
                 transition={{ type: "spring", duration: 0.5 }}

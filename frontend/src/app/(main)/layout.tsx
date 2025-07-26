@@ -13,7 +13,7 @@ export default function ClipLayout({
   children: React.ReactNode;
 }>) {
   return (
-      <div className={`dark:bg-black/10 bg-white/30 w-full`}>
+      <div className={`dark:bg-black/10 bg-white/30 w-full`} suppressHydrationWarning>
         <Navbar />
         <div className="px-4">{children}</div>
           <div className="fixed inset-0 z-[-1]">

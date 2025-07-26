@@ -2,3 +2,4 @@ celery[redis]
 redis
 yt-dlp
 pydantic
+gevent

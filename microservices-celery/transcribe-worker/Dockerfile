@@ -2,6 +2,9 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
+# Create a non-root user
+RUN useradd -m celeryuser
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
@@ -9,16 +12,18 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy shared modules
+# Copy shared modules and worker code
 COPY shared/ ./shared/
-
-# Copy worker code
 COPY transcribe-worker/ ./
 
-# Install dependencies
+# Create storage directories and set permissions before switching user
+RUN mkdir -p /app/storage/videos /app/storage/audio /app/storage/clips && \
+    chown -R celeryuser:celeryuser /app
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create storage directories
-RUN mkdir -p /app/storage/videos /app/storage/audio /app/storage/clips
+# Switch to non-root user
+USER celeryuser
 
 CMD ["python", "tasks.py"]

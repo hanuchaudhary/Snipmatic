@@ -50,10 +50,10 @@ def download_video(url: str) -> tuple[str, dict]:
         return video_path, video_info
 
 @celery_app.task(name='download_task', bind=True)
-def download_task(self, task_id, url, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None):
+def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None):
     """Download video task - handles queuing of next task to appropriate queue"""
     logger.info(f"[DOWNLOAD_WORKER] Starting download task for task_id: {task_id}, url: {url}")
-    logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: clip_type={clip_type}, aspect_ratio={aspect_ratio}, multiple_clips={multiple_clips}")
+    logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: clip_type={clip_type}, aspect_ratio={aspect_ratio}, multiple_clips={multiple_clips}, user_id={user_id}")
     
     try:
         logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Updating status to DOWNLOADING")
@@ -70,7 +70,7 @@ def download_task(self, task_id, url, aspect_ratio=None, multiple_clips=None, cl
             # Queue to transcribe queue
             celery_app.send_task(
                 'transcribe_task',
-                args=[task_id, video_path, url, aspect_ratio, multiple_clips, video_info],
+                args=[task_id, video_path, url, aspect_ratio, multiple_clips, video_info, user_id],
                 queue='transcribe',
                 routing_key='transcribe'
             )
@@ -81,7 +81,7 @@ def download_task(self, task_id, url, aspect_ratio=None, multiple_clips=None, cl
             # Queue to clip queue
             celery_app.send_task(
                 'manual_clip_task',
-                args=[task_id, video_path, start_time, end_time, aspect_ratio],
+                args=[task_id, video_path, start_time, end_time, aspect_ratio, user_id],
                 queue='clip',
                 routing_key='clip'
             )

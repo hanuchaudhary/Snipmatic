@@ -6,8 +6,11 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
 import os
+import boto3
 
 # Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from shared.celery_config import celery_app, CLIP_STORAGE_PATH
 from shared.models import TaskStatus, ViralMoment
 from shared.utils import update_task_status, cleanup_files, time_to_seconds
@@ -15,6 +18,83 @@ from shared.utils import update_task_status, cleanup_files, time_to_seconds
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+
+s3_client = None
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and S3_BUCKET_NAME:
+    try:
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+            region_name=AWS_REGION
+        )
+        logger.info("S3 client initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize S3 client: {str(e)}")
+        s3_client = None
+else:
+    logger.warning("S3 credentials not configured - S3 upload will be disabled")
+
+
+def upload_to_s3(file_path: str, clip_id: str, user_id: str, is_zip: bool = False) -> str:
+    """Upload clip to S3 and return URL"""
+    if not S3_BUCKET_NAME or not s3_client:
+        logger.warning("S3 not configured, skipping S3 upload")
+        return ""
+    
+    if is_zip:
+        s3_key = f"clips/{user_id}/{clip_id}.zip"
+        content_type = 'application/zip'
+    else:
+        s3_key = f"clips/{user_id}/{clip_id}.mp4"
+        content_type = 'video/mp4'
+    
+    logger.info(f"Uploading {file_path} to S3 bucket {S3_BUCKET_NAME} with key {s3_key}")
+    
+    try:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+            
+        s3_client.upload_file(
+            file_path,
+            S3_BUCKET_NAME,
+            s3_key,
+            ExtraArgs={'ContentType': content_type}
+        )
+        
+        cloudfront_url = f"https://d10d2f3sgu39wn.cloudfront.net/{s3_key}"
+        logger.info(f"Upload successful. CloudFront URL: {cloudfront_url}")
+        return cloudfront_url
+        
+    except Exception as e:
+        logger.error(f"Failed to upload to S3: {str(e)}")
+        raise Exception(f"Failed to upload to S3: {str(e)}")
+
+
+def upload_clips_to_s3(clip_paths: list, user_id: str) -> list:
+    """Upload multiple clips to S3 and return URLs"""
+    s3_urls = []
+    
+    for clip_path in clip_paths:
+        try:
+            filename = os.path.basename(clip_path)
+            clip_id = filename.replace('.mp4', '')
+            
+            s3_url = upload_to_s3(clip_path, clip_id, user_id, is_zip=False)
+            s3_urls.append(s3_url)
+            logger.info(f"Uploaded clip to S3: {s3_url}")
+            
+        except Exception as e:
+            logger.error(f"Failed to upload clip {clip_path}: {str(e)}")
+            s3_urls.append("")  # Add empty string to maintain index alignment
+    
+    return s3_urls
+
 
 def create_clip(video_path: str, start_time: float, end_time: float, aspect_ratio: str) -> str:
     """Create a clip from video with specified aspect ratio"""
@@ -104,10 +184,10 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
 
 
 @celery_app.task(name='clip_task', bind=True)
-def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_clips):
+def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_clips, user_id):
     """Clip generation task for AI-identified viral moments"""
     logger.info(f"[CLIP_WORKER] Starting AI clip task for task_id: {task_id}, video_path: {video_path}")
-    logger.info(f"[CLIP_WORKER] Task {task_id}: aspect_ratio={aspect_ratio}, multiple_clips={multiple_clips}")
+    logger.info(f"[CLIP_WORKER] Task {task_id}: aspect_ratio={aspect_ratio}, multiple_clips={multiple_clips}, user_id={user_id}")
     logger.info(f"[CLIP_WORKER] Task {task_id}: Processing {len(viral_moments)} viral moments")
     
     try:
@@ -152,8 +232,13 @@ def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_c
             clip_paths.append(clip_path)
             logger.info(f"[CLIP_WORKER] Task {task_id}: Single clip created: {clip_path}")
         
+        # Upload clips to S3
+        logger.info(f"[CLIP_WORKER] Task {task_id}: Uploading clips to S3")
+        s3_urls = upload_clips_to_s3(clip_paths, user_id)
+        
         # Create ZIP if multiple clips
         zip_path = None
+        zip_s3_url = ""
         if multiple_clips and len(clip_paths) > 1:
             logger.info(f"[CLIP_WORKER] Task {task_id}: Creating ZIP file for {len(clip_paths)} clips")
             zip_path = os.path.join(CLIP_STORAGE_PATH, f"{task_id}.zip")
@@ -163,12 +248,15 @@ def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_c
                     zipf.write(clip, clip_name)
                     logger.info(f"[CLIP_WORKER] Task {task_id}: Added {clip_name} to ZIP")
             logger.info(f"[CLIP_WORKER] Task {task_id}: ZIP file created: {zip_path}")
-        
+            zip_s3_url = upload_to_s3(zip_path, task_id, user_id, is_zip=True)
+
         # Prepare result
         result = {
             "viral_moments": viral_moments,
             "clip_paths": clip_paths,
-            "zip_path": zip_path
+            "s3_urls": s3_urls,
+            "zip_path": zip_path,
+            "zip_s3_url": zip_s3_url
         }
         
         logger.info(f"[CLIP_WORKER] Task {task_id}: AI clip task completed successfully")
@@ -193,10 +281,10 @@ def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_c
             # cleanup_files(video_path)
 
 @celery_app.task(name='manual_clip_task', bind=True)
-def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_ratio):
+def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_ratio, user_id):
     """Manual clip creation task"""
     logger.info(f"[CLIP_WORKER] Starting manual clip task for task_id: {task_id}")
-    logger.info(f"[CLIP_WORKER] Task {task_id}: video_path={video_path}, start={start_time}, end={end_time}, aspect_ratio={aspect_ratio}")
+    logger.info(f"[CLIP_WORKER] Task {task_id}: video_path={video_path}, start={start_time}, end={end_time}, aspect_ratio={aspect_ratio}, user_id={user_id}")
     
     try:
         logger.info(f"[CLIP_WORKER] Task {task_id}: Updating status to CREATING_CLIPS")
@@ -216,10 +304,17 @@ def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_rat
         )
         logger.info(f"[CLIP_WORKER] Task {task_id}: Clip created successfully: {clip_path}")
         
+        logger.info(f"[CLIP_WORKER] Task {task_id}: Uploading clip to S3")
+        s3_urls = upload_clips_to_s3([clip_path], user_id)
+        s3_url = s3_urls[0] if s3_urls else ""
+        
         # Prepare result
         result = {
             "clip_paths": [clip_path],
-            "zip_path": None
+            "s3_urls": s3_urls,
+            "s3_url": s3_url,
+            "zip_path": None,
+            "zip_s3_url": ""
         }
         
         logger.info(f"[CLIP_WORKER] Task {task_id}: Manual clip task completed successfully")

@@ -183,10 +183,10 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
     bind=True,
     rate_limit='2/m'  # Max 2 transcriptions per minute per worker
 )
-def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info):
+def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id):
     """Transcription task - queues clip task after completion"""
     logger.info(f"[TRANSCRIBE_WORKER] Starting transcribe task for task_id: {task_id}, video_path: {video_path}")
-    logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: original_url={original_url}, aspect_ratio={aspect_ratio}, multiple_clips={multiple_clips}")
+    logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: original_url={original_url}, aspect_ratio={aspect_ratio}, multiple_clips={multiple_clips}, user_id={user_id}")
     audio_path = None
     
     try:
@@ -233,7 +233,7 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
         # Queue to clip queue
         celery_app.send_task(
             'clip_task',
-            args=[task_id, video_path, viral_moments_serialized, aspect_ratio, multiple_clips],
+            args=[task_id, video_path, viral_moments_serialized, aspect_ratio, multiple_clips, user_id],
             queue='clip',
             routing_key='clip'
         )

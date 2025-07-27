@@ -18,6 +18,7 @@ class ClipType(str, Enum):
     MANUAL = "MANUAL"
 
 class ClipRequest(BaseModel):
+    user_id: str
     url: str
     startTime: Optional[str] = None
     endTime: Optional[str] = None
@@ -44,4 +45,7 @@ class TaskResult(BaseModel):
     """Result structure for completed tasks"""
     viral_moments: Optional[List[ViralMoment]] = None
     clip_paths: Optional[List[str]] = None
+    s3_urls: Optional[List[str]] = None
+    s3_url: Optional[str] = None  # For single clip cases
     zip_path: Optional[str] = None
+    zip_s3_url: Optional[str] = None

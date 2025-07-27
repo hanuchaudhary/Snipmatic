@@ -17,13 +17,16 @@
     "@hookform/resolvers": "^5.0.1",
     "@prisma/client": "6.12.0",
     "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-progress": "^1.1.7",
     "@radix-ui/react-select": "^2.2.4",
     "@radix-ui/react-slot": "^1.2.2",
     "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-tabs": "^1.1.12",
     "@tabler/icons-react": "^3.31.0",
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.12.0",
     "lucide-react": "^0.510.0",
     "motion": "^12.11.4",
@@ -37,7 +40,8 @@
     "react-hook-form": "^7.56.4",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
-    "zod": "^3.24.4"
+    "zod": "^3.24.4",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

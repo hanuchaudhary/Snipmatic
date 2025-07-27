@@ -2,3 +2,4 @@ celery[redis]
 redis
 ffmpeg-python
 pydantic
+boto3

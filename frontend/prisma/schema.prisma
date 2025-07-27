@@ -92,7 +92,6 @@ model Subscription {
   id              String   @id @default(cuid())
   userId          String   @unique
   status          SubscriptionStatus @default(INACTIVE)
-  priceId         String   @default("price_5_dollar")
   amount          Int      @default(500)
   currency        String   @default("usd")
   

@@ -22,7 +22,7 @@ export function Navbar() {
             </span>
           </Link>
           <Button variant="default" asChild>
-            <Link href="/pricing">Upgrade</Link>
+            <Link href="/subscription">Upgrade</Link>
           </Button>
         </div>
         <div className="flex items-center gap-2">

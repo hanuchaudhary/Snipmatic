@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { SubscriptionDialog } from "./SubscribeButton";
 
 interface PricingCardProps {
   title: string;
@@ -36,9 +37,13 @@ export function PricingCard({
             <p className="text-muted-foreground text-sm">{description}</p>
           </div>
 
-          <Button asChild className="w-inline-block" variant={buttonVariant}>
-            <Link href="">Get Started</Link>
-          </Button>
+          {title === "Snipper" ? (
+            <SubscriptionDialog />
+          ) : (
+            <Button asChild className="w-inline-block" variant={buttonVariant}>
+              Start Snipping
+            </Button>
+          )}
         </div>
       </div>
 

@@ -37,8 +37,8 @@ export function PricingPage() {
             />
 
             <PricingCard
-              title="Pro"
-              price="$5 / mo"
+              title="Snipper"
+              price="$4.9 / mo"
               description="For creators who need unlimited power"
               buttonVariant="default"
               highlight

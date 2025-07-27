@@ -135,13 +135,9 @@ export function Dashboard() {
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto border-2 border-muted bg-secondary rounded-[34px] h-full min-h-[80vh] p-2.5">
         <div className="max-w-7xl mx-auto border-4 rounded-3xl h-full min-h-[80vh] p-6 bg-card">
-          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold">Video Jobs Dashboard</h1>
-              <p className="text-muted-foreground mt-1">
-                Track and manage your video processing jobs
-              </p>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -156,12 +152,6 @@ export function Dashboard() {
                 />
                 Refresh
               </Button>
-              {completedJobs.length > 0 && (
-                <Button variant="outline" onClick={clearCompletedJobs}>
-                  <TrashIcon className="h-4 w-4 mr-2" />
-                  Clear Completed
-                </Button>
-              )}
             </div>
           </div>
 

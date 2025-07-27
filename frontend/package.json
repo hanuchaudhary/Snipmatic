@@ -16,6 +16,7 @@
     "@auth/prisma-adapter": "^2.10.0",
     "@hookform/resolvers": "^5.0.1",
     "@prisma/client": "6.12.0",
+    "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-progress": "^1.1.7",
     "@radix-ui/react-select": "^2.2.4",
@@ -27,6 +28,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dodopayments": "^1.43.1",
     "framer-motion": "^12.12.0",
     "lucide-react": "^0.510.0",
     "motion": "^12.11.4",
@@ -39,6 +41,7 @@
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.56.4",
     "sonner": "^2.0.3",
+    "standardwebhooks": "^1.0.0",
     "tailwind-merge": "^3.3.0",
     "zod": "^3.24.4",
     "zustand": "^5.0.6"

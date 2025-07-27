@@ -20,6 +20,7 @@ import {
 } from "@tabler/icons-react";
 import { cn, downloadFile } from "@/lib/utils";
 import { BACKEND_URL } from "../../../config";
+import { useSession } from "next-auth/react";
 
 const formSchema = z.object({
   url: z
@@ -37,6 +38,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export function CreateClipPage() {
+  const { data: session } = useSession();
+
   const {
     control,
     handleSubmit,
@@ -146,8 +149,9 @@ export function CreateClipPage() {
           subtitles: data.subtitles,
           clipType: data.clipType,
           multipleClips: data.multipleClips,
+          user_id: session?.user?.id || "",
         },
-        {
+      {
           headers: {
             "Content-Type": "application/json",
           },
@@ -202,9 +206,9 @@ export function CreateClipPage() {
   return (
     <div className="min-h-screen md:pt-0 pt-16 p-4 flex items-center justify-center">
       <div className="container max-w-2xl mx-auto space-y-4">
-      <Button onClick={handlefetchStatus} className="">
-        Reset Form
-      </Button>
+        <Button onClick={handlefetchStatus} className="">
+          Reset Form
+        </Button>
         <AnimatePresence mode="wait">
           {thumbnail ? (
             <motion.div

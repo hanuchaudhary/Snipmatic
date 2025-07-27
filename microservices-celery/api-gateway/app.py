@@ -5,8 +5,11 @@ import logging
 import sys
 import os
 
-# Add parent directory to path for imports
+import sys
+import os
 
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared.models import ClipRequest, ClipResponse, TaskStatus
 from shared.utils import update_task_status, get_task_status
@@ -39,25 +42,27 @@ async def create_video_clip(request: ClipRequest):
         update_task_status(task_id, TaskStatus.QUEUED, 0, "Task queued for processing")
         
         logger.info(f"[API] Created task {task_id} for {request.clipType} clip")
-        logger.info(f"[API] Task {task_id}: URL={request.url}, aspect_ratio={request.aspectRatio}")
+        logger.info(f"[API] Task {task_id}: URL={request.url}, aspect_ratio={request.aspectRatio}, user_id={request.user_id}")
         
         if request.clipType == "AI":
+            logger.info(f"[API] Task {task_id}: AI clip params - multiple_clips={request.multipleClips}")
             # Queue AI workflow starting with download task
             logger.info(f"[API] Queuing download task for AI workflow - task {task_id}")
             celery_app.send_task(
                 'download_task',
-                args=[task_id, request.url, request.aspectRatio, request.multipleClips, "AI", None, None],
+                args=[task_id, request.url, request.user_id, request.aspectRatio, request.multipleClips, request.clipType, None, None],
                 queue='download',
                 routing_key='download'
             )
             logger.info(f"[API] Download task queued to 'download' queue for task {task_id}")
             
         else:  # MANUAL
+            logger.info(f"[API] Task {task_id}: Manual clip params - start_time={request.startTime}, end_time={request.endTime}")
             # Queue manual workflow starting with download task
             logger.info(f"[API] Queuing download task for manual workflow - task {task_id}")
             celery_app.send_task(
                 'download_task',
-                args=[task_id, request.url, request.aspectRatio, None, "MANUAL", request.startTime, request.endTime],
+                args=[task_id, request.url, request.user_id, request.aspectRatio, None, "MANUAL", request.startTime, request.endTime],
                 queue='download',
                 routing_key='download'
             )

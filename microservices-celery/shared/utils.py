@@ -95,3 +95,4 @@ def time_to_seconds(time_str: str) -> float:
             return float(parts[0])
     except:
         return 0.0
+

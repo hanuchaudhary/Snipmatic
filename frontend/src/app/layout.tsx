@@ -56,8 +56,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           <ThemeProvider attribute="class" defaultTheme="dark">
-            <main>{children}</main>
-
+              <main>{children}</main> 
             <Toaster position="top-center" className="border-none" />
           </ThemeProvider>
         </SessionProvider>

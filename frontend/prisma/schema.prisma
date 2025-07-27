@@ -67,15 +67,16 @@ model VerificationToken {
 model VideoJob {
   id              String   @id @default(cuid())
   userId          String
-  jobId           String?
+  taskId          String?
   youtubeUrl      String
   title           String?
-  s3Key          String?
-  description     String?
-  thumbnailUrl    String?
+  s3Key           String?
   status          JobStatus @default(PENDING)
+  progress        Int       @default(0)
+  statusMessage   String?
   errorMessage    String?
   clipsData       Json?
+  s3Urls          Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   completedAt     DateTime?
@@ -84,6 +85,7 @@ model VideoJob {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([taskId])
 }
 
 model Subscription {
@@ -129,6 +131,10 @@ model Transaction {
 
 enum JobStatus {
   PENDING
+  QUEUED
+  DOWNLOADING
+  TRANSCRIBING
+  CREATING_CLIPS
   COMPLETED
   FAILED
 }

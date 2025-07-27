@@ -18,9 +18,10 @@ import {
   IconCircleXFilled,
   IconLoader2,
 } from "@tabler/icons-react";
-import { cn, downloadFile } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { BACKEND_URL } from "../../../config";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   url: z
@@ -37,8 +38,25 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const getVideoTitle = async (url: string): Promise<string | undefined> => {
+  try {
+    // Extract video ID
+    const match = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
+    );
+    if (!match) return undefined;
+
+    // You can implement YouTube API integration here if needed
+    // For now, return a simple title
+    return `YouTube Video ${match[1].slice(0, 8)}`;
+  } catch {
+    return undefined;
+  }
+};
+
 export function CreateClipPage() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   const {
     control,
@@ -83,6 +101,11 @@ export function CreateClipPage() {
   }, [watchUrl]);
 
   const onSubmit = async (data: FormValues) => {
+    if (!session?.user?.id) {
+      toast.error("Please sign in to create clips");
+      return;
+    }
+
     try {
       setIsProcessing(true);
 
@@ -137,8 +160,9 @@ export function CreateClipPage() {
         }
       }
 
-      toast.success("Processing your video...");
+      toast.loading("Starting video processing...");
 
+      // Submit to backend
       const response = await axios.post(
         `${BACKEND_URL}/clip`,
         {
@@ -149,9 +173,9 @@ export function CreateClipPage() {
           subtitles: data.subtitles,
           clipType: data.clipType,
           multipleClips: data.multipleClips,
-          user_id: session?.user?.id || "",
+          user_id: session.user.id,
         },
-      {
+        {
           headers: {
             "Content-Type": "application/json",
           },
@@ -159,20 +183,34 @@ export function CreateClipPage() {
       );
 
       const resData = response.data;
-      if (resData.clip_url) {
-        toast.dismiss();
-        toast.success("Video processed successfully!");
 
-        toast.loading("Downloading your clip...");
-        const fileExtension = resData.clip_url.split(".").pop();
-        const fileName = `Snipmatic_Clip_${Date.now()}.${fileExtension}`;
-        await downloadFile(resData.clip_url, fileName);
+      if (resData.task_id) {
         toast.dismiss();
-        toast.success("Clip downloaded successfully!");
+
+        // Get video title
+        const title = await getVideoTitle(data.url);
+
+        // Create video job in database and start polling
+        const job = await axios.post(`${BACKEND_URL}/api/task`, {
+          userId: session.user.id,
+          taskId: resData.task_id,
+          youtubeUrl: data.url,
+          title: title || "Untitled Video",
+          status: "PENDING",
+          progress: 0,
+        });
+
+        if (job) {
+          toast.success("Video processing started!");
+          reset();
+        } else {
+          toast.error("Failed to create video job");
+        }
       } else {
-        toast.error("Failed to process video. Please try again.");
+        toast.error("Failed to start video processing");
       }
     } catch (error) {
+      toast.dismiss();
       toast.error(
         `An error occurred: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -183,32 +221,9 @@ export function CreateClipPage() {
     }
   };
 
-  const handlefetchStatus = async () => {
-    try {
-      const response = await axios.get(
-        `${BACKEND_URL}/status/8b86e4b2-3014-40e3-b4b4-45916b1106bd`
-      );
-      const status = response.data.status;
-      console.log("Current status:", response.data);
-      if (status === "processing") {
-        toast.error("Video is already being processed. Please wait.");
-        return;
-      }
-    } catch (error) {
-      toast.error(
-        `An error occurred while fetching status: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    }
-  };
-
   return (
     <div className="min-h-screen md:pt-0 pt-16 p-4 flex items-center justify-center">
       <div className="container max-w-2xl mx-auto space-y-4">
-        <Button onClick={handlefetchStatus} className="">
-          Reset Form
-        </Button>
         <AnimatePresence mode="wait">
           {thumbnail ? (
             <motion.div

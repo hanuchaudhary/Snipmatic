@@ -1,7 +1,7 @@
 import os
 import tempfile
 import ffmpeg
-import whisperx
+from faster_whisper import WhisperModel
 import torch
 import logging
 import json
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Initialize AI models (loaded once per worker)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 compute_type = "float16" if torch.cuda.is_available() else "int8"
-whisperx_model = whisperx.load_model("base", device, compute_type=compute_type)
+whisper_model = WhisperModel("base", device=device, compute_type=compute_type)
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 def extract_audio(video_path: str) -> str:
@@ -51,23 +51,27 @@ def extract_audio(video_path: str) -> str:
         raise Exception(f"Audio extraction failed: {str(e)}")
 
 def transcribe_audio_whisperx(audio_path: str) -> list:
-    """Transcribe audio using WhisperX"""
-    logger.info(f"Starting WhisperX transcription for: {audio_path}")
+    """Transcribe audio using faster-whisper"""
+    logger.info(f"Starting faster-whisper transcription for: {audio_path}")
     
     try:
-        # Load audio
-        audio = whisperx.load_audio(audio_path)
-        logger.info(f"Audio loaded, duration: {len(audio)/16000:.2f} seconds")
+        # Transcribe using faster-whisper
+        segments_generator, info = whisper_model.transcribe(audio_path, beam_size=5)
         
-        # Transcribe
-        result = whisperx_model.transcribe(audio, batch_size=16)
-        segments = result["segments"]
+        # Convert generator to list and format similar to whisperx
+        segments = []
+        for segment in segments_generator:
+            segments.append({
+                'start': segment.start,
+                'end': segment.end,
+                'text': segment.text
+            })
         
         logger.info(f"Transcription completed. Found {len(segments)} segments")
         return segments
         
     except Exception as e:
-        logger.error(f"WhisperX transcription failed: {e}")
+        logger.error(f"faster-whisper transcription failed: {e}")
         raise Exception(f"Transcription failed: {str(e)}")
 
 def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
@@ -148,6 +152,9 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
         
         # Extract JSON from response
         response_text = response.text
+        
+        if not response_text:
+            raise Exception("Empty response from Gemini API")
         
         # Find JSON in the response
         start_idx = response_text.find('[')

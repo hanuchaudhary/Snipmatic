@@ -1,6 +1,6 @@
 celery[redis]
 redis
-whisperx
+faster-whisper
 torch
 torchaudio
 ffmpeg-python

@@ -35,7 +35,7 @@ export default function SigninForm() {
       await signIn("resend", {
         email: data.email,
         callbackUrl: "/",
-        redirectTo: "/clip",
+      redirectTo: "/clip",
       });
     } catch (error) {
       console.error("Signin error:", error);

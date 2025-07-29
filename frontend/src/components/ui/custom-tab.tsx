@@ -4,37 +4,46 @@ import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import React from "react";
 
-const clipTypes = [
-  { key: "MANUAL", label: "Manual Clip" },
-  { key: "AI", label: "Magic Clip" },
-];
+interface TabOption {
+  key: string;
+  label: string;
+}
 
-export const ClipTypeSwitch = ({
-  clipType,
-  setClipType,
-}: {
-  clipType: "AI" | "MANUAL";
-  setClipType: React.Dispatch<React.SetStateAction<"AI" | "MANUAL">>;
-}) => {
+interface TabSwitchProps<T extends string> {
+  tabs: TabOption[];
+  activeTab: T;
+  onTabChange: (tab: T) => void;
+  className?: string;
+  layoutId?: string;
+}
+
+export const TabSwitch = <T extends string>({
+  tabs,
+  activeTab,
+  onTabChange,
+  className,
+  layoutId = "activeTab",
+}: TabSwitchProps<T>) => {
   return (
     <div
-      onClick={() => setClipType(clipType === "AI" ? "MANUAL" : "AI")}
       className={cn(
-        "cursor-pointer relative flex h-12 rounded-full bg-secondary p-1 font-jost ring-1 ring-border"
+        "cursor-pointer relative flex h-12 rounded-full bg-secondary p-1 font-jost ring-1 ring-border",
+        className
       )}
     >
-      {clipTypes.map(({ key, label }) => {
-        const isActive = clipType === key;
+      {tabs.map(({ key, label }) => {
+        const isActive = activeTab === key;
         return (
           <button
             type="button"
             key={key}
+            onClick={() => onTabChange(key as T)}
             className="relative rounded-full cursor-pointer"
             aria-label={label}
           >
             {isActive && (
               <motion.div
-                layoutId="activeClipType"
+                layoutId={layoutId}
                 className="absolute inset-0 rounded-full bg-primary"
                 transition={{ type: "spring", duration: 0.5 }}
               />

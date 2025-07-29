@@ -65,11 +65,12 @@ services:
       - GEMINI_API_KEY=AIzaSyDEFuu_5nl0zc7o7qK7z7ocEx9EqcI9z0E
     volumes:
       - ./storage:/app/storage
+    # replicas: 2  # 2 workers × 2 concurrency
     # depends_on:
     #   redis:
     #     condition: service_healthy
     deploy:
-      replicas: 1  # 2 workers × 2 concurrency = 4 concurrent transcriptions (1 per GPU)
+      replicas: 2  # 2 workers × 2 concurrency = 4 concurrent transcriptions (1 per GPU)
       # resources:
       #   reservations:
       #     devices:
@@ -99,18 +100,18 @@ services:
       replicas: 1  # 3 workers × 4 concurrency = 12 concurrent clip creations
     restart: unless-stopped
 
-  # Celery Flower - Web-based monitoring tool
-  # flower:
-  #   image: mher/flower:0.9.7
-  #   ports:
-  #     - "5555:5555"
-  #   environment:
-  #     - CELERY_BROKER_URL=redis://redis:6379/0
-  #     - FLOWER_PORT=5555
-  #   # depends_on:
-  #   #   redis:
-  #   #     condition: service_healthy
-  #   restart: unless-stopped
+  # Celery Flower - Web-based monitoring tool for Celery tasks
+  flower:
+    image: mher/flower:0.9.7
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - FLOWER_PORT=5555
+    # depends_on:
+    #   redis:
+    #     condition: service_healthy
+    restart: unless-stopped
 
   # Nginx - Reverse proxy and file serving
   # nginx:

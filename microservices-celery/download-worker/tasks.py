@@ -206,7 +206,7 @@ if __name__ == "__main__":
             'worker', 
             '-Q', 'download',
             '--loglevel=info', 
-            '-P', 'forkpool',
+            '-P', 'processes',
             '--concurrency=10', 
             '--prefetch-multiplier=5',
             '-n', 'download_worker@%h'

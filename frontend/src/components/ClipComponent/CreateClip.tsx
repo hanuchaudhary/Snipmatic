@@ -3,7 +3,7 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { set, z } from "zod";
+import { z } from "zod";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { CliptypeSwitch } from "./ClipType";
+import { ClipTypeSwitch } from "./ClipType";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   IconArrowUpRight,
@@ -21,42 +21,12 @@ import {
 import { cn } from "@/lib/utils";
 import { BACKEND_URL } from "../../../config";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-
-const formSchema = z.object({
-  url: z
-    .string()
-    .url("Please enter a valid video URL")
-    .min(1, "URL is required"),
-  startTime: z.string().regex(/^\d{2}:\d{2}:\d{2}$/, "Invalid time format"),
-  endTime: z.string().regex(/^\d{2}:\d{2}:\d{2}$/, "Invalid time format"),
-  aspectRatio: z.enum(["original", "vertical", "square"]),
-  subtitles: z.boolean(),
-  clipType: z.enum(["AI", "MANUAL"]).optional(),
-  multipleClips: z.boolean().optional(),
-});
+import { formSchema } from "@/lib/validation";
 
 type FormValues = z.infer<typeof formSchema>;
 
-const getVideoTitle = async (url: string): Promise<string | undefined> => {
-  try {
-    // Extract video ID
-    const match = url.match(
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
-    );
-    if (!match) return undefined;
-
-    // You can implement YouTube API integration here if needed
-    // For now, return a simple title
-    return `YouTube Video ${match[1].slice(0, 8)}`;
-  } catch {
-    return undefined;
-  }
-};
-
 export function CreateClipPage() {
   const { data: session } = useSession();
-  const router = useRouter();
 
   const {
     control,
@@ -162,7 +132,6 @@ export function CreateClipPage() {
 
       toast.loading("Starting video processing...");
 
-      // Submit to backend
       const response = await axios.post(
         `${BACKEND_URL}/clip`,
         {
@@ -183,32 +152,8 @@ export function CreateClipPage() {
       );
 
       const resData = response.data;
-
-      if (resData.task_id) {
-        toast.dismiss();
-
-        // Get video title
-        const title = await getVideoTitle(data.url);
-
-        // Create video job in database and start polling
-        const job = await axios.post(`${BACKEND_URL}/api/task`, {
-          userId: session.user.id,
-          taskId: resData.task_id,
-          youtubeUrl: data.url,
-          title: title || "Untitled Video",
-          status: "PENDING",
-          progress: 0,
-        });
-
-        if (job) {
-          toast.success("Video processing started!");
-          reset();
-        } else {
-          toast.error("Failed to create video job");
-        }
-      } else {
-        toast.error("Failed to start video processing");
-      }
+      toast.dismiss();
+      console.log("Response data:", resData);
     } catch (error) {
       toast.dismiss();
       toast.error(
@@ -289,7 +234,7 @@ export function CreateClipPage() {
               </div>
 
               <div className="inline-block">
-                <CliptypeSwitch
+                <ClipTypeSwitch
                   clipType={watchClipType || "MANUAL"}
                   setClipType={() => {
                     const currentType = watchClipType;
@@ -357,7 +302,7 @@ export function CreateClipPage() {
                   control={control}
                   name="aspectRatio"
                   render={({ field }) => (
-                    <div className="flex flex-wrap gap-2 border p-2 rounded-2xl bg-secondary/50">
+                    <div className="flex flex-wrap gap-2 border p-2 rounded-[22px] bg-secondary/50">
                       {[
                         {
                           value: "original",

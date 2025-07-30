@@ -44,6 +44,9 @@ def update_task_status(task_id: str, status: TaskStatus, progress: int = 0,
                 'updated_at': datetime.utcnow().isoformat()
             }
         
+        # # Publish to Redis channel for real-time updates
+        # redis_client.publish(f"status:{task_id}", json.dumps(task_data, default=str))
+
         # Store with 24 hour TTL
         redis_client.setex(
             f"task_status:{task_id}",

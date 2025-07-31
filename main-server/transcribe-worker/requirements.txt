@@ -1,0 +1,8 @@
+celery[redis]
+redis
+faster-whisper
+torch
+torchaudio
+ffmpeg-python
+google-genai
+pydantic

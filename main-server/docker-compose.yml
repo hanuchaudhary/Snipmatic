@@ -9,11 +9,11 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
-    # healthcheck:
-    #   test: ["CMD", "redis-cli", "ping"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
 
   # API Gateway - FastAPI application
@@ -32,9 +32,9 @@ services:
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
     volumes:
       - ./storage:/app/storage
-    # depends_on:
-    #   redis:
-    #     condition: service_healthy
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   # Download Workers - Handle video downloading (I/O bound)
@@ -47,11 +47,11 @@ services:
       - STORAGE_BASE_PATH=/app/storage
     volumes:
       - ./storage:/app/storage
-    # depends_on:
-    #   redis:
-    #     condition: service_healthy
+    depends_on:
+      redis:
+        condition: service_healthy
     deploy:
-      replicas: 1  # 2 workers × 10 concurrency = 20 concurrent downloads
+      replicas: 2  # 2 workers × 3 concurrency x 5 workers = 30 concurrent downloads
     restart: unless-stopped
 
   # Transcribe Workers - Handle audio transcription and AI analysis (GPU bound)
@@ -65,12 +65,11 @@ services:
       - GEMINI_API_KEY=AIzaSyDEFuu_5nl0zc7o7qK7z7ocEx9EqcI9z0E
     volumes:
       - ./storage:/app/storage
-    # replicas: 2  # 2 workers × 2 concurrency
-    # depends_on:
-    #   redis:
-    #     condition: service_healthy
+    depends_on:
+      redis:
+        condition: service_healthy
     deploy:
-      replicas: 2  # 2 workers × 2 concurrency = 4 concurrent transcriptions (1 per GPU)
+      replicas: 2  # 2 workers × 1 concurrency = 2 concurrent transcriptions (1 per CPU)
       # resources:
       #   reservations:
       #     devices:
@@ -93,11 +92,11 @@ services:
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
     volumes:
       - ./storage:/app/storage
-    # depends_on:
-    #   redis:
-    #     condition: service_healthy
+    depends_on:
+      redis:
+        condition: service_healthy
     deploy:
-      replicas: 1  # 3 workers × 4 concurrency = 12 concurrent clip creations
+      replicas: 2  # 2 workers × 4 concurrency = 8 concurrent clip creations x 5 threads = 40 for ai multi-clips
     restart: unless-stopped
 
   # Celery Flower - Web-based monitoring tool for Celery tasks
@@ -108,11 +107,13 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - FLOWER_PORT=5555
-    # depends_on:
-    #   redis:
-    #     condition: service_healthy
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
+  # Uncomment the following section to enable Nginx as a reverse proxy and file server
+  
   # Nginx - Reverse proxy and file serving
   # nginx:
   #   image: nginx:alpine

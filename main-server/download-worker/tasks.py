@@ -100,7 +100,6 @@ def download_video(url: str, timeout_minutes: int = None) -> tuple[str, dict]:
         with yt_dlp.YoutubeDL(info_ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             video_duration = info.get('duration', 0)
-            logger.info(f"Video duration: {video_duration} seconds ({video_duration//60 if video_duration else 0} minutes)")
     except Exception as e:
         logger.warning(f"Could not get video info for timeout calculation: {e}")
     
@@ -120,7 +119,6 @@ def download_video(url: str, timeout_minutes: int = None) -> tuple[str, dict]:
         else:
             timeout_seconds = calculate_download_timeout(video_duration)
         
-        logger.info(f"Using download timeout of {timeout_seconds} seconds ({timeout_seconds//60} minutes)")
         
         # Wait for download to complete
         video_info = future.result(timeout=timeout_seconds)
@@ -136,7 +134,6 @@ def download_video(url: str, timeout_minutes: int = None) -> tuple[str, dict]:
         return video_path, video_info
         
     except TimeoutError as timeout_error:
-        logger.error(f"Download timed out for video_id {video_id} after {timeout_seconds} seconds")
         # Cancel the future if it's still running
         future.cancel()
         raise TimeoutError(f"Download timed out after {timeout_seconds//60} minutes")
@@ -149,18 +146,16 @@ def download_video(url: str, timeout_minutes: int = None) -> tuple[str, dict]:
 @celery_app.task(name='download_task', bind=True)
 def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None):
     """Download video task - handles queuing of next task to appropriate queue"""
-    logger.info(f"[DOWNLOAD_WORKER] Starting download task for task_id: {task_id}, url: {url}")
-    logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: clip_type={clip_type}, aspect_ratio={aspect_ratio}, multiple_clips={multiple_clips}, user_id={user_id}")
-     
+   
     video_path = None
     video_info = None
     try:
-        logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Updating status to DOWNLOADING")
+        
         update_task_status(task_id, TaskStatus.DOWNLOADING, 10, "Downloading video")
         
-        logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Calling download_video function")
+        
         video_path, video_info = download_video(url)
-        logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Video downloaded to {video_path}")
+        
     except Exception as download_error:
             logger.error(f"[DOWNLOAD_WORKER] Task {task_id}: Download failed with error: {str(download_error)}")
             update_task_status(task_id, TaskStatus.FAILED, 0, f"Download failed: {str(download_error)}")
@@ -169,7 +164,7 @@ def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips
     update_task_status(task_id, TaskStatus.DOWNLOADED, 30, "Video downloaded")
         
     if clip_type == "AI":
-            logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Queuing transcribe task to 'transcribe' queue")
+           
             try:
             # Queue to transcribe queue
                 celery_app.send_task(
@@ -178,13 +173,11 @@ def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips
                     queue='transcribe',
                     routing_key='transcribe'
                 )
-                logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Transcribe task queued successfully to 'transcribe' queue")
+                
             except Exception as queue_error:
                 logger.error(f"[DOWNLOAD_WORKER] Task {task_id}: Failed to queue transcribe task: {queue_error}")
-    else:  # MANUAL
-            logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Queuing manual clip task to 'clip' queue")
-            logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Manual clip params - start: {start_time}, end: {end_time}")
-            
+    else:  
+        # MANUAL
             try:
             # Queue to clip queue
                 celery_app.send_task(
@@ -193,7 +186,6 @@ def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips
                     queue='clip',
                     routing_key='clip'
                 )
-                logger.info(f"[DOWNLOAD_WORKER] Task {task_id}: Manual clip task queued successfully to 'clip' queue")
             except Exception as queue_error:
                  logger.error(f"[DOWNLOAD_WORKER] Task {task_id}: Failed to queue manual clip task: {queue_error}")
     return {"status": "success", "video_path": video_path, "video_info": video_info}

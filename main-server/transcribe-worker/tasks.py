@@ -7,7 +7,7 @@ import logging
 import json
 from google import genai
 import sys
-import os
+
 
 
 from shared.celery_config import celery_app, AUDIO_STORAGE_PATH, GEMINI_API_KEY
@@ -43,11 +43,9 @@ def extract_audio(video_path: str) -> str:
         if not os.path.exists(audio_path):
             raise Exception("Audio extraction failed - output file not created")
             
-        logger.info(f"Audio extracted successfully: {audio_path}, size: {os.path.getsize(audio_path)} bytes")
         return audio_path
         
     except ffmpeg.Error as e:
-        logger.error(f"FFmpeg error during audio extraction: {e}")
         raise Exception(f"Audio extraction failed: {str(e)}")
 
 def transcribe_audio_whisperx(audio_path: str) -> list:
@@ -67,11 +65,9 @@ def transcribe_audio_whisperx(audio_path: str) -> list:
                 'text': segment.text
             })
         
-        logger.info(f"Transcription completed. Found {len(segments)} segments")
         return segments
         
     except Exception as e:
-        logger.error(f"faster-whisper transcription failed: {e}")
         raise Exception(f"Transcription failed: {str(e)}")
 
 def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
@@ -177,12 +173,9 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
                 confidence_score=float(moment['confidence_score'])
             )
             viral_moments.append(viral_moment)
-        
-        logger.info(f"Found {len(viral_moments)} viral moments")
         return viral_moments
         
     except Exception as e:
-        logger.error(f"Viral moment analysis failed: {e}")
         raise Exception(f"AI analysis failed: {str(e)}")
 
 @celery_app.task(
@@ -192,26 +185,20 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
 )
 def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id):
     """Transcription task - queues clip task after completion"""
-    logger.info(f"[TRANSCRIBE_WORKER] Starting transcribe task for task_id: {task_id}, video_path: {video_path}")
-    logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: original_url={original_url}, aspect_ratio={aspect_ratio}, multiple_clips={multiple_clips}, user_id={user_id}")
     audio_path = None
     
     try:
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Updating status to EXTRACTING_AUDIO")
+        
         update_task_status(task_id, TaskStatus.EXTRACTING_AUDIO, 40, "Extracting audio")
         
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Extracting audio from video")
-        audio_path = extract_audio(video_path)
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Audio extracted to {audio_path}")
         
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Updating status to TRANSCRIBING")
+        audio_path = extract_audio(video_path)
+        
         update_task_status(task_id, TaskStatus.TRANSCRIBING, 60, "Transcribing audio")
         
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Starting audio transcription")
-        segments = transcribe_audio_whisperx(audio_path)
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Transcription completed successfully, found {len(segments)} segments")
         
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Updating status to ANALYZING")
+        segments = transcribe_audio_whisperx(audio_path)
+        
         update_task_status(task_id, TaskStatus.ANALYZING, 80, "Finding viral moments")
         
         logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Finding viral moments using AI")
@@ -234,9 +221,6 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
                     'confidence_score': m.confidence_score
                 })
 
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Found {len(viral_moments)} viral moments")
-
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Queuing clip task to 'clip' queue")
         # Queue to clip queue
         celery_app.send_task(
             'clip_task',
@@ -244,7 +228,6 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
             queue='clip',
             routing_key='clip'
         )
-        logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Clip task queued successfully to 'clip' queue")
         
         return {"status": "success", "viral_moments": viral_moments_serialized}
         
@@ -256,15 +239,18 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
         # Cleanup audio file immediately
         if audio_path and os.path.exists(audio_path):
             logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Cleaning up audio file: {audio_path}")
-            # cleanup_files(audio_path)
+            cleanup_files(audio_path)
 
 if __name__ == "__main__":
     # Run as Celery worker - GPU bound, limit to 1-2 per GPU
-    logger.info("Starting Transcribe Worker...")
-    celery_app.worker_main([
-        'worker', 
-        '-Q', 'transcribe',
-        '--loglevel=info', 
-        '--pool=solo'
-    ])
+    try:
+        logger.info("Starting Transcribe Worker...")
+        celery_app.worker_main([
+            'worker', 
+            '-Q', 'transcribe',
+            '--loglevel=info', 
+            '--pool=solo'
+        ])
+    except KeyboardInterrupt:
+        logger.info("Received keyboard interrupt, shutting down...")
     

@@ -10,6 +10,6 @@ Write-Host ""
 celery -A tasks worker `
     -Q download `
     --loglevel=info `
-    --concurrency=10 `
-    --prefetch-multiplier=1 `
+    --concurrency=3 `
+    --prefetch-multiplier=5 `
     -n download_worker@$env:COMPUTERNAME

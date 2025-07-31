@@ -9,7 +9,7 @@ import boto3
 
 from shared.celery_config import celery_app, CLIP_STORAGE_PATH
 from shared.models import TaskStatus, ViralMoment
-from shared.utils import update_task_status, cleanup_files, time_to_seconds
+from shared.utils import update_task_status, cleanup_files, time_to_seconds,  send_email_notification
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -232,7 +232,7 @@ def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_c
             "Clips created successfully", 
             result
         )
-        
+        send_email_notification(task_id) 
         return result
     except Exception as e:
         logger.error(f"[CLIP_WORKER] Task {task_id}: AI clip creation failed with error: {str(e)}")

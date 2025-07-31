@@ -5,11 +5,10 @@ from typing import Optional
 from datetime import datetime
 import sys
 import os
-
-# Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.models import TaskStatus
 from shared.celery_config import REDIS_URL
+EMAIL_SERVER_URL = os.getenv("EMAIL_SERVER_URL")  # e.g., "http://localhost:5000/send-email"
+EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
 
 logger = logging.getLogger(__name__)
 
@@ -98,4 +97,36 @@ def time_to_seconds(time_str: str) -> float:
             return float(parts[0])
     except:
         return 0.0
+def send_email_notification(task_id: str):
+    """Send email notification when clips are generated"""
+    if not EMAIL_SERVER_URL:
+        logger.warning("Email server URL not configured, skipping email notification")
+        return
+    
+    try:
+        payload = {
+            "task_id": task_id,
+            "message": f"Your clip(s) have been generated successfully!"
+        }
+        
+        headers = {"Content-Type": "application/json"}
+        if EMAIL_API_KEY:
+            headers["Authorization"] = f"Bearer {EMAIL_API_KEY}"
+        
+        response = requests.post(
+            EMAIL_SERVER_URL,
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            logger.info(f"[CLIP_WORKER] Task : Email notification sent successfully")
+        else:
+            logger.error(f"[CLIP_WORKER] Task : Email notification failed with status {response.status_code}")
+            
+    except Exception as e:
+        logger.error(f"[CLIP_WORKER] Task : Failed to send email notification: {str(e)}")
+
+
 

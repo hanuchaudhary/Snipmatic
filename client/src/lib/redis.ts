@@ -1,3 +1,8 @@
-import Redis from "ioredis";
+import { Queue } from "bullmq";
+import IORedis from "ioredis";
 
-export const redisClient = new Redis();
+export const connection = new IORedis({
+  maxRetriesPerRequest: null,
+});
+
+export const taskQueue = new Queue("task-status", { connection });

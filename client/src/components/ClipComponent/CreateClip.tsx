@@ -18,7 +18,7 @@ import {
   IconCircleXFilled,
   IconLoader2,
 } from "@tabler/icons-react";
-import { cn } from "@/lib/utils";
+import { cn, getYouTubeThumbnail } from "@/lib/utils";
 import { BACKEND_URL } from "../../../config";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
@@ -55,16 +55,9 @@ export function CreateClipPage() {
   const [thumbnail, setThumbnail] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    const extractYouTubeVideoId = (url: string): string | null => {
-      const match = url.match(
-        /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/
-      );
-      return match ? match[1] : null;
-    };
-
-    const id = extractYouTubeVideoId(watchUrl);
-    if (id) {
-      setThumbnail(`https://img.youtube.com/vi/${id}/hqdefault.jpg`);
+    const thumbnail = getYouTubeThumbnail(watchUrl);
+    if (thumbnail) {
+      setThumbnail(thumbnail);
     } else {
       setThumbnail(null);
     }
@@ -153,7 +146,8 @@ export function CreateClipPage() {
 
       const resData = response.data;
       toast.dismiss();
-      console.log("Response data:", resData);
+
+  
     } catch (error) {
       toast.dismiss();
       toast.error(

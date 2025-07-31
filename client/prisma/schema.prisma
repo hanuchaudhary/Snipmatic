@@ -17,7 +17,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  videoJobs     VideoJob[]
+  tasks     Task[]
   subscription  Subscription?
   transactions  Transaction[]
  
@@ -64,19 +64,17 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-model VideoJob {
-  id              String   @id @default(cuid())
-  userId          String
-  taskId          String?
+model Task {
+  userId          String @id
+  taskId          String
   youtubeUrl      String
   title           String?
-  s3Key           String?
+  clipURL           String?
   status          JobStatus @default(PENDING)
   progress        Int       @default(0)
   statusMessage   String?
   errorMessage    String?
   clipsData       Json?
-  s3Urls          Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   completedAt     DateTime?

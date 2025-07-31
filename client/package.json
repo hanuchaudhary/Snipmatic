@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "worker": "ts-node --project tsconfig.worker.json -r tsconfig-paths/register src/worker/PollerWorker.ts",
     "db:studio": "prisma studio",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
@@ -25,6 +26,7 @@
     "@radix-ui/react-tabs": "^1.1.12",
     "@tabler/icons-react": "^3.31.0",
     "axios": "^1.9.0",
+    "bullmq": "^5.56.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -44,6 +46,7 @@
     "sonner": "^2.0.3",
     "standardwebhooks": "^1.0.0",
     "tailwind-merge": "^3.3.0",
+    "ts-node": "^10.9.2",
     "zod": "^3.24.4",
     "zustand": "^5.0.6"
   },
@@ -53,6 +56,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
+    "tsconfig-paths": "^4.2.0",
     "tw-animate-css": "^1.2.9",
     "typescript": "^5"
   }

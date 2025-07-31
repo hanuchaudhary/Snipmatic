@@ -1,69 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
-    
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const jobs = await prisma.videoJob.findMany({
+    const tasks = await prisma.task.findMany({
       where: {
-        userId: session.user.id,
+        userId: session.user.id
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'desc'
       },
+      take: 10
     });
 
-    return NextResponse.json({ jobs });
-  } catch (error) {
-    console.error('Error fetching video jobs:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch video jobs' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { taskId, youtubeUrl, title } = body;
-
-    if (!taskId || !youtubeUrl) {
-      return NextResponse.json(
-        { error: 'taskId and youtubeUrl are required' },
-        { status: 400 }
-      );
-    }
-
-    const job = await prisma.videoJob.create({
-      data: {
-        userId: session.user.id,
-        taskId,
-        youtubeUrl,
-        title,
-        status: 'QUEUED',
-        progress: 0,
-        statusMessage: 'Task queued for processing',
-      },
+    return NextResponse.json({
+      success: true,
+      tasks: tasks.map(task => ({
+        taskId: task.taskId,
+        youtubeUrl: task.youtubeUrl,
+        title: task.title,
+        status: task.status,
+        progress: task.progress,
+        statusMessage: task.statusMessage,
+        errorMessage: task.errorMessage,
+        clipURL: task.clipURL,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        completedAt: task.completedAt
+      }))
     });
 
-    return NextResponse.json({ job });
   } catch (error) {
-    console.error('Error creating video job:', error);
+    console.error("Error fetching tasks:", error);
     return NextResponse.json(
-      { error: 'Failed to create video job' },
+      { error: "Failed to fetch tasks" },
       { status: 500 }
     );
   }

@@ -6,6 +6,7 @@ import { Logo } from "../Logo";
 import { ThemeSwitcher } from "../ThemeToggle";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "../ui/button";
+import axios from "axios";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -27,7 +28,13 @@ export function Navbar() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeSwitcher />
-          <Logo />
+          <div
+            onClick={async () => {
+              await axios.post("/api/task/010101");
+            }}
+          >
+            <Logo />
+          </div>
           {session && (
             <>
               <Button

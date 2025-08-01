@@ -1,0 +1,458 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"sync"
+	"time"
+	"github.com/resend/resend-go/v2"
+	"github.com/gorilla/mux"
+)
+
+// EmailRequest represents the request structure for sending emails
+type EmailRequest struct {
+	Message string `json:"message"`
+	TaskID  string `json:"task_id"`
+}
+
+// EmailResponse represents the response structure
+type EmailResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+// TaskActiveRequest represents the request structure for setting task active status
+type TaskActiveRequest struct {
+	TaskID string `json:"task_id"`
+}
+type TaskAddRequest struct {
+	TaskID string `json:"task_id"`
+	Email string `json:"email"`
+}
+
+// TaskActiveResponse represents the response structure for task active status
+type TaskActiveResponse struct {
+	Success   bool   `json:"success"`
+	Message   string `json:"message"`
+	TaskID    string `json:"task_id"`
+	IsActive  bool   `json:"is_active"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+// TaskStatus represents the internal task status tracking
+type TaskStatus struct {
+	TaskID       string
+	Email        string
+	IsActive     bool
+	ActivatedAt  time.Time
+	DeactivateAt time.Time
+}
+
+// Global variables for task status tracking
+var (
+	activeTasks = make(map[string]*TaskStatus)
+	tasksMutex  = sync.RWMutex{}
+)
+
+// Global Resend client
+var resendClient *resend.Client
+
+// handleSendEmail handles the HTTP request to send completion emails
+func handleSendEmail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req EmailRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Error decoding request: %v", err)
+		writeErrorResponse(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Validate required fields
+	if req.TaskID == ""  {
+		writeErrorResponse(w, "Missing required field: task_id", http.StatusBadRequest)
+		return
+	}
+
+	// Check if task is currently active - only send emails for inactive tasks
+	isActive, _ := getTaskStatus(req.TaskID)
+	if isActive {
+		log.Printf("Task %s is currently active, skipping email notification", req.TaskID)
+		response := EmailResponse{
+			Success: true,
+			Message: "Email skipped - task is currently active",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	log.Printf("Task %s is inactive, sending email notification", req.TaskID)
+
+	// Send email using Resend
+	if err := sendCompletionEmailWithResend(req); err != nil {
+		log.Printf("Error sending email: %v", err)
+		writeErrorResponse(w, "Failed to send email", http.StatusInternalServerError)
+		return
+	}
+
+	// Return success response
+	response := EmailResponse{
+		Success: true,
+		Message: "Email sent successfully",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// handleHealth handles health check requests
+func handleHealth(w http.ResponseWriter, r *http.Request) {
+	response := map[string]interface{}{
+		"status":    "healthy",
+		"service":   "email-server",
+		"timestamp": time.Now().Unix(),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// handleActiveTasks handles setting tasks as active with auto-deactivation
+func handleActiveTasks(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    var req TaskActiveRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        log.Printf("Error decoding request: %v", err)
+        writeErrorResponse(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    // Validate required fields
+    if req.TaskID == "" {
+        writeErrorResponse(w, "Missing required fields task_id ", http.StatusBadRequest)
+        return
+    }
+
+    // Set task as active
+    setTaskActive(req.TaskID)
+
+    // Return success response
+    response := TaskActiveResponse{
+        Success:   true,
+        Message:   "Task set to active",
+        TaskID:    req.TaskID,
+        IsActive:  true,
+        Timestamp: time.Now().Unix(),
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(response)
+}
+
+// setTaskActive sets a task as active and schedules auto-deactivation
+func setTaskActive(taskID string) {
+    tasksMutex.Lock()
+    defer tasksMutex.Unlock()
+
+    now := time.Now()
+    deactivateAt := now.Add(10 * time.Second)
+
+    // Update or create task status
+    if taskStatus, exists := activeTasks[taskID]; exists {
+        taskStatus.IsActive = true
+        taskStatus.ActivatedAt = now
+        taskStatus.DeactivateAt = deactivateAt
+    }
+
+    log.Printf("Task %s set to active for email, will be deactivated at %s", taskID, deactivateAt.Format(time.RFC3339))
+
+    // Schedule auto-deactivation
+    go func() {
+        time.Sleep(10 * time.Second)
+        deactivateTask(taskID, deactivateAt)
+    }()
+}
+
+// deactivateTask deactivates a task if the deactivation time matches
+func deactivateTask(taskID string, scheduledDeactivateAt time.Time) {
+    tasksMutex.Lock()
+    defer tasksMutex.Unlock()
+
+    if taskStatus, exists := activeTasks[taskID]; exists {
+        // Only deactivate if this is the same activation session
+        if taskStatus.DeactivateAt.Equal(scheduledDeactivateAt) {
+            taskStatus.IsActive = false
+            log.Printf("Task %s automatically deactivated", taskID)
+        }
+    }
+}
+
+// getTaskStatus returns the current status of a task
+func getTaskStatus(taskID string) (bool, *TaskStatus) {
+    tasksMutex.RLock()
+    defer tasksMutex.RUnlock()
+
+    if taskStatus, exists := activeTasks[taskID]; exists {
+        return taskStatus.IsActive, taskStatus
+    }
+    return false, nil
+}
+
+// getAllActiveTasks returns a list of all currently active tasks
+func getAllActiveTasks() []string {
+    tasksMutex.RLock()
+    defer tasksMutex.RUnlock()
+
+    var activeTaskIDs []string
+    for taskID, taskStatus := range activeTasks {
+        if taskStatus.IsActive {
+            activeTaskIDs = append(activeTaskIDs, taskID)
+        }
+    }
+    return activeTaskIDs
+}
+
+// getActiveTaskCount returns the count of currently active tasks
+func getActiveTaskCount() int {
+    tasksMutex.RLock()
+    defer tasksMutex.RUnlock()
+
+    count := 0
+    for _, taskStatus := range activeTasks {
+        if taskStatus.IsActive {
+            count++
+        }
+    }
+    return count
+}
+
+// handleGetTaskStatus handles GET requests to check task status
+func handleGetTaskStatus(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodGet {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    taskID := r.URL.Query().Get("task_id")
+    if taskID == "" {
+        writeErrorResponse(w, "Missing required parameter: task_id", http.StatusBadRequest)
+        return
+    }
+
+    isActive, taskStatus := getTaskStatus(taskID)
+    
+    var response TaskActiveResponse
+    if taskStatus != nil {
+        response = TaskActiveResponse{
+            Success:   true,
+            Message:   "Task status retrieved",
+            TaskID:    taskID,
+            IsActive:  isActive,
+            Timestamp: taskStatus.ActivatedAt.Unix(),
+        }
+    } else {
+        response = TaskActiveResponse{
+            Success:   true,
+            Message:   "Task not found or never activated",
+            TaskID:    taskID,
+            IsActive:  false,
+            Timestamp: time.Now().Unix(),
+        }
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(response)
+}
+
+// handleActiveTasksStats handles GET requests to get active tasks statistics
+func handleActiveTasksStats(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodGet {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    activeTasksList := getAllActiveTasks()
+    activeCount := getActiveTaskCount()
+
+    response := map[string]interface{}{
+        "success":       true,
+        "active_count":  activeCount,
+        "active_tasks":  activeTasksList,
+        "timestamp":     time.Now().Unix(),
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(response)
+}
+func handleSetTask(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+	var req TaskAddRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        log.Printf("Error decoding request: %v", err)
+        writeErrorResponse(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+	 if req.TaskID == "" || req.Email == "" {
+        writeErrorResponse(w, "Missing required field: task_id or emaid_id", http.StatusBadRequest)
+        return
+    }
+	tasksMutex.Lock()
+    defer tasksMutex.Unlock()
+
+    now := time.Now()
+    deactivateAt := now.Add(10 * time.Second)
+
+    // Update or create task status
+    activeTasks[req.TaskID] = &TaskStatus{
+        TaskID:       req.TaskID,
+        Email:        req.Email,
+        IsActive:     true,
+        ActivatedAt:  now,
+        DeactivateAt: deactivateAt,
+    }
+
+    // Schedule auto-deactivation
+    go func() {
+        time.Sleep(10 * time.Second)
+        deactivateTask(req.TaskID, deactivateAt)
+    }()
+   
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode("Task added successfully")
+}
+// writeErrorResponse writes an error response
+func writeErrorResponse(w http.ResponseWriter, message string, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	
+	response := map[string]interface{}{
+		"success": false,
+		"error":   message,
+		"timestamp": time.Now().Unix(),
+	}
+	
+	json.NewEncoder(w).Encode(response)
+}
+// corsMiddleware adds CORS headers
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// loggingMiddleware logs HTTP requests
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		log.Printf("%s %s %s", r.Method, r.RequestURI, time.Since(start))
+	})
+}
+
+// sendCompletionEmailWithResend sends a completion email using Resend
+func sendCompletionEmailWithResend(req EmailRequest) error {
+    params := &resend.SendEmailRequest{
+        From:    "noreply@snipmatic.com",
+        To:      []string{"gamerkuah21@gmail.com"},
+        Subject: "Task Completion Notification",
+        Html:    "<h1>Task Completed</h1><p>Your task has been completed.</p><p>Message:</p>",
+        Text:    "Task has been completed. Message:",
+    }
+
+    sent, err := resendClient.Emails.Send(params)
+    if err != nil {
+        return fmt.Errorf("failed to send email: %w", err)
+    }
+
+    log.Printf("Email sent successfully. ID: %s", sent.Id)
+    return nil
+}
+
+// initResendClient initializes the Resend client
+func initResendClient() error {
+    apiKey := getEnvOrDefault("RESEND_API_KEY", "re_aYieb2dM_4rSK32rrPa2soPzSERvcmFex")
+    
+    if apiKey == "" {
+        return fmt.Errorf("RESEND_API_KEY is required")
+    }
+    
+    // Validate API key format (Resend keys start with "re_")
+    if len(apiKey) < 3 || apiKey[:3] != "re_" {
+        return fmt.Errorf("invalid Resend API key format")
+    }
+    
+    resendClient = resend.NewClient(apiKey)
+    
+    if resendClient == nil {
+        return fmt.Errorf("failed to create Resend client")
+    }
+    
+    log.Printf("Resend client initialized successfully")
+    return nil
+}
+
+// getEnvOrDefault returns environment variable value or default
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func main() {
+    // Initialize Resend client
+    if err := initResendClient(); err != nil {
+        log.Fatalf("Failed to initialize Resend client: %v", err)
+    }
+    
+    // Create router
+    r := mux.NewRouter()
+
+    // Apply middleware
+    r.Use(corsMiddleware)
+    r.Use(loggingMiddleware)
+
+    // Routes
+    r.HandleFunc("/health", handleHealth).Methods("GET")
+    r.HandleFunc("/send-completion-email", handleSendEmail).Methods("POST")
+    r.HandleFunc("/active", handleActiveTasks).Methods("POST")
+    r.HandleFunc("/status", handleGetTaskStatus).Methods("GET")
+    r.HandleFunc("/active-stats", handleActiveTasksStats).Methods("GET")
+	r.HandleFunc("/set_task", handleSetTask).Methods("POST")
+    
+    // Get port from environment or use default
+    port := getEnvOrDefault("PORT", "8000")
+
+    log.Printf("Email server starting on port %s", port)
+    log.Printf("From Email: %s", getEnvOrDefault("FROM_EMAIL", "noreply@yourdomain.com"))
+    log.Printf("Resend API Key configured: %s", getEnvOrDefault("RESEND_API_KEY", "not set"))
+
+    // Start server
+    if err := http.ListenAndServe(":"+port, r); err != nil {
+        log.Fatalf("Server failed to start: %v", err)
+    }
+}

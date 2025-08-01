@@ -15,7 +15,6 @@ import (
 func main() {
 	// Load configuration
 	cfg := config.Load()
-
 	// Initialize services
 	taskService := services.NewTaskService()
 	

@@ -18,10 +18,11 @@ import {
   IconCircleXFilled,
   IconLoader2,
 } from "@tabler/icons-react";
-import { cn, getYouTubeThumbnail } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { BACKEND_URL } from "../../../config";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
+import { TaskProgressLoader } from "@/components/TaskProgressLoader";
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -55,9 +56,16 @@ export function CreateClipPage() {
   const [thumbnail, setThumbnail] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    const thumbnail = getYouTubeThumbnail(watchUrl);
-    if (thumbnail) {
-      setThumbnail(thumbnail);
+    const extractYouTubeVideoId = (url: string): string | null => {
+      const match = url.match(
+        /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/
+      );
+      return match ? match[1] : null;
+    };
+
+    const id = extractYouTubeVideoId(watchUrl);
+    if (id) {
+      setThumbnail(`https://img.youtube.com/vi/${id}/hqdefault.jpg`);
     } else {
       setThumbnail(null);
     }
@@ -145,9 +153,12 @@ export function CreateClipPage() {
       );
 
       const resData = response.data;
+      const taskId = resData.task_id;
+      await axios.post(`/api/task/${taskId}`, {
+        youtubeUrl: data.url || "",
+        title: "Title for the clip",
+      });
       toast.dismiss();
-
-  
     } catch (error) {
       toast.dismiss();
       toast.error(

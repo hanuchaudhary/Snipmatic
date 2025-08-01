@@ -36,7 +36,7 @@ export async function POST(
         taskId,
         userId: session.user.id,
         youtubeUrl,
-        title: title || null,
+        title: title || "Untitled Clip",
         status: "PENDING",
         progress: 0,
         statusMessage: "Task initialized",

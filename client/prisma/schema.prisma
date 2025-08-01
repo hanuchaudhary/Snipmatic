@@ -65,8 +65,8 @@ model VerificationToken {
 }
 
 model Task {
-  userId          String @id
-  taskId          String
+  taskId          String @id 
+  userId          String 
   youtubeUrl      String
   title           String?
   clipURL           String?

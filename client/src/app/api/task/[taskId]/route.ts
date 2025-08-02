@@ -77,7 +77,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { youtubeUrl, title } = body;
+    const { youtubeUrl, title, videoInfo } = body;
 
     if (!youtubeUrl) {
       return NextResponse.json(
@@ -86,44 +86,41 @@ export async function POST(
       );
     }
 
-    const [task] = await Promise.all([
-      // new task in the database
-      prisma.task.create({
-        data: {
-          taskId,
-          userId: session.user.id,
-          youtubeUrl,
-          title: title || "Untitled Clip",
-          status: "PENDING",
-          progress: 0,
-          statusMessage: "Task initialized",
-        },
-      }),
-
-      // add job to the task queue
-      taskQueue.add("task-status", {
+    // new task in the database
+    const newTask = await prisma.task.create({
+      data: {
         taskId,
         userId: session.user.id,
-      }),
-
-      // notify the email server about the new task
-      axios.post(`${EMAIL_SERVER_URL}/set_task`, {
-        email: session.user.email,
-        task_id: taskId,
-      }),
-    ]);
-
-    console.log(`Task created with ID: ${task.taskId} for user: ${session.user.id}`);
+        youtubeUrl,
+        title: videoInfo?.title || "Default Title",
+        status: "PENDING",
+        progress: 0,
+        statusMessage: "Task initialized",
+        clipType: "AI",
+        duration: videoInfo?.duration || 0,
+        multipleClips: videoInfo?.multipleClips || false,
+      },
+    });
+    // add job to the task queue
+    await taskQueue.add("task-status", {
+      taskId,
+      userId: session.user.id,
+    });
+    // notify the email server about the new task
+    await axios.post(`${EMAIL_SERVER_URL}/set_task`, {
+      email: session.user.email,
+      task_id: taskId,
+    });
 
     return NextResponse.json(
       {
         success: true,
         message: "Task created successfully",
         task: {
-          taskId: task.taskId,
-          status: task.status,
-          progress: task.progress,
-          statusMessage: task.statusMessage,
+          taskId: newTask.taskId,
+          status: newTask.status,
+          progress: newTask.progress,
+          statusMessage: newTask.statusMessage,
         },
       },
       { status: 201 }

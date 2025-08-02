@@ -43,8 +43,8 @@ func main() {
 	r.HandleFunc("/set_task", taskHandler.AddTask).Methods("POST")
 
 	log.Printf("Email server starting on port %s", cfg.Port)
-	log.Printf("From Email: %s", cfg.FromEmail)
-	log.Printf("Resend API Key configured: %s", cfg.ResendAPIKey)
+	// log.Printf("From Email: %s", cfg.FromEmail)
+	// log.Printf("Resend API Key configured: %s", cfg.ResendAPIKey)
 
 	// Start server
 	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {

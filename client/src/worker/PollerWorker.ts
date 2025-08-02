@@ -30,7 +30,7 @@ const taskStatusWorker = new Worker(
             progress: data.progress,
             statusMessage: data.statusMessage,
             errorMessage: data.errorMessage || "",
-            clipURL: data.result.s3_urls[0] || "",
+            clipURL: data.result?.s3_urls[0] || "",
             completedAt: ["COMPLETED", "FAILED"].includes(data.status)
               ? new Date(data.completedAt || new Date())
               : null,
@@ -54,18 +54,23 @@ const taskStatusWorker = new Worker(
   { connection, concurrency: 1, autorun: true }
 );
 
-taskStatusWorker.on("completed", (job) => {
-  console.log(`Job ${job.id} completed successfully.`);
-});
-
-taskStatusWorker.on("failed", (job, err) => {
-  console.error(`Job ${job?.data} failed with error: ${err.message}`);
-});
-
-taskStatusWorker.on("error", (err) => {
-  console.error("Worker encountered an error:", err);
+// 🟢 Worker Event Listeners
+taskStatusWorker.on("ready", () => {
+  console.log("✅ taskStatusWorker connected to Redis and is ready.");
 });
 
 taskStatusWorker.on("active", (job) => {
-  console.log(`Job ${job.id} is now active.`);
+  console.log(`🔄 Job ${job.id} is now active.`);
+});
+
+taskStatusWorker.on("completed", (job) => {
+  console.log(`✅ Job ${job.id} completed successfully.`);
+});
+
+taskStatusWorker.on("failed", (job, err) => {
+  console.error(`❌ Job ${job?.data?.taskId} failed with error: ${err.message}`);
+});
+
+taskStatusWorker.on("error", (err) => {
+  console.error("❗ Worker encountered an error:", err);
 });

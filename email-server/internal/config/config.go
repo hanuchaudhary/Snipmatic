@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"os"
+	"github.com/joho/godotenv"
+)
 
 // Config holds all configuration for the application
 type Config struct {
@@ -11,17 +14,12 @@ type Config struct {
 
 // Load loads configuration from environment variables
 func Load() *Config {
+	_=godotenv.Load() 
+	println("Loading configuration from environment variables...")
+	
 	return &Config{
-		Port:         getEnvOrDefault("PORT"),
-		ResendAPIKey: getEnvOrDefault("RESEND_API_KEY"),
-		FromEmail:    getEnvOrDefault("FROM_EMAIL"),
+		Port:         os.Getenv("PORT"),
+		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
+		FromEmail:    os.Getenv("FROM_EMAIL"),
 	}
-}
-
-// getEnvOrDefault returns environment variable value or default
-func getEnvOrDefault(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
 }

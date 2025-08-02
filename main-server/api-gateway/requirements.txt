@@ -3,3 +3,4 @@ uvicorn[standard]
 celery[redis]
 redis
 pydantic
+yt_dlp

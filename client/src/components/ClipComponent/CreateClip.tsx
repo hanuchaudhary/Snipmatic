@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,10 +19,10 @@ import {
   IconLoader2,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
-import { BACKEND_URL } from "../../../config";
+import { EMAIL_SERVER_URL, MAIN_SERVER_URL } from "../../../config";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
-import { TaskProgressLoader } from "@/components/TaskProgressLoader";
+import { ITask } from "@/lib/types";
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -35,7 +35,6 @@ export function CreateClipPage() {
     formState: { errors },
     watch,
     setValue,
-    reset,
   } = useForm<FormValues>({
     defaultValues: {
       url: "",
@@ -54,6 +53,9 @@ export function CreateClipPage() {
   const watchClipType = watch("clipType");
   const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
   const [thumbnail, setThumbnail] = React.useState<string | null>(null);
+  const [taskId, setTaskId] = React.useState<string | null>(
+    typeof window !== "undefined" ? localStorage.getItem("taskId") : null
+  );
 
   React.useEffect(() => {
     const extractYouTubeVideoId = (url: string): string | null => {
@@ -74,6 +76,14 @@ export function CreateClipPage() {
   const onSubmit = async (data: FormValues) => {
     if (!session?.user?.id) {
       toast.error("Please sign in to create clips");
+      return;
+    }
+
+    const subsCheck = await axios.get("/api/pre");
+    if (subsCheck.status === 403) {
+      toast.error(
+        "Your subscription limits have been exceeded. Please upgrade your plan."
+      );
       return;
     }
 
@@ -134,7 +144,7 @@ export function CreateClipPage() {
       toast.loading("Starting video processing...");
 
       const response = await axios.post(
-        `${BACKEND_URL}/clip`,
+        `${MAIN_SERVER_URL}/clip`,
         {
           url: data.url,
           startTime: data.startTime,
@@ -154,10 +164,20 @@ export function CreateClipPage() {
 
       const resData = response.data;
       const taskId = resData.task_id;
+
+      if (!taskId) {
+        toast.error("Failed to create clip. Please try again.");
+        return;
+      }
+
+      setTaskId(taskId);
+      localStorage.setItem("taskId", taskId);
+
       await axios.post(`/api/task/${taskId}`, {
         youtubeUrl: data.url || "",
         title: "Title for the clip",
       });
+
       toast.dismiss();
     } catch (error) {
       toast.dismiss();
@@ -170,6 +190,73 @@ export function CreateClipPage() {
       setIsProcessing(false);
     }
   };
+
+  const [task, setTask] = React.useState<ITask | null>(null);
+  console.log("Current task ID:", taskId);
+  console.log("Current task data:", task);
+
+  useEffect(() => {
+    let statusInterval: NodeJS.Timeout;
+    let heartbeatInterval: NodeJS.Timeout;
+
+    if (!taskId) return;
+
+    // Poll task status
+    const fetchTaskStatus = async () => {
+      try {
+        const response = await axios.get(`/api/task/${taskId}`);
+        if (response.status === 200) {
+          const taskData = response.data;
+          setTask(taskData);
+          if (taskData.status === "COMPLETED") {
+            toast.success("Task completed successfully!");
+            setValue("url", "");
+            setThumbnail(null);
+            localStorage.removeItem("taskId");
+            clearInterval(statusInterval);
+            clearInterval(heartbeatInterval);
+          } else if (taskData.status === "FAILED") {
+            toast.error("Task failed. Please try again.");
+            setValue("url", "");
+            setThumbnail(null);
+            localStorage.removeItem("taskId");
+            clearInterval(statusInterval);
+            clearInterval(heartbeatInterval);
+          } else {
+            toast.info(`Task is in progress: ${taskData.status}`);
+          }
+          console.log("Task status fetched successfully");
+        } else {
+          toast.error("Failed to fetch task status");
+          clearInterval(statusInterval);
+        }
+      } catch (error) {
+        console.error("Error fetching task status:", error);
+      }
+    };
+
+    const sendHeartbeat = async () => {
+      try {
+        await axios.post(
+          `${EMAIL_SERVER_URL}/active`,
+          { taskId, userId: session?.user?.id },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        console.log(`Heartbeat sent for task ${taskId}`);
+      } catch (error) {
+        console.error(`Heartbeat failed for task ${taskId}:`, error);
+      }
+    };
+
+    fetchTaskStatus();
+    statusInterval = setInterval(fetchTaskStatus, 15000); // 15 seconds
+    heartbeatInterval = setInterval(sendHeartbeat, 30000); //30 seconds
+
+    return () => {
+      clearInterval(statusInterval);
+      clearInterval(heartbeatInterval);
+    };
+  }, [taskId, session?.user?.id]);
 
   return (
     <div className="min-h-screen md:pt-0 pt-16 p-4 flex items-center justify-center">

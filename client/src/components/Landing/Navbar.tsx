@@ -30,7 +30,19 @@ export function Navbar() {
           <ThemeSwitcher />
           <div
             onClick={async () => {
-              await axios.post("/api/task/010101");
+              await fetch("http://localhost:8080/set_task", {
+                credentials: "include",
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  email: session?.user?.email,
+                  task_id: "test-task-id", // Replace with actual task ID
+                }),
+              }).catch((error) => {
+                console.error("Error notifying email server:", error);
+              });
             }}
           >
             <Logo />

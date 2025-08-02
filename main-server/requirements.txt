@@ -12,3 +12,4 @@ torch
 torchaudio
 celery[redis]
 redis
+requests

@@ -77,9 +77,6 @@ export function CreateClipPage() {
       setPreviewThumbnail(store.videoInfo.thumbnail || null);
     }
 
-    return () => {
-      setPreviewThumbnail(null);
-    };
   }, [watchUrl]);
 
   const onSubmit = async (data: FormValues) => {
@@ -253,7 +250,7 @@ export function CreateClipPage() {
       try {
         await axios.post(
           `${EMAIL_SERVER_URL}/active`,
-          { task_id: taskId, email: session?.user?.email },
+          { task_id: taskId },
           { headers: { "Content-Type": "application/json" } }
         );
         console.log(`Heartbeat sent for task ${taskId}`);

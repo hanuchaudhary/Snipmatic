@@ -35,12 +35,12 @@ func main() {
 	r.Use(middleware.LoggingMiddleware)
 
 	// Routes
-	r.HandleFunc("/health", handlers.HealthHandler).Methods("GET")
-	r.HandleFunc("/send-completion-email", emailHandler.SendEmail).Methods("POST")
-	r.HandleFunc("/active", taskHandler.SetActive).Methods("POST")
-	r.HandleFunc("/status", taskHandler.GetStatus).Methods("GET")
-	r.HandleFunc("/active-stats", taskHandler.GetActiveStats).Methods("GET")
-	r.HandleFunc("/set_task", taskHandler.AddTask).Methods("POST")
+	r.HandleFunc("/health", handlers.HealthHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/send-completion-email", emailHandler.SendEmail).Methods("POST", "OPTIONS")
+	r.HandleFunc("/active", taskHandler.SetActive).Methods("POST", "OPTIONS")
+	r.HandleFunc("/status", taskHandler.GetStatus).Methods("GET", "OPTIONS")
+	r.HandleFunc("/active-stats", taskHandler.GetActiveStats).Methods("GET", "OPTIONS")
+	r.HandleFunc("/set_task", taskHandler.AddTask).Methods("POST", "OPTIONS")
 
 	log.Printf("Email server starting on port %s", cfg.Port)
 	// log.Printf("From Email: %s", cfg.FromEmail)

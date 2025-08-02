@@ -4,3 +4,4 @@ celery[redis]
 redis
 pydantic
 yt_dlp
+requests

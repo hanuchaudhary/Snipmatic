@@ -7,7 +7,9 @@ import sys
 import os
 from shared.models import TaskStatus
 from shared.celery_config import REDIS_URL
-EMAIL_SERVER_URL = os.getenv("EMAIL_SERVER_URL")  # e.g., "http://localhost:5000/send-email"
+import requests
+
+EMAIL_SERVER_URL = os.getenv("EMAIL_SERVER_URL","http://host.docker.internal:8080/send-completion-email")  # e.g., "http://localhost:5000/send-email"
 EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
 
 logger = logging.getLogger(__name__)

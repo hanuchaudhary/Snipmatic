@@ -1,9 +1,40 @@
-export interface ITaskStatus {
-  task_id: string;
-  status: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED';
-  progress?: number;
-  message?: string;
-  result?: any;
-  created_at: string;
-  updated_at: string;
+export interface ITask {
+  taskId: string;
+  userId: string;
+  youtubeUrl: string;
+  title?: string;
+  clipType?: string;
+  multipleClips: boolean;
+  subtitle: boolean;
+  duration?: number;
+  clipURL?: string;
+  status: JobStatus;
+  progress: number;
+  statusMessage?: string;
+  errorMessage?: string;
+  clipsData?: any;
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
+  user: User;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  subscription: "FREE_TIER" | "SNIPPER_TIER";
+  tasks: ITask[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum JobStatus {
+  PENDING = "PENDING",
+  QUEUED = "QUEUED",
+  DOWNLOADING = "DOWNLOADING",
+  TRANSCRIBING = "TRANSCRIBING",
+  CREATING_CLIPS = "CREATING_CLIPS",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
 }

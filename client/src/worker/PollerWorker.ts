@@ -1,7 +1,7 @@
 import { connection } from "@/lib/redis";
 import { Worker } from "bullmq";
 import { prisma } from "@/lib/prisma";
-import { BACKEND_URL } from "../../config";
+import { MAIN_SERVER_URL } from "../../config";
 
 const taskStatusWorker = new Worker(
   "task-status",
@@ -10,7 +10,7 @@ const taskStatusWorker = new Worker(
 
     const poll = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/status/${taskId}`);
+        const response = await fetch(`${MAIN_SERVER_URL}/status/${taskId}`);
         if (!response.ok) { 
           throw new Error(
             `Failed to fetch task status: ${response.statusText}`

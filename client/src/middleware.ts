@@ -14,6 +14,9 @@ export default auth(async function middleware(req: NextRequest) {
 
   const session = await auth();
 
+  console.log(`Session: ${JSON.stringify(session)}`);
+  
+
   if (!session && !isPublicRoute) {
     const newUrl = new URL("/signin", req.nextUrl.origin);
     return Response.redirect(newUrl);

@@ -69,6 +69,10 @@ model Task {
   userId          String 
   youtubeUrl      String
   title           String?
+  clipType        String?
+  multipleClips    Boolean @default(false)
+  subtitle         Boolean @default(false)
+  duration         Int?
   clipURL           String?
   status          JobStatus @default(PENDING)
   progress        Int       @default(0)

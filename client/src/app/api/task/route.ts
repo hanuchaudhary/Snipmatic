@@ -30,9 +30,20 @@ export async function GET() {
         statusMessage: task.statusMessage,
         errorMessage: task.errorMessage,
         clipURL: task.clipURL,
+        clipsData: task.clipsData,
+        result: task.clipsData ? {
+          viral_moments: task.clipsData,
+          s3_urls: task.clipURL ? [task.clipURL] : []
+        } : null,
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
-        completedAt: task.completedAt
+        completedAt: task.completedAt,
+        clipType: task.clipType,
+        duration: task.duration,
+        multipleClips: task.multipleClips,
+        subtitle: task.subtitle,
+        aspectRatio: 'original', // Default value since it might not be in DB
+        quality: 'HD', // Default value since it might not be in DB
       }))
     });
 

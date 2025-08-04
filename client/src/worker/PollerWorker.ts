@@ -1,3 +1,7 @@
+// This worker has been replaced with direct polling in the CreateClip component
+// The polling is now done directly to the main server with database updates via API
+
+/*
 import { connection } from "@/lib/redis";
 import { Worker } from "bullmq";
 import { prisma } from "@/lib/prisma";
@@ -69,3 +73,4 @@ taskStatusWorker.on("error", (err) => {
 taskStatusWorker.on("active", (job) => {
   console.log(`Job ${job.id} is now active.`);
 });
+*/

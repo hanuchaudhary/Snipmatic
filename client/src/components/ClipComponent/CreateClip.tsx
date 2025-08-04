@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import { EMAIL_SERVER_URL, MAIN_SERVER_URL } from "../../../config";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
-import { ITask } from "@/lib/types";
 import { useSnipStore } from "@/lib/snipStore";
 
 type FormValues = z.infer<typeof formSchema>;
@@ -54,9 +53,6 @@ export function CreateClipPage() {
   const watchMultiple = watch("multipleClips");
   const watchClipType = watch("clipType");
   const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
-  const [previewThumbnail, setPreviewThumbnail] = React.useState<string | null>(
-    null
-  );
   const [taskId, setTaskId] = React.useState<string | null>(
     typeof window !== "undefined" ? localStorage.getItem("taskId") : null
   );
@@ -74,7 +70,6 @@ export function CreateClipPage() {
 
     if (watchUrl && !store.isFetching) {
       store.fetchVideoInfo(watchUrl);
-      setPreviewThumbnail(store.videoInfo.thumbnail || null);
     }
   }, [watchUrl]);
 
@@ -84,29 +79,44 @@ export function CreateClipPage() {
       return;
     }
 
-    const subsCheck = await axios.get("/api/pre");
-    if (subsCheck.status === 403) {
-      toast.error(
-        "Your subscription limits have been exceeded. Please upgrade your plan."
-      );
-      return;
-    }
-
     try {
       setIsProcessing(true);
 
+      // Check subscription limits
+      try {
+        const subsCheck = await axios.get("/api/pre");
+        if (subsCheck.status === 403) {
+          toast.error(
+            "Your subscription limits have been exceeded. Please upgrade your plan."
+          );
+          setIsProcessing(false);
+          return;
+        }
+      } catch (subsError: any) {
+        if (subsError.response?.status === 403) {
+          toast.error(
+            "Your subscription limits have been exceeded. Please upgrade your plan."
+          );
+          setIsProcessing(false);
+          return;
+        }
+      }
+
       if (!watchUrl) {
         toast.error("Please enter a valid YouTube URL");
+        setIsProcessing(false);
         return;
       }
 
       if (watchClipType === "MANUAL" && !watch("startTime")) {
         toast.error("Please enter a valid start time");
+        setIsProcessing(false);
         return;
       }
 
       if (watchClipType === "MANUAL" && !watch("endTime")) {
         toast.error("Please enter a valid end time");
+        setIsProcessing(false);
         return;
       }
 
@@ -116,6 +126,7 @@ export function CreateClipPage() {
           watch("endTime") === "00:00:00"
         ) {
           toast.error("Please enter a valid start and end time");
+          setIsProcessing(false);
           return;
         }
 
@@ -131,6 +142,7 @@ export function CreateClipPage() {
 
         if (startSeconds >= endSeconds) {
           toast.error("Start time must be before end time");
+          setIsProcessing(false);
           return;
         }
         if (watchMultiple) {
@@ -142,6 +154,7 @@ export function CreateClipPage() {
           !watchUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)/)
         ) {
           toast.error("Please enter a valid YouTube URL for AI processing");
+          setIsProcessing(false);
           return;
         }
       }
@@ -172,6 +185,7 @@ export function CreateClipPage() {
 
       if (!taskId) {
         toast.error("Failed to create clip. Please try again.");
+        setIsProcessing(false);
         return;
       }
 
@@ -180,31 +194,29 @@ export function CreateClipPage() {
 
       await axios.post(`/api/task/${taskId}`, {
         youtubeUrl: data.url || "",
-        title: "Title for the clip",
         videoInfo: {
           duration: store.videoInfo.duration,
           multipleClips: data.multipleClips,
           title: store.videoInfo.title,
           thumbnail: store.videoInfo.thumbnail,
+          clipType: data.clipType,
+          subtitle: data.subtitles,
         },
       });
 
       toast.dismiss();
     } catch (error) {
       toast.dismiss();
+      setIsProcessing(false);
       toast.error(
         `An error occurred: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
-    } finally {
-      setIsProcessing(false);
     }
   };
 
-  const [task, setTask] = React.useState<ITask | null>(null);
-  console.log("Current task ID:", taskId);
-  console.log("Current task data:", task);
+  const [task, setTask] = React.useState<any | null>(null);
 
   useEffect(() => {
     let statusInterval: NodeJS.Timeout;
@@ -212,37 +224,108 @@ export function CreateClipPage() {
 
     if (!taskId) return;
 
-    // Poll task status
     const fetchTaskStatus = async () => {
       try {
-        const response = await axios.get(`/api/task/${taskId}`);
-        if (response.status === 200) {
-          const taskData = response.data;
-          setTask(taskData);
-          if (taskData.status === "COMPLETED") {
-            toast.success("Task completed successfully!");
-            setValue("url", "");
-            setPreviewThumbnail(null);
-            localStorage.removeItem("taskId");
-            clearInterval(statusInterval);
-            clearInterval(heartbeatInterval);
-          } else if (taskData.status === "FAILED") {
-            toast.error("Task failed. Please try again.");
-            setValue("url", "");
-            setPreviewThumbnail(null);
-            localStorage.removeItem("taskId");
-            clearInterval(statusInterval);
-            clearInterval(heartbeatInterval);
-          } else {
-            toast.info(`Task is in progress: ${taskData.status}`);
-          }
-          console.log("Task status fetched successfully");
-        } else {
-          toast.error("Failed to fetch task status");
-          clearInterval(statusInterval);
+        const mainServerResponse = await axios.get(
+          `${MAIN_SERVER_URL}/status/${taskId}`
+        );
+        if (mainServerResponse.status !== 200) {
+          throw new Error(
+            `Failed to fetch task status: ${mainServerResponse.statusText}`
+          );
         }
+
+        const mainServerData = mainServerResponse.data;
+
+        console.log(
+          `Polling task status for taskId: ${taskId} progress: ${mainServerData.progress} status: ${mainServerData.status}`
+        );
+
+        // Update database with main server data
+        await axios.put(`/api/task/${taskId}`, {
+          status: mainServerData.status,
+          progress: mainServerData.progress,
+          statusMessage: mainServerData.message || mainServerData.statusMessage,
+          errorMessage: mainServerData.errorMessage || "",
+          clipURL: mainServerData.result?.s3_urls?.[0] || "",
+          clipsData: mainServerData.result?.viral_moments || null,
+          completedAt: ["COMPLETED", "FAILED"].includes(mainServerData.status)
+            ? new Date(mainServerData.updated_at || new Date())
+            : null,
+        });
+
+        // Create unified task data structure for UI
+        const unifiedTaskData = {
+          taskId: taskId,
+          status: mainServerData.status,
+          progress: mainServerData.progress,
+          statusMessage: mainServerData.message || mainServerData.statusMessage,
+          errorMessage: mainServerData.errorMessage || "",
+          clipURL: mainServerData.result?.s3_urls?.[0] || "",
+          clipsData: mainServerData.result?.viral_moments || null,
+          result: mainServerData.result || null,
+          createdAt: mainServerData.created_at,
+          updatedAt: mainServerData.updated_at,
+          completedAt: ["COMPLETED", "FAILED"].includes(mainServerData.status)
+            ? mainServerData.updated_at
+            : null,
+        };
+
+        console.log("Unified task data:", unifiedTaskData);
+        setTask(unifiedTaskData);
+
+        if (unifiedTaskData.status === "COMPLETED") {
+          setIsProcessing(false);
+          toast.success("Task completed successfully!");
+          setValue("url", "");
+          localStorage.removeItem("taskId");
+          clearInterval(statusInterval);
+          clearInterval(heartbeatInterval);
+        } else if (unifiedTaskData.status === "FAILED") {
+          setIsProcessing(false);
+          toast.error("Task failed. Please try again.");
+          setValue("url", "");
+          localStorage.removeItem("taskId");
+          clearInterval(statusInterval);
+          clearInterval(heartbeatInterval);
+        } else {
+          toast.info(`Task is in progress: ${unifiedTaskData.status}`);
+        }
+        console.log("Task status updated successfully");
       } catch (error) {
         console.error("Error fetching task status:", error);
+        // Fallback to local database
+        try {
+          const response = await axios.get(`/api/task/${taskId}`);
+          if (response.status === 200) {
+            const dbTaskData = response.data.task;
+
+            // Create unified structure from database data
+            const unifiedTaskData = {
+              taskId: dbTaskData.taskId,
+              status: dbTaskData.status,
+              progress: dbTaskData.progress,
+              statusMessage: dbTaskData.statusMessage,
+              errorMessage: dbTaskData.errorMessage,
+              clipURL: dbTaskData.clipURL,
+              clipsData: dbTaskData.clipsData,
+              result: dbTaskData.clipsData
+                ? {
+                    viral_moments: dbTaskData.clipsData,
+                    s3_urls: dbTaskData.clipURL ? [dbTaskData.clipURL] : [],
+                  }
+                : null,
+              createdAt: dbTaskData.createdAt,
+              updatedAt: dbTaskData.updatedAt,
+              completedAt: dbTaskData.completedAt,
+            };
+
+            setTask(unifiedTaskData);
+            console.log("Fallback: using database data", unifiedTaskData);
+          }
+        } catch (fallbackError) {
+          console.error("Fallback fetch also failed:", fallbackError);
+        }
       }
     };
 
@@ -260,8 +343,8 @@ export function CreateClipPage() {
     };
 
     fetchTaskStatus();
-    statusInterval = setInterval(fetchTaskStatus, 15000); // 15 seconds
-    heartbeatInterval = setInterval(sendHeartbeat, 30000); //30 seconds
+    statusInterval = setInterval(fetchTaskStatus, 3000);
+    heartbeatInterval = setInterval(sendHeartbeat, 3000);
 
     return () => {
       clearInterval(statusInterval);
@@ -288,7 +371,7 @@ export function CreateClipPage() {
               </span>{" "}
               info...
             </motion.div>
-          ) : previewThumbnail ? (
+          ) : store.videoInfo.thumbnail ? (
             <motion.div
               key="thumbnail"
               initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
@@ -300,14 +383,14 @@ export function CreateClipPage() {
               <div
                 onClick={() => {
                   setValue("url", "");
-                  setPreviewThumbnail(null);
+                  store.videoInfo.thumbnail = "";
                 }}
                 className="absolute z-[99] top-3 right-3"
               >
                 <IconCircleXFilled className="h-7 w-7 shadow opacity-80 hover:opacity-100 hover:scale-105 transition-transform cursor-pointer text-orange-200" />
               </div>
               <img
-                src={previewThumbnail}
+                src={store.videoInfo.thumbnail}
                 alt="YouTube Thumbnail"
                 className="w-full h-full object-cover"
               />

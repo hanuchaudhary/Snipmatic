@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { taskQueue } from "@/lib/redis";
 import axios from "axios";
 import { EMAIL_SERVER_URL } from "../../../../../config";
 
@@ -77,7 +76,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { youtubeUrl, title } = body;
+    const { youtubeUrl, videoInfo } = body;
 
     if (!youtubeUrl) {
       return NextResponse.json(
@@ -86,34 +85,32 @@ export async function POST(
       );
     }
 
-    const [task] = await Promise.all([
-      // new task in the database
-      prisma.task.create({
-        data: {
-          taskId,
-          userId: session.user.id,
-          youtubeUrl,
-          title: title || "Untitled Clip",
-          status: "PENDING",
-          progress: 0,
-          statusMessage: "Task initialized",
-        },
-      }),
-
-      // add job to the task queue
-      taskQueue.add("task-status", {
+    // first entry in the database
+    const task = await prisma.task.create({
+      data: {
         taskId,
         userId: session.user.id,
-      }),
+        youtubeUrl,
+        title: videoInfo.title || "Untitled Clip",
+        status: "QUEUED",
+        progress: 0,
+        statusMessage: "Task initialized",
+        clipType: videoInfo.clipType || "FULL_VIDEO",
+        duration: videoInfo.duration || 0,
+        multipleClips: videoInfo.multipleClips || false,
+        subtitle: videoInfo.subtitle || false,
+      },
+    });
 
-      // notify the email server about the new task
-      axios.post(`${EMAIL_SERVER_URL}/set_task`, {
-        email: session.user.email,
-        task_id: taskId,
-      }),
-    ]);
+    // notify the email server about the new task
+    await axios.post(`${EMAIL_SERVER_URL}/set_task`, {
+      email: session.user.email,
+      task_id: taskId,
+    });
 
-    console.log(`Task created with ID: ${task.taskId} for user: ${session.user.id}`);
+    console.log(
+      `Task created with ID: ${task.taskId} for user: ${session.user.id}`
+    );
 
     return NextResponse.json(
       {
@@ -132,6 +129,88 @@ export async function POST(
     console.error("Error creating task:", error);
     return NextResponse.json(
       { error: "Failed to create task" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ taskId: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { taskId } = await params;
+    if (!taskId) {
+      return NextResponse.json(
+        { error: "Task ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      status,
+      progress,
+      statusMessage,
+      errorMessage,
+      clipURL,
+      clipsData,
+      completedAt,
+    } = body;
+
+    // Verify the task belongs to the user
+    const existingTask = await prisma.task.findFirst({
+      where: {
+        taskId,
+        userId: session.user.id,
+      },
+    });
+
+    if (!existingTask) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+
+    // Update the task
+    const updatedTask = await prisma.task.update({
+      where: { taskId },
+      data: {
+        status,
+        progress,
+        statusMessage,
+        errorMessage: errorMessage || "",
+        clipURL: clipURL || "",
+        completedAt: ["COMPLETED", "FAILED"].includes(status)
+          ? new Date(completedAt || new Date())
+          : null,
+        clipsData: clipsData || null,
+      },
+    });
+
+    console.log(`Task ${taskId} updated with status: ${status}`);
+
+    return NextResponse.json({
+      success: true,
+      message: "Task updated successfully",
+      task: {
+        taskId: updatedTask.taskId,
+        status: updatedTask.status,
+        progress: updatedTask.progress,
+        statusMessage: updatedTask.statusMessage,
+        errorMessage: updatedTask.errorMessage,
+        clipURL: updatedTask.clipURL,
+        clipsData: updatedTask.clipsData,
+        completedAt: updatedTask.completedAt,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating task:", error);
+    return NextResponse.json(
+      { error: "Failed to update task" },
       { status: 500 }
     );
   }

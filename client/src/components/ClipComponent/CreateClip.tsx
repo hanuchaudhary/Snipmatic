@@ -23,11 +23,13 @@ import { EMAIL_SERVER_URL, MAIN_SERVER_URL } from "../../../config";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
 import { ITask } from "@/lib/types";
+import { useSnipStore } from "@/lib/snipStore";
 
 type FormValues = z.infer<typeof formSchema>;
 
 export function CreateClipPage() {
   const { data: session } = useSession();
+  const store = useSnipStore();
 
   const {
     control,
@@ -52,24 +54,27 @@ export function CreateClipPage() {
   const watchMultiple = watch("multipleClips");
   const watchClipType = watch("clipType");
   const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
-  const [thumbnail, setThumbnail] = React.useState<string | null>(null);
+  const [previewThumbnail, setPreviewThumbnail] = React.useState<string | null>(
+    null
+  );
   const [taskId, setTaskId] = React.useState<string | null>(
     typeof window !== "undefined" ? localStorage.getItem("taskId") : null
   );
 
   React.useEffect(() => {
-    const extractYouTubeVideoId = (url: string): string | null => {
-      const match = url.match(
-        /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/
-      );
-      return match ? match[1] : null;
-    };
+    // Validate YouTube URL format
+    let isValidUrl = watchUrl?.match(
+      /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?([a-zA-Z0-9_-]{11})/
+    );
+    if (!isValidUrl && watchUrl !== "") {
+      setValue("url", "");
+      toast.error("Please enter a valid YouTube URL");
+      return;
+    }
 
-    const id = extractYouTubeVideoId(watchUrl);
-    if (id) {
-      setThumbnail(`https://img.youtube.com/vi/${id}/hqdefault.jpg`);
-    } else {
-      setThumbnail(null);
+    if (watchUrl && !store.isFetching) {
+      store.fetchVideoInfo(watchUrl);
+      setPreviewThumbnail(store.videoInfo.thumbnail || null);
     }
   }, [watchUrl]);
 
@@ -176,6 +181,12 @@ export function CreateClipPage() {
       await axios.post(`/api/task/${taskId}`, {
         youtubeUrl: data.url || "",
         title: "Title for the clip",
+        videoInfo: {
+          duration: store.videoInfo.duration,
+          multipleClips: data.multipleClips,
+          title: store.videoInfo.title,
+          thumbnail: store.videoInfo.thumbnail,
+        },
       });
 
       toast.dismiss();
@@ -211,14 +222,14 @@ export function CreateClipPage() {
           if (taskData.status === "COMPLETED") {
             toast.success("Task completed successfully!");
             setValue("url", "");
-            setThumbnail(null);
+            setPreviewThumbnail(null);
             localStorage.removeItem("taskId");
             clearInterval(statusInterval);
             clearInterval(heartbeatInterval);
           } else if (taskData.status === "FAILED") {
             toast.error("Task failed. Please try again.");
             setValue("url", "");
-            setThumbnail(null);
+            setPreviewThumbnail(null);
             localStorage.removeItem("taskId");
             clearInterval(statusInterval);
             clearInterval(heartbeatInterval);
@@ -262,28 +273,52 @@ export function CreateClipPage() {
     <div className="min-h-screen md:pt-0 pt-16 p-4 flex items-center justify-center">
       <div className="container max-w-2xl mx-auto space-y-4">
         <AnimatePresence mode="wait">
-          {thumbnail ? (
+          {store.isFetching ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="text-center text-2xl font-instrumental font-thin mt-10"
+            >
+              Fetching{" "}
+              <span className="dark:text-orange-500 text-orange-600">
+                video
+              </span>{" "}
+              info...
+            </motion.div>
+          ) : previewThumbnail ? (
             <motion.div
               key="thumbnail"
               initial={{ opacity: 0, filter: "blur(20px)", y: 20 }}
               animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
               exit={{ opacity: 0, filter: "blur(20px)", y: -10 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="relative h-60 mt-10 bg-secondary/50 rounded-xl w-full overflow-hidden border-2 shadow"
+              className="relative h-60 mt-10 bg-secondary/50 rounded-3xl w-full overflow-hidden border-2 shadow"
             >
               <div
                 onClick={() => {
                   setValue("url", "");
+                  setPreviewThumbnail(null);
                 }}
                 className="absolute z-[99] top-3 right-3"
               >
-                <IconCircleXFilled className="h-7 w-7 shadow opacity-80 hover:opacity-100 hover:scale-105 transition-transform cursor-pointer" />
+                <IconCircleXFilled className="h-7 w-7 shadow opacity-80 hover:opacity-100 hover:scale-105 transition-transform cursor-pointer text-orange-200" />
               </div>
               <img
-                src={thumbnail}
+                src={previewThumbnail}
                 alt="YouTube Thumbnail"
                 className="w-full h-full object-cover"
               />
+              <div className="absolute bottom-2 left-2 right-2 rounded-[16px] backdrop-blur-sm bg-primary-foreground/30 border dark:border-border border-border/30 text-white p-2 font-jost font-semibold">
+                <p className="text-sm">{store.videoInfo.title}</p>
+                <p className="text-xs">
+                  {Math.floor(store.videoInfo.duration / 60)}:
+                  {String(store.videoInfo.duration % 60).padStart(2, "0")}{" "}
+                  minutes
+                </p>
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -468,7 +503,10 @@ export function CreateClipPage() {
               </div>
 
               <div className="w-full flex items-center justify-end mt-4">
-                <Button type="submit" disabled={!watchUrl || isProcessing}>
+                <Button
+                  type="submit"
+                  disabled={!watchUrl || isProcessing || store.isFetching}
+                >
                   {isProcessing ? (
                     <span className="flex items-center gap-2">
                       Processing

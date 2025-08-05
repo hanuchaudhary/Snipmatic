@@ -15,5 +15,5 @@ services:
       - snipmatic_network
 
 networks:
-  shared_network:
+  snipmatic_network:
     external: true

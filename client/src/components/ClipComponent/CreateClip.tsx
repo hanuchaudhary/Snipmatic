@@ -148,6 +148,21 @@ export function CreateClipPage() {
         if (watchMultiple) {
           setValue("multipleClips", false);
         }
+
+        if (store.videoInfo.duration < endSeconds) {
+          console.log(
+            "Video duration:",
+            store.videoInfo.duration,
+            "End time:",
+            endSeconds,
+            "start time:",
+            startSeconds
+          );
+
+          toast.error("End time exceeds video duration");
+          setIsProcessing(false);
+          return;
+        }
       } else if (watchClipType === "AI") {
         if (
           !watchUrl ||
@@ -216,8 +231,6 @@ export function CreateClipPage() {
     }
   };
 
-  const [task, setTask] = React.useState<any | null>(null);
-
   useEffect(() => {
     let statusInterval: NodeJS.Timeout;
     let heartbeatInterval: NodeJS.Timeout;
@@ -254,7 +267,6 @@ export function CreateClipPage() {
             : null,
         });
 
-        // Create unified task data structure for UI
         const unifiedTaskData = {
           taskId: taskId,
           status: mainServerData.status,
@@ -271,8 +283,26 @@ export function CreateClipPage() {
             : null,
         };
 
-        console.log("Unified task data:", unifiedTaskData);
-        setTask(unifiedTaskData);
+        store.setTasks([
+          ...(store.tasks || []),
+          {
+            ...unifiedTaskData,
+            userId: session?.user?.id,
+            youtubeUrl: store.videoInfo.url,
+            title: store.videoInfo.title,
+            duration: store.videoInfo.duration,
+            clipType: watchClipType,
+            multipleClips: watchMultiple,
+            subtitle: watch("subtitles"),
+            createdAt: new Date(unifiedTaskData.createdAt),
+            updatedAt: new Date(unifiedTaskData.updatedAt),
+            status: unifiedTaskData.status,
+            progress: unifiedTaskData.progress,
+            statusMessage: unifiedTaskData.statusMessage,
+            taskId: unifiedTaskData.taskId,
+            completedAt: unifiedTaskData.completedAt,
+          },
+        ]);
 
         if (unifiedTaskData.status === "COMPLETED") {
           setIsProcessing(false);
@@ -288,8 +318,6 @@ export function CreateClipPage() {
           localStorage.removeItem("taskId");
           clearInterval(statusInterval);
           clearInterval(heartbeatInterval);
-        } else {
-          toast.info(`Task is in progress: ${unifiedTaskData.status}`);
         }
         console.log("Task status updated successfully");
       } catch (error) {
@@ -320,7 +348,29 @@ export function CreateClipPage() {
               completedAt: dbTaskData.completedAt,
             };
 
-            setTask(unifiedTaskData);
+            store.setTasks([
+              ...(store.tasks || []),
+              {
+                ...unifiedTaskData,
+                userId: session?.user?.id,
+                youtubeUrl: store.videoInfo.url,
+                title: store.videoInfo.title,
+                duration: store.videoInfo.duration,
+                clipType: watchClipType,
+                multipleClips: watchMultiple,
+                subtitle: watch("subtitles"),
+                createdAt: new Date(unifiedTaskData.createdAt),
+                updatedAt: new Date(unifiedTaskData.updatedAt),
+                status: unifiedTaskData.status,
+                progress: unifiedTaskData.progress,
+                statusMessage: unifiedTaskData.statusMessage,
+                taskId: unifiedTaskData.taskId,
+                completedAt: unifiedTaskData.completedAt,
+                clipURL: unifiedTaskData.clipURL,
+                clipsData: unifiedTaskData.clipsData,
+                result: unifiedTaskData.result || undefined,
+              },
+            ]);
             console.log("Fallback: using database data", unifiedTaskData);
           }
         } catch (fallbackError) {
@@ -343,8 +393,8 @@ export function CreateClipPage() {
     };
 
     fetchTaskStatus();
-    statusInterval = setInterval(fetchTaskStatus, 3000);
-    heartbeatInterval = setInterval(sendHeartbeat, 3000);
+    statusInterval = setInterval(fetchTaskStatus, 7000); // Poll every 7 seconds
+    heartbeatInterval = setInterval(sendHeartbeat, 10000); // Send heartbeat every 10 seconds
 
     return () => {
       clearInterval(statusInterval);
@@ -354,7 +404,7 @@ export function CreateClipPage() {
 
   return (
     <div className="min-h-screen md:pt-0 pt-16 p-4 flex items-center justify-center">
-      <div className="container max-w-2xl mx-auto space-y-4">
+      <div className="max-w-2xl container relative group mx-auto space-y-4">
         <AnimatePresence mode="wait">
           {store.isFetching ? (
             <motion.div
@@ -503,6 +553,14 @@ export function CreateClipPage() {
                         )}
                       />
                     </div>
+                    {watch("startTime") && watch("endTime") && (
+                      <p className="text-sm text-muted-foreground">
+                        Duration:{" "}
+                        {watch("startTime") && watch("endTime")
+                          ? `${watch("startTime")}s - ${watch("endTime")}s`
+                          : "00:00:00 - 00:00:00"}
+                      </p>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>

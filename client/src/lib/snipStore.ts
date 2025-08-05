@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { MAIN_SERVER_URL } from "../../config";
 import axios from "axios";
+import { Task } from "@/types/task";
 
 export interface VideoInfo {
   url: string;
@@ -14,6 +15,9 @@ interface SnipStore {
   fetchVideoInfo: (url: string) => Promise<void>;
   videoInfo: VideoInfo;
   isFetching?: boolean;
+
+  tasks: Task[];
+  setTasks: (tasks: Task[]) => void;
 }
 
 export const useSnipStore = create<SnipStore>((set, get) => ({
@@ -29,7 +33,7 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
     set({ isFetching: true });
     if (url.trim() === get().videoInfo.url) {
       console.log("Video info already fetched for this URL.");
-      set({ isFetching: false,});
+      set({ isFetching: false });
       return;
     }
 
@@ -53,5 +57,9 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
     } finally {
       set({ isFetching: false });
     }
+  },
+  tasks: [],
+  setTasks: (tasks) => {
+    set({ tasks });
   },
 }));

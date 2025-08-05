@@ -15,6 +15,8 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
+    networks:
+      - snipmatic_network
 
   # API Gateway - FastAPI application
   api-gateway:
@@ -37,6 +39,8 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - snipmatic_network
 
   # Download Workers - Handle video downloading (I/O bound)
   download-worker:
@@ -55,6 +59,8 @@ services:
     deploy:
       replicas: 2  # 2 workers × 3 concurrency x 5 workers = 30 concurrent downloads
     restart: unless-stopped
+    networks:
+      - snipmatic_network
 
   # Transcribe Workers - Handle audio transcription and AI analysis (GPU bound)
   transcribe-worker:
@@ -80,6 +86,8 @@ services:
       #         count: 1
       #         capabilities: [gpu]
     restart: unless-stopped
+    networks:
+      - snipmatic_network
 
   # Clip Workers - Handle video clip generation (CPU bound)
   clip-worker:
@@ -102,6 +110,8 @@ services:
     deploy:
       replicas: 2  # 2 workers × 4 concurrency = 8 concurrent clip creations x 5 threads = 40 for ai multi-clips
     restart: unless-stopped
+    networks:
+      - snipmatic_network
 
   # Celery Flower - Web-based monitoring tool for Celery tasks
   flower:
@@ -116,6 +126,8 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - snipmatic_network
 
   # Uncomment the following section to enable Nginx as a reverse proxy and file server
   
@@ -134,3 +146,7 @@ services:
 volumes:
   redis_data:
     driver: local
+
+networks:
+  snipmatic_network:
+    external: true

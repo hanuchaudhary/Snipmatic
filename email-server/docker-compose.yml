@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  email-server:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - FROM_EMAIL=${FROM_EMAIL}
+    env_file:
+      - .env

@@ -404,7 +404,7 @@ export function CreateClipPage() {
 
   return (
     <div className="min-h-screen md:pt-0 pt-16 p-4 flex items-center justify-center">
-      <div className="max-w-2xl container relative group mx-auto space-y-4">
+      <div className="max-w-3xl container relative group mx-auto space-y-4 ">
         <AnimatePresence mode="wait">
           {store.isFetching ? (
             <motion.div
@@ -469,201 +469,206 @@ export function CreateClipPage() {
             </motion.div>
           )}
         </AnimatePresence>
-        <Card>
-          <CardContent className="font-jost">
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-              <div className="space-y-2">
-                <Controller
-                  control={control}
-                  name="url"
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="url"
-                      type="url"
-                      placeholder="Paste any YouTube link..."
-                      className="border-none focus-visible:ring-0 shadow-none"
-                    />
-                  )}
-                />
-                {errors.url && (
-                  <p className="text-sm text-destructive">
-                    {errors.url.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="inline-block">
-                <ClipTypeSwitch
-                  clipType={watchClipType || "MANUAL"}
-                  setClipType={() => {
-                    const currentType = watchClipType;
-                    setValue(
-                      "clipType",
-                      currentType === "AI" ? "MANUAL" : "AI"
-                    );
-                  }}
-                />
-              </div>
-
-              <AnimatePresence>
-                {watchClipType === "AI" && (
-                  <motion.div className="flex items-center justify-between py-2.5">
-                    <Label htmlFor="multipleClips" className="">
-                      Generate Multiple Clips with AI
-                    </Label>
-                    <Controller
-                      control={control}
-                      name="multipleClips"
-                      render={({ field }) => (
-                        <Switch
-                          id="multipleClips"
-                          checked={field.value}
-                          disabled={watchClipType !== "AI"}
-                          onCheckedChange={(checked) => field.onChange(checked)}
-                        />
-                      )}
-                    />
-                  </motion.div>
-                )}
-                {watchClipType === "MANUAL" && (
-                  <motion.div className="space-y-2">
-                    <div className="flex items-center gap-4">
-                      <Controller
-                        control={control}
-                        name="startTime"
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            placeholder="Start - 00:00:00"
-                            className="flex-1 font-mono"
-                          />
-                        )}
+        <div className="p-3 bg-muted/20 rounded-[46px] backdrop-blur-sm border">
+          <Card className="bg-secondary/50 backdrop-blur-sm border-muted/30 border-none">
+            <CardContent className="font-jost">
+              <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+                <div className="space-y-2">
+                  <Controller
+                    control={control}
+                    name="url"
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        id="url"
+                        type="url"
+                        placeholder="Paste any YouTube link..."
+                        className="border-none focus-visible:ring-0 shadow-none"
                       />
-                      <span className="text-muted-foreground">-</span>
-                      <Controller
-                        control={control}
-                        name="endTime"
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            placeholder="End - 00:00:00"
-                            className="flex-1 font-mono"
-                          />
-                        )}
-                      />
-                    </div>
-                    {watch("startTime") && watch("endTime") && (
-                      <p className="text-sm text-muted-foreground">
-                        Duration:{" "}
-                        {watch("startTime") && watch("endTime")
-                          ? `${watch("startTime")}s - ${watch("endTime")}s`
-                          : "00:00:00 - 00:00:00"}
-                      </p>
                     )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="space-y-2">
-                <Controller
-                  control={control}
-                  name="aspectRatio"
-                  render={({ field }) => (
-                    <div className="flex flex-wrap gap-2 border p-2 rounded-[22px] bg-secondary/50">
-                      {[
-                        {
-                          value: "original",
-                          label: "Original",
-                        },
-                        {
-                          value: "vertical",
-                          label: "Vertical (9:16)",
-                        },
-                        {
-                          value: "square",
-                          label: "Square (1:1)",
-                        },
-                      ].map((option) => {
-                        const isActive = option.value === watch("aspectRatio");
-
-                        return (
-                          <button
-                            onClick={() => field.onChange(option.value)}
-                            key={option.value}
-                            type="button"
-                            className={cn(
-                              "flex-1 relative border bg-secondary justify-center md:h-15 md:text-base cursor-pointer rounded-xl"
-                            )}
-                          >
-                            {isActive && (
-                              <motion.div
-                                layoutId={"active"}
-                                className={`absolute inset-0 z-20 rounded-xl bg-primary`}
-                                transition={{ duration: 0.3, type: "spring" }}
-                              />
-                            )}
-                            {
-                              <span
-                                className={cn(
-                                  "relative m-auto px-4 z-30 font-[500]",
-                                  isActive
-                                    ? "text-primary-foreground"
-                                    : "text-muted-foreground"
-                                )}
-                              >
-                                {option.label}
-                              </span>
-                            }
-                          </button>
-                        );
-                      })}
-                    </div>
+                  />
+                  {errors.url && (
+                    <p className="text-sm text-destructive">
+                      {errors.url.message}
+                    </p>
                   )}
-                />
-              </div>
+                </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="subtitles">Subtitles</Label>
-                <Controller
-                  control={control}
-                  name="subtitles"
-                  render={({ field }) => (
-                    <div className="flex items-center space-x-2 pt-2">
-                      <Switch
-                        id="subtitles"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                      <Label htmlFor="subtitles" className="text-sm">
-                        English only
+                <div className="inline-block">
+                  <ClipTypeSwitch
+                    clipType={watchClipType || "MANUAL"}
+                    setClipType={() => {
+                      const currentType = watchClipType;
+                      setValue(
+                        "clipType",
+                        currentType === "AI" ? "MANUAL" : "AI"
+                      );
+                    }}
+                  />
+                </div>
+
+                <AnimatePresence>
+                  {watchClipType === "AI" && (
+                    <motion.div className="flex items-center justify-between py-2.5">
+                      <Label htmlFor="multipleClips" className="">
+                        Generate Multiple Clips with AI
                       </Label>
-                    </div>
+                      <Controller
+                        control={control}
+                        name="multipleClips"
+                        render={({ field }) => (
+                          <Switch
+                            id="multipleClips"
+                            checked={field.value}
+                            disabled={watchClipType !== "AI"}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked)
+                            }
+                          />
+                        )}
+                      />
+                    </motion.div>
                   )}
-                />
-              </div>
+                  {watchClipType === "MANUAL" && (
+                    <motion.div className="space-y-2">
+                      <div className="flex items-center gap-4">
+                        <Controller
+                          control={control}
+                          name="startTime"
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              placeholder="Start - 00:00:00"
+                              className="flex-1 font-mono"
+                            />
+                          )}
+                        />
+                        <span className="text-muted-foreground">-</span>
+                        <Controller
+                          control={control}
+                          name="endTime"
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              placeholder="End - 00:00:00"
+                              className="flex-1 font-mono"
+                            />
+                          )}
+                        />
+                      </div>
+                      {watch("startTime") && watch("endTime") && (
+                        <p className="text-sm text-muted-foreground">
+                          Duration:{" "}
+                          {watch("startTime") && watch("endTime")
+                            ? `${watch("startTime")}s - ${watch("endTime")}s`
+                            : "00:00:00 - 00:00:00"}
+                        </p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-              <div className="w-full flex items-center justify-end mt-4">
-                <Button
-                  type="submit"
-                  disabled={!watchUrl || isProcessing || store.isFetching}
-                >
-                  {isProcessing ? (
-                    <span className="flex items-center gap-2">
-                      Processing
-                      <IconLoader2 className="animate-spin h-4 w-4" />
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      Process Video
-                      <IconArrowUpRight />
-                    </span>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                <div className="space-y-2">
+                  <Controller
+                    control={control}
+                    name="aspectRatio"
+                    render={({ field }) => (
+                      <div className="flex flex-wrap gap-2 border p-2 rounded-[22px] bg-secondary/50">
+                        {[
+                          {
+                            value: "original",
+                            label: "Original",
+                          },
+                          {
+                            value: "vertical",
+                            label: "Vertical (9:16)",
+                          },
+                          {
+                            value: "square",
+                            label: "Square (1:1)",
+                          },
+                        ].map((option) => {
+                          const isActive =
+                            option.value === watch("aspectRatio");
+
+                          return (
+                            <button
+                              onClick={() => field.onChange(option.value)}
+                              key={option.value}
+                              type="button"
+                              className={cn(
+                                "flex-1 relative border bg-secondary justify-center md:h-15 md:text-base cursor-pointer rounded-xl"
+                              )}
+                            >
+                              {isActive && (
+                                <motion.div
+                                  layoutId={"active"}
+                                  className={`absolute inset-0 z-20 rounded-xl bg-primary`}
+                                  transition={{ duration: 0.3, type: "spring" }}
+                                />
+                              )}
+                              {
+                                <span
+                                  className={cn(
+                                    "relative m-auto px-4 z-30 font-[500]",
+                                    isActive
+                                      ? "text-primary-foreground"
+                                      : "text-muted-foreground"
+                                  )}
+                                >
+                                  {option.label}
+                                </span>
+                              }
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="subtitles">Subtitles</Label>
+                  <Controller
+                    control={control}
+                    name="subtitles"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-2 pt-2">
+                        <Switch
+                          id="subtitles"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <Label htmlFor="subtitles" className="text-sm">
+                          English only
+                        </Label>
+                      </div>
+                    )}
+                  />
+                </div>
+
+                <div className="w-full flex items-center justify-end mt-4">
+                  <Button
+                    type="submit"
+                    disabled={!watchUrl || isProcessing || store.isFetching}
+                  >
+                    {isProcessing ? (
+                      <span className="flex items-center gap-2">
+                        Processing
+                        <IconLoader2 className="animate-spin h-4 w-4" />
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        Process Video
+                        <IconArrowUpRight />
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import os
 import tempfile
 import ffmpeg
-from faster_whisper import WhisperModel
+from faster_whisper import WhisperModel, BatchedInferencePipeline
 import torch
 import logging
 import json
@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 # Initialize AI models (loaded once per worker)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 compute_type = "float16" if torch.cuda.is_available() else "int8"
-whisper_model = WhisperModel("base", device=device, compute_type=compute_type)
+model = WhisperModel("base", device=device, compute_type=compute_type)
+bached_model = BatchedInferencePipeline(model)
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 def extract_audio(video_path: str) -> str:
@@ -54,7 +55,7 @@ def transcribe_audio_whisperx(audio_path: str) -> list:
     
     try:
         # Transcribe using faster-whisper
-        segments_generator, info = whisper_model.transcribe(audio_path, beam_size=5)
+        segments_generator, info = bached_model.transcribe(audio_path, batch_size=8, beam_size=5)
         
         # Convert generator to list and format similar to whisperx
         segments = []

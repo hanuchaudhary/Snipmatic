@@ -12,9 +12,9 @@ type Config struct {
 // Load loads configuration from environment variables
 func Load() *Config {
 	return &Config{
-		Port:         getEnvOrDefault("PORT"),
-		ResendAPIKey: getEnvOrDefault("RESEND_API_KEY"),
-		FromEmail:    getEnvOrDefault("FROM_EMAIL"),
+		Port:         getEnvOrDefault("PORT", "8080"),
+		ResendAPIKey: getEnvOrDefault("RESEND_API_KEY", ""),
+		FromEmail:    getEnvOrDefault("FROM_EMAIL", "noreply@example.com"),
 	}
 }
 

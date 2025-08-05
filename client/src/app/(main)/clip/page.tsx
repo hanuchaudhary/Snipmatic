@@ -7,7 +7,7 @@ export default function Page() {
     <main>
       <CreateClipPage />
       <div className="h-[calc(100vh-8rem)] relative">
-        <div className="absolute -top-10 w-full">
+        <div className="absolute md:-top-10 w-full">
           <Dashboard />
         </div>
       </div>

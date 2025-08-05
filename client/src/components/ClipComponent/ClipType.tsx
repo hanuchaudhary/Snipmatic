@@ -29,7 +29,7 @@ export const ClipTypeSwitch = ({
           <button
             type="button"
             key={key}
-            className="relative rounded-full cursor-pointer"
+            className="relative rounded-full md:text-base text-sm cursor-pointer"
             aria-label={label}
           >
             {isActive && (

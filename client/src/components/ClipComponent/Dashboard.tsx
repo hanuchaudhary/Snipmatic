@@ -49,13 +49,13 @@ export function Dashboard() {
   };
 
   return (
-    <div className="min-h-[87vh] font-jost">
-      <div className="max-w-7xl mx-auto border-2 border-muted/30 bg-secondary/40 backdrop-blur-sm rounded-[42px] h-full min-h-[80vh] p-2.5">
-        <div className="max-w-7xl mx-auto border-4 rounded-4xl h-full min-h-[80vh] p-6 bg-card">
+    <div className="min-h-[87vh] px-2 font-jost">
+      <div className="max-w-7xl mx-auto border-2 border-muted/30 bg-secondary/40 backdrop-blur-sm md:rounded-[42px] h-full min-h-[80vh] md:p-2.5 p-1 rounded-[36px]">
+        <div className="max-w-7xl mx-auto md:border-4 rounded-4xl h-full min-h-[80vh] p-6 bg-card">
           <div className="flex items-center justify-between mb-6">
             <TaskTypeSwitch taskType={activeTab} setTaskType={setActiveTab} />
 
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            {/* <div className="flex items-center gap-4 text-sm text-muted-foreground">
               {activeTab === "PROCESSING" && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -67,7 +67,7 @@ export function Dashboard() {
                   ? `${processingTasks.length} processing`
                   : `${completedTasks.length} completed`}
               </span>
-            </div>
+            </div> */}
           </div>
 
           <AnimatePresence mode="wait">

@@ -403,7 +403,7 @@ export function CreateClipPage() {
   }, [taskId, session?.user?.id]);
 
   return (
-    <div className="min-h-screen md:pt-0 pt-16 p-4 flex items-center justify-center">
+    <div className="min-h-screen md:pt-10 pt-26 p-4 flex items-center justify-center">
       <div className="max-w-3xl container relative group mx-auto space-y-4 ">
         <AnimatePresence mode="wait">
           {store.isFetching ? (
@@ -413,7 +413,7 @@ export function CreateClipPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="text-center text-2xl font-instrumental font-thin mt-10"
+              className="text-center text-2xl font-instrumental font-thin md:mt-10"
             >
               Fetching{" "}
               <span className="dark:text-orange-500 text-orange-600">
@@ -428,7 +428,7 @@ export function CreateClipPage() {
               animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
               exit={{ opacity: 0, filter: "blur(20px)", y: -10 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="relative h-60 mt-10 bg-secondary/50 rounded-3xl w-full overflow-hidden border-2 shadow"
+              className="relative md:h-60 h-42 md:mt-10 bg-muted/30 rounded-3xl w-full overflow-hidden border-2 shadow backdrop-blur-sm"
             >
               <div
                 onClick={() => {
@@ -469,9 +469,9 @@ export function CreateClipPage() {
             </motion.div>
           )}
         </AnimatePresence>
-        <div className="p-3 bg-muted/20 rounded-[46px] backdrop-blur-sm border">
-          <Card className="bg-secondary/50 backdrop-blur-sm border-muted/30 border-none">
-            <CardContent className="font-jost">
+        <div className="md:p-3 bg-muted/20 md:rounded-[44px] p-1 rounded-[36px] backdrop-blur-sm border">
+          <Card className="border-muted/30 border-none">
+            <CardContent className="font-jost md:p-6 p-4">
               <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
                 <div className="space-y-2">
                   <Controller
@@ -597,7 +597,7 @@ export function CreateClipPage() {
                               key={option.value}
                               type="button"
                               className={cn(
-                                "flex-1 relative border bg-secondary justify-center md:h-15 md:text-base cursor-pointer rounded-xl"
+                                "flex-1 relative border bg-secondary justify-center md:h-15 text-sm md:text-base cursor-pointer rounded-xl"
                               )}
                             >
                               {isActive && (

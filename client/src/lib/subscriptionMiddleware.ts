@@ -71,24 +71,25 @@ export const subscriptionMiddleware = async (
 
     const exceedsAICount = aiClips.length >= limits.AI_CLIP_COUNT;
     const exceedsManualCount = manualClips.length >= limits.MANUAL_CLIP_COUNT;
-    const hasInvalidMultiClipsOrSubtitles = userTasks.some(
-      (task) =>
-        task.multipleClips !== limits.MULTIPLE_CLIPS ||
-        task.subtitle !== limits.SUBTITLE
-    );
+
     const exceedsVideoLength = userTasks.some(
       (task) => (task.duration ?? 0) > limits.VIDEO_LENGTH
     );
 
     const hasViolation =
-      exceedsAICount ||
-      exceedsManualCount ||
-      hasInvalidMultiClipsOrSubtitles ||
-      exceedsVideoLength;
+      exceedsAICount || exceedsManualCount || exceedsVideoLength;
+    console.log("hasViolation", {
+      exceedsAICount,
+      exceedsManualCount,
+      exceedsVideoLength,
+      limits,
+      tier,
+      userTasks,
+    });
 
-    return hasViolation; 
+    return hasViolation;
   } catch (error) {
     console.error("Error in subscriptionMiddleware:", error);
-    return true; 
+    return true;
   }
 };

@@ -6,22 +6,21 @@ import { AnimatePresence, motion } from "motion/react";
 import { Task } from "@/types/task";
 import TaskCard from "./TaskCard";
 import axios from "axios";
+import { useSnipStore } from "@/lib/snipStore";
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<"COMPLETED" | "PROCESSING">(
     "PROCESSING"
   );
 
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { tasks, setTasks } = useSnipStore();
 
   const fetchTasks = async () => {
     try {
       setIsLoading(true);
       const response = await axios.get(`/api/task`);
-      const data = response.data.tasks as Task[] || [];
-      console.log("Fetched tasks:", data);
-      
+      const data = (response.data.tasks as Task[]) || [];
       setTasks(data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -34,30 +33,11 @@ export function Dashboard() {
     fetchTasks();
   }, [activeTab]);
 
-  // Live polling for processing tasks
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    const hasProcessingTasks = tasks.some(task => 
-      !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
-    );
-
-    if (hasProcessingTasks && activeTab === "PROCESSING") {
-      interval = setInterval(fetchTasks, 5000); // Poll every 5 seconds
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [tasks, activeTab]);
-
-  const processingTasks = tasks.filter(task => 
-    !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
+  const processingTasks = tasks.filter(
+    (task) => !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
   );
 
-  const completedTasks = tasks.filter(task => 
+  const completedTasks = tasks.filter((task) =>
     ["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
   );
 
@@ -74,8 +54,7 @@ export function Dashboard() {
         <div className="max-w-7xl mx-auto border-4 rounded-4xl h-full min-h-[80vh] p-6 bg-card">
           <div className="flex items-center justify-between mb-6">
             <TaskTypeSwitch taskType={activeTab} setTaskType={setActiveTab} />
-            
-            {/* Task count and refresh indicator */}
+
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               {activeTab === "PROCESSING" && (
                 <div className="flex items-center gap-2">
@@ -84,10 +63,9 @@ export function Dashboard() {
                 </div>
               )}
               <span>
-                {activeTab === "PROCESSING" 
+                {activeTab === "PROCESSING"
                   ? `${processingTasks.length} processing`
-                  : `${completedTasks.length} completed`
-                }
+                  : `${completedTasks.length} completed`}
               </span>
             </div>
           </div>
@@ -105,9 +83,9 @@ export function Dashboard() {
             ) : activeTab === "PROCESSING" ? (
               <motion.div
                 key="processing"
-                initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
+                initial={{ opacity: 0, filter: "blur(10px)" }}
+                animate={{ opacity: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, filter: "blur(10px)" }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="space-y-4"
               >

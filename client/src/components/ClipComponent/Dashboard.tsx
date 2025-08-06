@@ -55,7 +55,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <TaskTypeSwitch taskType={activeTab} setTaskType={setActiveTab} />
 
-            {/* <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="md:flex hidden items-center gap-4 text-sm text-muted-foreground">
               {activeTab === "PROCESSING" && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -67,7 +67,7 @@ export function Dashboard() {
                   ? `${processingTasks.length} processing`
                   : `${completedTasks.length} completed`}
               </span>
-            </div> */}
+            </div>
           </div>
 
           <AnimatePresence mode="wait">

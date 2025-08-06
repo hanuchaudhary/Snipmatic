@@ -31,7 +31,7 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION=${AWS_REGION:-us-east-1}
-      - EMAIL_SERVER_URL=http://localhost:8080
+      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
     volumes:
       - ./storage:/app/storage
@@ -50,7 +50,7 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379/0
       - STORAGE_BASE_PATH=/app/storage
-      - EMAIL_SERVER_URL=http://localhost:8080
+      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
     volumes:
       - ./storage:/app/storage
     depends_on:
@@ -71,7 +71,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - STORAGE_BASE_PATH=/app/storage
       - GEMINI_API_KEY=AIzaSyDEFuu_5nl0zc7o7qK7z7ocEx9EqcI9z0E
-      - EMAIL_SERVER_URL=http://localhost:8080
+      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
     volumes:
       - ./storage:/app/storage
     depends_on:
@@ -101,7 +101,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION=${AWS_REGION:-us-east-1}
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - EMAIL_SERVER_URL=http://localhost:8080
+      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
     volumes:
       - ./storage:/app/storage
     depends_on:

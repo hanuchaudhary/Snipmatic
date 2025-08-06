@@ -6,3 +6,4 @@ torchaudio
 ffmpeg-python
 google-genai
 pydantic
+requests

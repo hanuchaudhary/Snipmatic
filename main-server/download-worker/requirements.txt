@@ -3,3 +3,4 @@ redis
 yt-dlp
 pydantic
 gevent
+requests

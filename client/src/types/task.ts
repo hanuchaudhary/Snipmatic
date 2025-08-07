@@ -5,6 +5,7 @@ export interface Task {
   title: string;
   status: string;
   progress: number;
+  thumbnailUrl?: string;
   statusMessage: string;
   errorMessage?: string;
   clipURL?: string;

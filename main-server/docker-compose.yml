@@ -56,6 +56,11 @@ services:
     build:
       context: .
       dockerfile: transcribe-worker/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_BASE_PATH=/app/storage
+      - GEMINI_API_KEY=AIzaSyD20JPRpK2A2eqHyIHFbQ8MLh3CuSjONaM
+      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
     env_file:
       - ./transcribe-worker/.env
     volumes:
@@ -64,7 +69,7 @@ services:
       redis:
         condition: service_healthy
     deploy:
-      replicas: 2  # 2 workers × 1 concurrency = 2 concurrent transcriptions (1 per CPU)
+      replicas: 1  # 2 workers × 1 concurrency = 2 concurrent transcriptions (1 per CPU)
       # resources:
       #   reservations:
       #     devices:
@@ -87,7 +92,7 @@ services:
       redis:
         condition: service_healthy
     deploy:
-      replicas: 2  # 2 workers × 4 concurrency = 8 concurrent clip creations x 5 threads = 40 for ai multi-clips
+      replicas: 1  # 2 workers × 4 concurrency = 8 concurrent clip creations x 5 threads = 40 for ai multi-clips
     restart: unless-stopped
    
 

@@ -10,7 +10,7 @@ import { useSnipStore } from "@/lib/snipStore";
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<"COMPLETED" | "PROCESSING">(
-    "COMPLETED"
+    "PROCESSING"
   );
 
   const [isLoading, setIsLoading] = useState(false);
@@ -105,14 +105,14 @@ export function Dashboard() {
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="space-y-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-4 gap-2"
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-4 gap-2"
             >
               {completedTasks.length > 0 ? (
                 completedTasks.map((task) => (
                   <TaskCard task={task} key={task.taskId} />
                 ))
               ) : (
-                <div className="text-center text-muted-foreground py-12">
+                <div className="col-span-full text-center text-muted-foreground py-12">
                   {getEmptyMessage()}
                 </div>
               )}

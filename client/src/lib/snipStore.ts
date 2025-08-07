@@ -43,6 +43,9 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
       );
       const data = response.data;
 
+      console.log("Fetched video info:", data);
+      
+
       set({
         videoInfo: {
           url: data.url,

@@ -9,7 +9,7 @@ echo "Concurrency: 10 (I/O bound)"
 echo "Prefetch: 1"
 echo ""
 
-celery -A tasks worker \
+celery -A shared.celery_config worker \
     -Q download \
     --loglevel=info \
     --concurrency=3 \

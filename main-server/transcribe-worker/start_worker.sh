@@ -9,7 +9,7 @@ echo "Concurrency: 2 (GPU bound - limit per GPU)"
 echo "Prefetch: 1"
 echo ""
 
-celery -A tasks worker \
+celery -A shared.celery_config worker \
     -Q transcribe \
     --loglevel=info \
     --concurrency=2 \

@@ -11,9 +11,3 @@ services:
       - FROM_EMAIL=${FROM_EMAIL}
     env_file:
       - .env
-    networks:
-      - snipmatic_network
-
-networks:
-  snipmatic_network:
-    external: true

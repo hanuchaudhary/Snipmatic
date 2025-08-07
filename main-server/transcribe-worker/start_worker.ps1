@@ -7,7 +7,7 @@ Write-Host "Concurrency: 2 (GPU bound - limit per GPU)" -ForegroundColor Cyan
 Write-Host "Prefetch: 1" -ForegroundColor Cyan
 Write-Host ""
 
-celery -A tasks worker `
+celery -A shared.celery_config worker `
     -Q transcribe `
     --loglevel=info `
     --concurrency=2 `

@@ -15,8 +15,7 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
-    networks:
-      - snipmatic_network
+   
 
   # API Gateway - FastAPI application
   api-gateway:
@@ -25,32 +24,23 @@ services:
       dockerfile: api-gateway/Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-      - STORAGE_BASE_PATH=/app/storage
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION:-us-east-1}
-      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+    env_file:
+      - ./api-gateway/.env
     volumes:
       - ./storage:/app/storage
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
-    networks:
-      - snipmatic_network
+    
 
   # Download Workers - Handle video downloading (I/O bound)
   download-worker:
     build:
       context: .
       dockerfile: download-worker/Dockerfile
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-      - STORAGE_BASE_PATH=/app/storage
-      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
+    env_file:
+      - ./download-worker/.env
     volumes:
       - ./storage:/app/storage
     depends_on:
@@ -59,19 +49,15 @@ services:
     deploy:
       replicas: 2  # 2 workers × 3 concurrency x 5 workers = 30 concurrent downloads
     restart: unless-stopped
-    networks:
-      - snipmatic_network
+   
 
   # Transcribe Workers - Handle audio transcription and AI analysis (GPU bound)
   transcribe-worker:
     build:
       context: .
       dockerfile: transcribe-worker/Dockerfile
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-      - STORAGE_BASE_PATH=/app/storage
-      - GEMINI_API_KEY=AIzaSyDEFuu_5nl0zc7o7qK7z7ocEx9EqcI9z0E
-      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
+    env_file:
+      - ./transcribe-worker/.env
     volumes:
       - ./storage:/app/storage
     depends_on:
@@ -86,22 +72,15 @@ services:
       #         count: 1
       #         capabilities: [gpu]
     restart: unless-stopped
-    networks:
-      - snipmatic_network
+    
 
   # Clip Workers - Handle video clip generation (CPU bound)
   clip-worker:
     build:
       context: .
       dockerfile: clip-worker/Dockerfile
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-      - STORAGE_BASE_PATH=/app/storage
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION:-us-east-1}
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
+    env_file:
+      - ./clip-worker/.env
     volumes:
       - ./storage:/app/storage
     depends_on:
@@ -110,24 +89,20 @@ services:
     deploy:
       replicas: 2  # 2 workers × 4 concurrency = 8 concurrent clip creations x 5 threads = 40 for ai multi-clips
     restart: unless-stopped
-    networks:
-      - snipmatic_network
+   
 
   # Celery Flower - Web-based monitoring tool for Celery tasks
   flower:
     image: mher/flower:0.9.7
     ports:
       - "5555:5555"
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - FLOWER_PORT=5555
+    env_file:
+      - ./.env
       
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
-    networks:
-      - snipmatic_network
 
   # Uncomment the following section to enable Nginx as a reverse proxy and file server
   
@@ -146,7 +121,3 @@ services:
 volumes:
   redis_data:
     driver: local
-
-networks:
-  snipmatic_network:
-    external: true

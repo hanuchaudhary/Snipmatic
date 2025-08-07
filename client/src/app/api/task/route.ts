@@ -39,6 +39,7 @@ export async function GET() {
         updatedAt: task.updatedAt,
         completedAt: task.completedAt,
         clipType: task.clipType,
+        thumbnailUrl: task.thumbnailUrl,
         duration: task.duration,
         multipleClips: task.multipleClips,
         subtitle: task.subtitle,

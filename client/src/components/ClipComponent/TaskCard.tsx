@@ -26,8 +26,6 @@ interface TaskCardProps {
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
   const [open, setOpen] = useState(false);
-  const thumbnailUrl = getYouTubeThumbnail(task.youtubeUrl);
-
   const isProcessing = !["COMPLETED", "FAILED"].includes(
     task.status.toUpperCase()
   );
@@ -48,14 +46,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
 
   useEffect(() => {
     if (task.progress !== undefined) {
-      const randomOffset = Math.floor(Math.random() * 7) - 3; // -3 to +3
-      const newProgress = Math.max(
-        0,
-        Math.min(100, task.progress + randomOffset)
-      );
+      const newProgress = Math.max(progress, task.progress);
       setProgress(newProgress);
     }
-  }, [task.progress]);
+  }, [task.progress, progress]);
 
   useEffect(() => {
     const animationDuration = 1500;
@@ -64,15 +58,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
     const progressDiff = progress - displayProgress;
     const stepIncrement = progressDiff / steps;
 
-    if (Math.abs(progressDiff) > 0.1) {
+    if (progressDiff > 0.1) {
       let currentStep = 0;
       const animationInterval = setInterval(() => {
         currentStep++;
         if (currentStep <= steps) {
           setDisplayProgress((prev) => {
             const newValue = prev + stepIncrement;
-            const microOffset = Math.random() - 0.5;
-            return Math.max(0, Math.min(100, newValue + microOffset));
+            return Math.max(prev, Math.min(100, newValue));
           });
         } else {
           setDisplayProgress(progress);
@@ -81,6 +74,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
       }, stepDuration);
 
       return () => clearInterval(animationInterval);
+    } else if (progressDiff < -0.1) {
+      setDisplayProgress(progress);
     }
   }, [progress, displayProgress]);
 
@@ -95,17 +90,26 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
         >
           <div className="relative w-full aspect-[16/9]">
             <img
-              src={thumbnailUrl || "/placeholder.svg"}
+              src={
+                task.thumbnailUrl ||
+                (task.youtubeUrl ? getYouTubeThumbnail(task.youtubeUrl) : null) ||
+                "/placeholder.jpg"
+              }
               alt={task.title}
               className={`object-cover w-full h-full ${
                 isProcessing ? "opacity-20" : ""
               }`}
               onError={(e) => {
-                e.currentTarget.src = "/placeholder-thumbnail.jpg";
+                // If image fails to load, try YouTube thumbnail fallback
+                if (task.youtubeUrl && e.currentTarget.src !== getYouTubeThumbnail(task.youtubeUrl)) {
+                  e.currentTarget.src = getYouTubeThumbnail(task.youtubeUrl);
+                } else {
+                  e.currentTarget.src = "/placeholder.jpg";
+                }
               }}
             />
             <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-              0 days before expiring
+              1 days before expiring
             </div>
             {isProcessing && (
               <div
@@ -185,7 +189,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 {task.result.viral_moments.map((moment, index) => (
                   <MinimalCard key={index} className="relative">
                     <MinimalCardImage
-                      src={thumbnailUrl || "/placeholder.svg"}
+                      src={
+                        task.thumbnailUrl ||
+                        getYouTubeThumbnail(task.youtubeUrl) ||
+                        "/placeholder.jpg"
+                      }
                       alt={`Viral moment thumbnail`}
                     />
                     <MinimalCardTitle className="line-clamp-2">

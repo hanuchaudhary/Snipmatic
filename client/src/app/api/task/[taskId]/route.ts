@@ -94,6 +94,7 @@ export async function POST(
         title: videoInfo.title || "Untitled Clip",
         status: "QUEUED",
         progress: 0,
+        thumbnailUrl: videoInfo.thumbnail || "",
         statusMessage: "Task initialized",
         clipType: videoInfo.clipType || "FULL_VIDEO",
         duration: videoInfo.duration || 0,
@@ -121,6 +122,7 @@ export async function POST(
           status: task.status,
           progress: task.progress,
           statusMessage: task.statusMessage,
+          thumbnailUrl: task.thumbnailUrl,
         },
       },
       { status: 201 }
@@ -175,7 +177,6 @@ export async function PUT(
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    // Update the task
     const updatedTask = await prisma.task.update({
       where: { taskId },
       data: {
@@ -188,10 +189,11 @@ export async function PUT(
           ? new Date(completedAt || new Date())
           : null,
         clipsData: clipsData || null,
+        ...(body.thumbnailUrl !== undefined && {
+          thumbnailUrl: body.thumbnailUrl,
+        }),
       },
     });
-
-    console.log(`Task ${taskId} updated with status: ${status}`);
 
     return NextResponse.json({
       success: true,
@@ -202,9 +204,7 @@ export async function PUT(
         progress: updatedTask.progress,
         statusMessage: updatedTask.statusMessage,
         errorMessage: updatedTask.errorMessage,
-        clipURL: updatedTask.clipURL,
-        clipsData: updatedTask.clipsData,
-        completedAt: updatedTask.completedAt,
+        thumbnailUrl: updatedTask.thumbnailUrl,
       },
     });
   } catch (error) {

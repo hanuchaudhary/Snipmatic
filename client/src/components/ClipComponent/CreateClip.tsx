@@ -220,7 +220,7 @@ export function CreateClipPage() {
       });
 
       store.videoInfo = { thumbnail: "", title: "", duration: 0, url: "" };
-      
+
       toast.dismiss();
     } catch (error) {
       toast.dismiss();
@@ -257,12 +257,15 @@ export function CreateClipPage() {
         );
 
         // Update database with main server data
-        await axios.put(`/api/task/${taskId}`, {
+        const updatedTask = await axios.put(`/api/task/${taskId}`, {
           status: mainServerData.status,
           progress: mainServerData.progress,
           statusMessage: mainServerData.message || mainServerData.statusMessage,
           errorMessage: mainServerData.errorMessage || "",
-          clipURL: mainServerData.result?.s3_urls?.[0] || "",
+          clipURL:
+            watchMultiple === true
+              ? mainServerData.result?.zip_s3_url
+              : mainServerData.result?.s3_urls?.[0],
           clipsData: mainServerData.result?.viral_moments || null,
           completedAt: ["COMPLETED", "FAILED"].includes(mainServerData.status)
             ? new Date(mainServerData.updated_at || new Date())
@@ -273,9 +276,13 @@ export function CreateClipPage() {
           taskId: taskId,
           status: mainServerData.status,
           progress: mainServerData.progress,
+          youtubeUrl: updatedTask.data.youtubeUrl || "",
           statusMessage: mainServerData.message || mainServerData.statusMessage,
           errorMessage: mainServerData.errorMessage || "",
-          clipURL: mainServerData.result?.s3_urls?.[0] || "",
+          clipURL:
+            watchMultiple === true
+              ? mainServerData.result?.zip_s3_url
+              : mainServerData.result?.s3_urls?.[0],
           clipsData: mainServerData.result?.viral_moments || null,
           result: mainServerData.result || null,
           createdAt: mainServerData.created_at,
@@ -285,14 +292,17 @@ export function CreateClipPage() {
             : null,
         };
 
+        console.log("Updated task:", updatedTask);
+
         store.setTasks([
           ...(store.tasks || []),
           {
             ...unifiedTaskData,
             userId: session?.user?.id,
             youtubeUrl: store.videoInfo.url,
-            title: store.videoInfo.title,
+            title: updatedTask.data.task.title,
             duration: store.videoInfo.duration,
+            thumbnailUrl: updatedTask.data.task.thumbnailUrl || "",
             clipType: watchClipType,
             multipleClips: watchMultiple,
             subtitle: watch("subtitles"),
@@ -347,6 +357,7 @@ export function CreateClipPage() {
                 : null,
               createdAt: dbTaskData.createdAt,
               updatedAt: dbTaskData.updatedAt,
+              thumbnailUrl: dbTaskData.thumbnailUrl,
               completedAt: dbTaskData.completedAt,
             };
 

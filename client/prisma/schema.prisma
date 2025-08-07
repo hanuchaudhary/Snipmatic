@@ -70,6 +70,7 @@ model Task {
   youtubeUrl      String
   title           String?
   clipType        String?
+  thumbnailUrl    String?
   multipleClips    Boolean @default(false)
   subtitle         Boolean @default(false)
   duration         Int?

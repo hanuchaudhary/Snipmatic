@@ -8,7 +8,7 @@ import os
 from shared.models import TaskStatus
 from shared.celery_config import REDIS_URL
 import requests
-EMAIL_SERVER_URL = os.getenv("EMAIL_SERVER_URL")  
+EMAIL_SERVER_URL = os.getenv("EMAIL_SERVER_URL")  # e.g., "http://localhost:5000/send-email"
 EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # Redis client for status storage
 redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 
-def update_task_status(user_id: Optional[str], task_id: str, status: TaskStatus, progress: int = 0, 
+def update_task_status(task_id: str, status: TaskStatus, progress: int = 0, 
                       message: str = "", result: Optional[dict] = None):
     """Update task status in Redis"""
     try:
@@ -35,7 +35,6 @@ def update_task_status(user_id: Optional[str], task_id: str, status: TaskStatus,
                 task_data['result'] = result
         else:
             task_data = {
-                'user_id': user_id,
                 'task_id': task_id,
                 'status': status,
                 'progress': progress,

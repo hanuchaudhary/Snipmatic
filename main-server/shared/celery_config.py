@@ -50,13 +50,13 @@ celery_app.conf.update(
             'rate_limit': '2/m',  # Max 2 transcriptions per minute
         },
         'download_task': {
-            'rate_limit': '50/m',  # Max 50 downloads per minute
+            'rate_limit': '10/m',  # Max 10 downloads per minute
         },
         'clip_task': {
-            'rate_limit': '100/m',  # Max 100 clips per minute
+            'rate_limit': '20/m',  # Max 20 clips per minute
         },
         'manual_clip_task': {
-            'rate_limit': '40/m',  # Max 20 clips per minute
+            'rate_limit': '20/m',  # Max 20 clips per minute
         },
     },
     
@@ -71,7 +71,7 @@ QUEUE_CONFIG = {
         'name': 'download',
         'routing_key': 'download',
         'max_workers': 10,  # I/O bound - can have higher concurrency
-        'prefetch_count': 5
+        'prefetch_count': 1
     },
     'transcribe': {
         'name': 'transcribe', 
@@ -82,7 +82,7 @@ QUEUE_CONFIG = {
     'clip': {
         'name': 'clip',
         'routing_key': 'clip', 
-        'max_workers': 5,  # CPU bound - moderate concurrency
+        'max_workers': 4,  # CPU bound - moderate concurrency
         'prefetch_count': 1
     }
 }

@@ -9,7 +9,7 @@ export function PricingPage() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-normal font-instrumental">
-            Choose Your Plan
+            Choose Your <span className="text-orange-400">Plan</span>
           </h1>
           <p className="text-xl dark:text-neutral-200 font-jost">
             Start free, upgrade when you need more power
@@ -61,7 +61,7 @@ export function PricingPage() {
           </div>
         </div>
 
-        <PricingComparison />
+        {/* <PricingComparison /> */}
         <FAQSection />
       </div>
     </div>

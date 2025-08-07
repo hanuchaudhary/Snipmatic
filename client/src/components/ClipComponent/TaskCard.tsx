@@ -1,16 +1,23 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Download, Play, Clock, Globe } from "lucide-react";
+import { Task } from "@/types/task";
 import {
   cn,
   formatDuration,
   formatTimestamp,
   getYouTubeThumbnail,
 } from "@/lib/utils";
-import { Task } from "@/types/task";
+import WrapButton from "../ui/wrap-button";
+import MinimalCard, {
+  MinimalCardDescription,
+  MinimalCardImage,
+  MinimalCardTitle,
+} from "../ui/minimal-card";
 
 interface TaskCardProps {
   task: Task;
@@ -18,122 +25,195 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
+  const [open, setOpen] = useState(false);
   const thumbnailUrl = getYouTubeThumbnail(task.youtubeUrl);
 
   const isProcessing = !["COMPLETED", "FAILED"].includes(
     task.status.toUpperCase()
   );
 
+  const handleDownload = () => {
+    if (task.clipURL) {
+      const link = document.createElement("a");
+      link.href = task.clipURL;
+      link.download = `${task.title}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const [progress, setProgress] = useState(task.progress || 0);
+  const [displayProgress, setDisplayProgress] = useState(task.progress || 0);
+
+  useEffect(() => {
+    if (task.progress !== undefined) {
+      const randomOffset = Math.floor(Math.random() * 7) - 3; // -3 to +3
+      const newProgress = Math.max(
+        0,
+        Math.min(100, task.progress + randomOffset)
+      );
+      setProgress(newProgress);
+    }
+  }, [task.progress]);
+
+  useEffect(() => {
+    const animationDuration = 1500;
+    const steps = 60;
+    const stepDuration = animationDuration / steps;
+    const progressDiff = progress - displayProgress;
+    const stepIncrement = progressDiff / steps;
+
+    if (Math.abs(progressDiff) > 0.1) {
+      let currentStep = 0;
+      const animationInterval = setInterval(() => {
+        currentStep++;
+        if (currentStep <= steps) {
+          setDisplayProgress((prev) => {
+            const newValue = prev + stepIncrement;
+            const microOffset = Math.random() - 0.5;
+            return Math.max(0, Math.min(100, newValue + microOffset));
+          });
+        } else {
+          setDisplayProgress(progress);
+          clearInterval(animationInterval);
+        }
+      }, stepDuration);
+
+      return () => clearInterval(animationInterval);
+    }
+  }, [progress, displayProgress]);
+
   return (
-    <div className={cn("overflow-hidden border-2 rounded-4xl", className)}>
-      <div className="font-semibold px-8 py-2 flex items-center justify-between">
-        <span>{task.title}</span>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="flex items-center gap-1">
-            {task.status}
-          </Badge>
-          <span>{task.clipType === "AI" ? "AI" : "Manual"}</span>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <div
+          className={cn(
+            "cursor-pointer w-full max-w-xs rounded-3xl overflow-hidden shadow-lg border bg-muted hover:shadow-xl transition",
+            className
+          )}
+        >
+          <div className="relative w-full aspect-[16/9]">
+            <img
+              src={thumbnailUrl || "/placeholder.svg"}
+              alt={task.title}
+              className={`object-cover w-full h-full ${
+                isProcessing ? "opacity-20" : ""
+              }`}
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder-thumbnail.jpg";
+              }}
+            />
+            <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+              0 days before expiring
+            </div>
+            {isProcessing && (
+              <div
+                style={{
+                  width: Math.round(displayProgress) + "%",
+                }}
+                className="absolute flex items-center transition-all duration-300 ease-out justify-center inset-0 right-2 bg-orange-400/30 h-full w-full text-xl font-semibold px-2 py-1"
+              >
+                <span className="">{Math.round(displayProgress)}%</span>
+              </div>
+            )}
+          </div>
+          <div className="p-3">
+            <div className="text-sm font-semibold line-clamp-1">
+              {task.title}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {task.clipType === "AI" ? "AI Generated" : "Manual Clip"}
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col sm:flex-row border rounded-4xl overflow-hidden bg-secondary">
-        <div className="relative w-full sm:w-48 flex-shrink-0">
-          <img
-            src={thumbnailUrl}
-            alt={task.title}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = "/placeholder-thumbnail.jpg";
-            }}
-          />
-          <div className="absolute bottom-1 right-1 bg-black/70 text-xs px-1.5 py-0.5 rounded">
-            {formatDuration(task.duration || 0)}
-          </div>
-        </div>
+      </DrawerTrigger>
 
-        <div className="gap-1 text-sm text-muted-foreground p-4 flex flex-col flex-1">
-          {isProcessing && (
-            <div className="mb-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium">Progress</span>
-                <span className="text-sm">{task.progress}%</span>
-              </div>
-              <Progress value={task.progress} className="h-2" />
-              <div className="text-xs text-muted-foreground mt-1">
-                {task.statusMessage || "Processing..."}
+      <DrawerContent className="max-w-4xl mx-auto p-2 border overflow-hidden font-jost">
+        <div className="p-6 max-h-[80vh] rounded-4xl mask-b-from-[90%] border bg-secondary dark:bg-secondary/50 overflow-y-auto space-y-6 hide-scrollbar">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold mb-2">{task.title}</h2>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Badge variant="secondary">{task.status}</Badge>
+                <span>•</span>
+                <span>{task.clipType}</span>
+                <span>•</span>
+                <span>{task.quality}</span>
               </div>
             </div>
-          )}
+            {task.clipURL && (
+              <WrapButton className="font-jost" href={task.clipURL}>
+                <Globe className="animate-spin h-5 w-5" />
+                Download
+              </WrapButton>
+            )}
+          </div>
 
-          {task.status.toUpperCase() === "FAILED" && task.errorMessage && (
-            <div className="mb-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
-              <div className="text-xs text-red-600 dark:text-red-400">
-                {task.errorMessage}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Created</p>
+              <p className="text-sm font-medium">
+                {formatTimestamp(task.createdAt as string)}
+              </p>
+            </div>
+            {task.completedAt && (
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1">Completed</p>
+                <p className="text-sm font-medium">
+                  {formatTimestamp(task.completedAt as string)}
+                </p>
               </div>
+            )}
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Aspect Ratio</p>
+              <p className="text-sm font-medium">
+                {task.aspectRatio || "original"}
+              </p>
             </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            <span>Quality: {task.quality || "HD"}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>Aspect: {task.aspectRatio || "original"}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="truncate">
-              Created:{" "}
-              {formatTimestamp(
-                typeof task.createdAt === "string"
-                  ? task.createdAt
-                  : task.createdAt.toISOString()
-              )}
-            </span>
-          </div>
-          {task.completedAt && (
-            <div className="flex items-center gap-2">
-              <span className="truncate">
-                Completed:{" "}
-                {formatTimestamp(
-                  typeof task.completedAt === "string"
-                    ? task.completedAt
-                    : task.completedAt.toISOString()
-                )}
-              </span>
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Duration</p>
+              <p className="text-sm font-medium">
+                {formatDuration(task.duration as number)}
+              </p>
             </div>
-          )}
+          </div>
 
-          {task.status.toUpperCase() === "COMPLETED" &&
-            task.result?.viral_moments && (
-              <div className="mt-2">
-                {task.result.s3_urls && task.result.s3_urls.length > 0 && (
-                  <div className="text-xs">
-                    <a
-                      href={task.result.s3_urls[0]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700 underline"
-                    >
-                      View Clip
-                    </a>
-                  </div>
-                )}
+          {task.result?.viral_moments &&
+            task.result.viral_moments.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {task.result.viral_moments.map((moment, index) => (
+                  <MinimalCard key={index} className="relative">
+                    <MinimalCardImage
+                      src={thumbnailUrl || "/placeholder.svg"}
+                      alt={`Viral moment thumbnail`}
+                    />
+                    <MinimalCardTitle className="line-clamp-2">
+                      {moment.reason}
+                    </MinimalCardTitle>
+                    <MinimalCardDescription className="line-clamp-3 mask-b-from-0%">
+                      {moment.content}
+                    </MinimalCardDescription>
+                    <div className="absolute top-2 right-2 font-semibold bg-secondary text-primary m-1 text-xs px-2 py-1 rounded-full border">
+                      Clip Score{" "}
+                      <span className="text-orange-500">
+                        {moment.confidence_score * 100}%
+                      </span>
+                    </div>
+                  </MinimalCard>
+                ))}
               </div>
             )}
 
-          <div className="mt-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={() => {
-                console.log(`Viewing details for task ${task}`);
-              }}
-            >
-              View Details
-            </Button>
-          </div>
+          {task.status.toUpperCase() === "FAILED" && task.errorMessage && (
+            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <p className="font-medium mb-1">Error</p>
+              <p>{task.errorMessage}</p>
+            </div>
+          )}
         </div>
-      </div>
-    </div>
+      </DrawerContent>
+    </Drawer>
   );
 };
 

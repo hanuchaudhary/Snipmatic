@@ -9,7 +9,7 @@ import NextAuth from "next-auth";
 // 2. Wrapped middleware option
 const { auth } = NextAuth(authConfig);
 export default auth(async function middleware(req: NextRequest) {
-  const publicRoutes = ["/", "/signin", "/register", "/verify", "/pricing"];
+  const publicRoutes = ["/", "/signin", "/register", "/verify", "/subscription"];
   const isPublicRoute = publicRoutes.includes(req.nextUrl.pathname);
 
   const session = await auth();

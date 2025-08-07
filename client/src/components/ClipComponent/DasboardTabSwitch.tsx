@@ -20,7 +20,7 @@ export const TaskTypeSwitch = ({
     <div
       onClick={() => setTaskType(taskType === "COMPLETED" ? "PROCESSING" : "COMPLETED")}
       className={cn(
-        "cursor-pointer relative flex h-12 rounded-full bg-secondary p-1 font-jost ring-1 ring-border"
+        "cursor-pointer relative flex md:h-12 h-10 rounded-full bg-secondary p-1 font-jost ring-1 ring-border"
       )}
     >
       {taskTypes.map(({ key, label }) => {
@@ -42,7 +42,7 @@ export const TaskTypeSwitch = ({
             {
               <span
                 className={cn(
-                  "relative m-auto px-4 font-[500]",
+                  "relative m-auto md:px-4 px-2 font-[500] md:text-base text-xs",
                   isActive ? "text-primary-foreground" : "text-muted-foreground"
                 )}
               >

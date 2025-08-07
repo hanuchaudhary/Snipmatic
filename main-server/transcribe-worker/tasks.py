@@ -8,6 +8,8 @@ import json
 from google import genai
 import sys
 
+
+
 from shared.celery_config import celery_app, AUDIO_STORAGE_PATH, GEMINI_API_KEY
 from shared.models import TaskStatus, ViralMoment
 from shared.utils import update_task_status, cleanup_files
@@ -182,7 +184,6 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
     bind=True,
     rate_limit='2/m'  # Max 2 transcriptions per minute per worker
 )
-
 def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id):
     """Transcription task - queues clip task after completion"""
     audio_path = None
@@ -191,9 +192,11 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
         
         update_task_status(task_id, TaskStatus.EXTRACTING_AUDIO, 40, "Extracting audio")
         
+        
         audio_path = extract_audio(video_path)
         
         update_task_status(task_id, TaskStatus.TRANSCRIBING, 60, "Transcribing audio")
+        
         
         segments = transcribe_audio_whisperx(audio_path)
         

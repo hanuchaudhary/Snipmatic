@@ -38,13 +38,13 @@ export function Navbar() {
                 className="h-12 md:h-16"
                 alt="Snipmatic Logo"
               />
-              <span className="md:text-2xl text-lg font-semibold font-jost">
+              <span className="md:text-xl text-lg font-semibold font-jost">
                 Snipmatic
               </span>
             </Link>
 
             <div className="hidden md:block">
-              <Button variant="default" asChild>
+              <Button variant="default" size={"sm"} asChild>
                 <Link href="/subscription">Upgrade</Link>
               </Button>
             </div>
@@ -63,6 +63,7 @@ export function Navbar() {
             </motion.div>
             {session && (
               <Button
+                size={"sm"}
                 variant="outline"
                 onClick={() =>
                   signOut({
@@ -200,6 +201,7 @@ export function Navbar() {
                     <Button
                       variant="outline"
                       className="w-full"
+                      size={"sm"}
                       onClick={() => {
                         signOut({
                           redirectTo: "/",

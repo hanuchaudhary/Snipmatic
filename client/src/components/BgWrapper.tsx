@@ -4,7 +4,6 @@ import React from "react";
 
 export function BgWrapper() {
   const pathname = usePathname();
-  console.log("BgWrapper pathname:", pathname);
 
   return (
     <>
@@ -12,18 +11,20 @@ export function BgWrapper() {
         className={`fixed left-1/2 ${
           pathname.startsWith("/signin") ||
           pathname.startsWith("/signup") ||
-          pathname.startsWith("/verify")
-            ? "top-[100%]"
-            : "top-[70%]"
+          pathname.startsWith("/verify") ||
+          pathname.startsWith("/subscription/success")
+            ? "top-[100%] blur-md dark:blur-none"
+            : "top-[70%] dark:blur-none blur-md"
         } -translate-x-1/2 -translate-y-1/2  z-[-1] h-screen`}
       >
         <h1
-          className={`md:text-[44vh] text-[34vh] font-instrumental dark:text-white/40 text-black/60 font-black ${
+          className={`md:text-[44vh] text-[34vh] font-instrumental scale-y-125 dark:text-secondary/40 mask-b-from-[20%] text-black/60 font-black ${
             pathname.startsWith("/signin") ||
             pathname.startsWith("/signup") ||
-            pathname.startsWith("/verify")
-              ? "blur-xl text-[50vh]"
-              : "dark:blur-none blur-md"
+            pathname.startsWith("/verify") ||
+            pathname.startsWith("/subscription")
+              ? "text-[50vh]"
+              : ""
           }`}
         >
           Snipmatic

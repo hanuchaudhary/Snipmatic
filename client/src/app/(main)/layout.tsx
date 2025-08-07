@@ -15,12 +15,14 @@ export default function ClipLayout({
 }>) {
   return (
     <div
-      className={`dark:bg-black/10 bg-secondary/30 w-full`}
+      className={`dark:bg-black/10 bg-secondary/30 w-full relative`}
       suppressHydrationWarning
     >
       <Navbar />
       <div>{children}</div>
-      <BgWrapper />
+      <div className="fixed flex items-center justify-center inset-0 z-[-1] w-screen h-screen">
+        <BgWrapper />
+      </div>
     </div>
   );
 }

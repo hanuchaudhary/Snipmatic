@@ -219,6 +219,8 @@ export function CreateClipPage() {
         },
       });
 
+      store.videoInfo = { thumbnail: "", title: "", duration: 0, url: "" };
+      
       toast.dismiss();
     } catch (error) {
       toast.dismiss();
@@ -394,7 +396,7 @@ export function CreateClipPage() {
 
     fetchTaskStatus();
     statusInterval = setInterval(fetchTaskStatus, 7000); // Poll every 7 seconds
-    heartbeatInterval = setInterval(sendHeartbeat, 10000); // Send heartbeat every 10 seconds
+    heartbeatInterval = setInterval(sendHeartbeat, 5000); // Send heartbeat every 5 seconds
 
     return () => {
       clearInterval(statusInterval);
@@ -403,8 +405,8 @@ export function CreateClipPage() {
   }, [taskId, session?.user?.id]);
 
   return (
-    <div className="min-h-screen md:pt-10 pt-26 p-4 flex items-center justify-center">
-      <div className="max-w-3xl container relative group mx-auto space-y-4 ">
+    <div className="relative min-h-screen md:pt-10 pt-26 p-4 flex items-center justify-center">
+      <div className="max-w-2xl container relative group mx-auto space-y-4 ">
         <AnimatePresence mode="wait">
           {store.isFetching ? (
             <motion.div
@@ -428,7 +430,7 @@ export function CreateClipPage() {
               animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
               exit={{ opacity: 0, filter: "blur(20px)", y: -10 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="relative md:h-60 h-42 md:mt-10 bg-muted/30 rounded-3xl w-full overflow-hidden border-2 shadow backdrop-blur-sm"
+              className="relative md:h-50 h-42 md:mt-10 bg-muted/30 rounded-3xl w-full overflow-hidden border-2 shadow backdrop-blur-sm"
             >
               <div
                 onClick={() => {
@@ -460,7 +462,7 @@ export function CreateClipPage() {
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="text-center md:text-4xl text-2xl md:mb-8 mb-6 font-instrumental font-thin"
+              className="text-center md:text-2xl text-xl md:mb-8 mb-6 font-instrumental font-thin"
             >
               Ready to Snip Something{" "}
               <span className="dark:text-orange-500 text-orange-600">
@@ -469,10 +471,13 @@ export function CreateClipPage() {
             </motion.div>
           )}
         </AnimatePresence>
-        <div className="md:p-3 bg-muted/20 md:rounded-[44px] p-1 rounded-[36px] backdrop-blur-sm border">
+        <div className="md:p-2.5 bg-muted/20 md:rounded-[42px] p-1 rounded-[36px] backdrop-blur-sm border">
           <Card className="border-muted/30 border-none">
-            <CardContent className="font-jost md:p-6 p-4">
-              <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <CardContent className="font-jost p-4 md:py-0">
+              <form
+                className="md:space-y-6 space-y-4"
+                onSubmit={handleSubmit(onSubmit)}
+              >
                 <div className="space-y-2">
                   <Controller
                     control={control}
@@ -649,6 +654,7 @@ export function CreateClipPage() {
 
                 <div className="w-full flex items-center justify-end mt-4">
                   <Button
+                    size={"sm"}
                     type="submit"
                     disabled={!watchUrl || isProcessing || store.isFetching}
                   >
@@ -670,6 +676,22 @@ export function CreateClipPage() {
           </Card>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isProcessing && (
+          <motion.div
+            key="processing"
+            initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute bottom-6 text-muted-foreground font-instrumental left-1/2 transform -translate-x-1/2"
+          >
+            Scroll down to see your{" "}
+            <span className="text-orange-400">clips</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

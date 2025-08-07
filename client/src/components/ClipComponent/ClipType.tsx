@@ -20,7 +20,7 @@ export const ClipTypeSwitch = ({
     <div
       onClick={() => setClipType(clipType === "AI" ? "MANUAL" : "AI")}
       className={cn(
-        "cursor-pointer relative flex h-12 rounded-full bg-secondary p-1 font-jost ring-1 ring-border"
+        "cursor-pointer relative flex md:h-12 h-10 rounded-full bg-secondary p-1 font-jost ring-1 ring-border"
       )}
     >
       {clipTypes.map(({ key, label }) => {
@@ -29,7 +29,7 @@ export const ClipTypeSwitch = ({
           <button
             type="button"
             key={key}
-            className="relative rounded-full md:text-base text-sm cursor-pointer"
+            className="relative rounded-full md:text-base text-xs cursor-pointer"
             aria-label={label}
           >
             {isActive && (

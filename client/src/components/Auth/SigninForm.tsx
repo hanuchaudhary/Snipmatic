@@ -45,7 +45,7 @@ export default function SigninForm() {
   return (
     <div className="w-full max-w-md mx-auto space-y-6 font-jost">
       <div>
-        <div className="text-4xl text-center font-instrumental font-normal">
+        <div className="text-4xl text-orange-400 text-center font-instrumental font-normal">
           Sign In
         </div>
         <p className="text-center font-jost dark:text-neutral-200">

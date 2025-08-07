@@ -2,6 +2,7 @@ from celery import Celery
 import os
 
 # Redis/Message Broker Configuration
+# Environment variables will be loaded by Docker Compose
 REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/')
 
 # Celery application instance
@@ -94,7 +95,7 @@ AUDIO_STORAGE_PATH = os.path.join(STORAGE_BASE_PATH, 'audio')
 CLIP_STORAGE_PATH = os.path.join(STORAGE_BASE_PATH, 'clips')
 
 # API Configuration
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyDEFuu_5nl0zc7o7qK7z7ocEx9EqcI9z0E')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
 # Create storage directories
 os.makedirs(VIDEO_STORAGE_PATH, exist_ok=True)

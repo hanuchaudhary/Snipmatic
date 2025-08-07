@@ -7,7 +7,8 @@ Write-Host "Concurrency: 4 (CPU bound - moderate)" -ForegroundColor Cyan
 Write-Host "Prefetch: 1" -ForegroundColor Cyan
 Write-Host ""
 
-celery -A tasks worker `
+# Use shared.celery_config for centralized configuration
+celery -A shared.celery_config worker `
     -Q clip `
     --loglevel=info `
     --concurrency=4 `

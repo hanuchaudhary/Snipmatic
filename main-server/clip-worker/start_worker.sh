@@ -9,9 +9,10 @@ echo "Concurrency: 4 (CPU bound - moderate)"
 echo "Prefetch: 1"
 echo ""
 
-celery -A tasks worker \
+# Use shared.celery_config for centralized configuration
+celery -A shared.celery_config worker \
     -Q clip \
     --loglevel=info \
-    --concurrency=4 \
+    --concurrency=5 \
     --prefetch-multiplier=1 \
     -n clip_worker@%h

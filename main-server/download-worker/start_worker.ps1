@@ -7,7 +7,7 @@ Write-Host "Concurrency: 10 (I/O bound)" -ForegroundColor Cyan
 Write-Host "Prefetch: 1" -ForegroundColor Cyan
 Write-Host ""
 
-celery -A tasks worker `
+celery -A shared.celery_config worker `
     -Q download `
     --loglevel=info `
     --concurrency=3 `

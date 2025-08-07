@@ -49,7 +49,7 @@ async def create_video_clip(request: ClipRequest):
     
     try:
         # Update initial status
-        update_task_status(task_id, TaskStatus.QUEUED, 0, "Task queued for processing")
+        update_task_status(request.user_id, task_id, TaskStatus.QUEUED, 0, "Task queued for processing")
         
         if request.clipType == "AI":
             logger.info(f"[API] Queuing download task for AI workflow - task {task_id}")

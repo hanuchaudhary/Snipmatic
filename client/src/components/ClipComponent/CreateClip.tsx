@@ -187,6 +187,7 @@ export function CreateClipPage() {
           clipType: data.clipType,
           multipleClips: data.multipleClips,
           user_id: session.user.id,
+          duration: store.videoInfo.duration,
         },
         {
           headers: {

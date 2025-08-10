@@ -86,7 +86,7 @@ export function Dashboard() {
               animate={{ opacity: 1, filter: "blur(0px)" }}
               exit={{ opacity: 0, filter: "blur(10px)" }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="space-y-4"
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-4 gap-2"
             >
               {processingTasks.length > 0 ? (
                 processingTasks.map((task) => (

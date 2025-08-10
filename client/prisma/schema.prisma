@@ -75,7 +75,7 @@ model Task {
   subtitle         Boolean @default(false)
   duration         Int?
   clipURL           String?
-  status          JobStatus @default(PENDING)
+  status          JobStatus @default(QUEUED)
   progress        Int       @default(0)
   statusMessage   String?
   errorMessage    String?
@@ -132,13 +132,15 @@ model Transaction {
 }
 
 enum JobStatus {
-  PENDING
-  QUEUED
-  DOWNLOADING
-  TRANSCRIBING
-  CREATING_CLIPS
-  COMPLETED
-  FAILED
+   QUEUED
+   DOWNLOADING
+   DOWNLOADED
+   EXTRACTING_AUDIO
+   TRANSCRIBING
+   ANALYZING
+   CREATING_CLIPS
+   COMPLETED
+   FAILED
 }
 
 enum SubscriptionStatus {

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Redis - Message Broker and Result Backend
   redis:
@@ -8,6 +6,8 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -15,7 +15,6 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
-   
 
   # API Gateway - FastAPI application
   api-gateway:
@@ -28,13 +27,14 @@ services:
       - ./api-gateway/.env
     volumes:
       - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
-    
 
-  # Download Workers - Handle video downloading (I/O bound)
+  # Download Workers
   download-worker:
     build:
       context: .
@@ -43,15 +43,16 @@ services:
       - ./download-worker/.env
     volumes:
       - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
     deploy:
-      replicas: 2  # 2 workers × 3 concurrency x 5 workers = 30 concurrent downloads
+      replicas: 2
     restart: unless-stopped
-   
 
-  # Transcribe Workers - Handle audio transcription and AI analysis (GPU bound)
+  # Transcribe Workers
   transcribe-worker:
     build:
       context: .
@@ -59,27 +60,22 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379/0
       - STORAGE_BASE_PATH=/app/storage
-      - GEMINI_API_KEY=AIzaSyD20JPRpK2A2eqHyIHFbQ8MLh3CuSjONaM
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
     env_file:
       - ./transcribe-worker/.env
     volumes:
       - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
     deploy:
-      replicas: 1  # 2 workers × 1 concurrency = 2 concurrent transcriptions (1 per CPU)
-      # resources:
-      #   reservations:
-      #     devices:
-      #       - driver: nvidia
-      #         count: 1
-      #         capabilities: [gpu]
+      replicas: 1
     restart: unless-stopped
-    
 
-  # Clip Workers - Handle video clip generation (CPU bound)
+  # Clip Workers
   clip-worker:
     build:
       context: .
@@ -88,40 +84,29 @@ services:
       - ./clip-worker/.env
     volumes:
       - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
     deploy:
-      replicas: 1  # 2 workers × 4 concurrency = 8 concurrent clip creations x 5 threads = 40 for ai multi-clips
+      replicas: 1
     restart: unless-stopped
-   
 
-  # Celery Flower - Web-based monitoring tool for Celery tasks
+  # Celery Flower
   flower:
     image: mher/flower:0.9.7
     ports:
       - "5555:5555"
     env_file:
       - ./.env
-      
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
-
-  # Uncomment the following section to enable Nginx as a reverse proxy and file server
-  
-  # Nginx - Reverse proxy and file serving
-  # nginx:
-  #   image: nginx:alpine
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./storage:/usr/share/nginx/html/storage:ro
-  #   depends_on:
-  #     - api-gateway
-  #   restart: unless-stopped
 
 volumes:
   redis_data:

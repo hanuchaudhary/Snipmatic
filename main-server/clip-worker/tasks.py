@@ -112,7 +112,7 @@ def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, 
         # styles
         subtitle_style = (
             "FontName=Arial Black,"
-            "FontSize=6"
+            "FontSize=3"
             "PrimaryColour=&Hffffff&,"  # White text
             "SecondaryColour=&H000000&,"  # Black secondary
             "OutlineColour=&H000000&,"   # Black outline

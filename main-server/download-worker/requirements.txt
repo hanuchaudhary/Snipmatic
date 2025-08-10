@@ -4,3 +4,4 @@ yt-dlp
 pydantic
 gevent
 requests
+ffmpeg-python

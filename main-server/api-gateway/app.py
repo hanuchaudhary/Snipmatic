@@ -55,7 +55,7 @@ async def create_video_clip(request: ClipRequest):
             logger.info(f"[API] Queuing download task for AI workflow - task {task_id}")
             celery_app.send_task(
                 'download_task',
-                args=[task_id, request.url, request.user_id, request.aspectRatio, request.multipleClips, request.clipType, None, None],
+                args=[task_id, request.url, request.user_id, request.aspectRatio, request.multipleClips, request.clipType, None, None, request.subtitles],
                 queue='download',
                 routing_key='download'
             )
@@ -66,7 +66,7 @@ async def create_video_clip(request: ClipRequest):
             logger.info(f"[API] Queuing download task for manual workflow - task {task_id}")
             celery_app.send_task(
                 'download_task',
-                args=[task_id, request.url, request.user_id, request.aspectRatio, None, "MANUAL", request.startTime, request.endTime],
+                args=[task_id, request.url, request.user_id, request.aspectRatio, None, "MANUAL", request.startTime, request.endTime, request.subtitles],
                 queue='download',
                 routing_key='download'
             )

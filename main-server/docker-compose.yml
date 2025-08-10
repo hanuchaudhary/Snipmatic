@@ -6,8 +6,6 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -27,8 +25,6 @@ services:
       - ./api-gateway/.env
     volumes:
       - ./storage:/app/storage
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -43,8 +39,6 @@ services:
       - ./download-worker/.env
     volumes:
       - ./storage:/app/storage
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -66,8 +60,6 @@ services:
       - ./transcribe-worker/.env
     volumes:
       - ./storage:/app/storage
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -84,8 +76,6 @@ services:
       - ./clip-worker/.env
     volumes:
       - ./storage:/app/storage
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -100,9 +90,6 @@ services:
       - "5555:5555"
     env_file:
       - ./.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy

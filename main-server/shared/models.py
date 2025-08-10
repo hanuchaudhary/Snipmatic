@@ -26,6 +26,7 @@ class ClipRequest(BaseModel):
     subtitles: bool = False
     clipType: str = "AI"
     multipleClips: bool = False
+    duration: int = 0  # Duration in seconds, used for timeout calculation
 
 class ViralMoment(BaseModel):
     start_time: float

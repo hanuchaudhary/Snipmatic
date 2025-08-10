@@ -42,7 +42,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 
 # Download timeout calculation
-def calculate_download_timeout(video_duration: int = None, base_timeout: int = 300) -> int:
+def calculate_download_timeout(video_duration: int = 0, base_timeout: int = 300) -> int:
     """
     Calculate appropriate timeout based on video duration
     Args:
@@ -72,6 +72,9 @@ def _download_with_ydl(url: str, ydl_opts: dict) -> dict:
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         # Get video info first
         info = ydl.extract_info(url, download=False)
+        if info is None:
+            raise Exception("Failed to extract video information")
+        
         video_info = {
             'title': info.get('title', 'Unknown'),
             'description': info.get('description', ''),
@@ -84,24 +87,11 @@ def _download_with_ydl(url: str, ydl_opts: dict) -> dict:
         ydl.download([url])
         return video_info
     
-def download_video(url: str, timeout_minutes: int = None) -> tuple[str, dict]:
+def download_video(url: str, timeout_minutes: int = 0, video_duration: int = 0) -> tuple[str, dict]:
     """Download video in highest quality using ThreadPoolExecutor and return path + video info"""
     video_id = str(uuid.uuid4())[:8]
     output_path = os.path.join(VIDEO_STORAGE_PATH, f"video_{video_id}.%(ext)s")
     logger.info(f"Starting download for video_id: {video_id}")
-    
-    # First, get video info to calculate appropriate timeout
-    info_ydl_opts = {
-        'quiet': True,
-    }
-    
-    video_duration = None
-    try:
-        with yt_dlp.YoutubeDL(info_ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            video_duration = info.get('duration', 0)
-    except Exception as e:
-        logger.warning(f"Could not get video info for timeout calculation: {e}")
     
     ydl_opts = {
         'format': 'best[ext=mp4]/best',
@@ -112,14 +102,13 @@ def download_video(url: str, timeout_minutes: int = None) -> tuple[str, dict]:
     # Submit download task to thread pool
     future = download_executor.submit(_download_with_ydl, url, ydl_opts)
     
+    if timeout_minutes:
+        timeout_seconds = timeout_minutes * 60
+    else:
+        timeout_seconds = calculate_download_timeout(video_duration)
+    
     try:
-        # Calculate appropriate timeout
-        if timeout_minutes:
-            timeout_seconds = timeout_minutes * 60
-        else:
-            timeout_seconds = calculate_download_timeout(video_duration)
-        
-        
+        # Calculate appropriate timeout using passed duration or default
         # Wait for download to complete
         video_info = future.result(timeout=timeout_seconds)
         
@@ -144,25 +133,22 @@ def download_video(url: str, timeout_minutes: int = None) -> tuple[str, dict]:
         raise
 
 @celery_app.task(name='download_task', bind=True)
-def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None, subtitles=False):
+def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None, subtitles=False, duration=0):
     """Download video task - handles queuing of next task to appropriate queue"""
    
     video_path = None
     video_info = None
     try:
-        
-        update_task_status(task_id, TaskStatus.DOWNLOADING, 10, "Downloading video")
-        
-        
-        video_path, video_info = download_video(url)
+        update_task_status(user_id, task_id, TaskStatus.DOWNLOADING, 10, "Downloading video")
+        video_path, video_info = download_video(url, video_duration=duration)
         
     except Exception as download_error:
             logger.error(f"[DOWNLOAD_WORKER] Task {task_id}: Download failed with error: {str(download_error)}")
-            update_task_status(task_id, TaskStatus.FAILED, 0, f"Download failed: {str(download_error)}")
+            update_task_status(user_id, task_id, TaskStatus.FAILED, 0, f"Download failed: {str(download_error)}")
             raise  # Re-raise to exit the task without queuing next task
-        
-    update_task_status(task_id, TaskStatus.DOWNLOADED, 30, "Video downloaded")
-        
+
+    update_task_status(user_id, task_id, TaskStatus.DOWNLOADED, 30, "Video downloaded")
+
     if clip_type == "AI":
            
             try:

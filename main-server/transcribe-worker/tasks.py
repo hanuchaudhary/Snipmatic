@@ -23,6 +23,7 @@ model = WhisperModel("base", device=device, compute_type=compute_type)
 bached_model = BatchedInferencePipeline(model)
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
+# gets audio file for segmented transcription 
 def extract_audio(video_path: str) -> str:
     """Extract audio from video file"""
     audio_filename = f"audio_{os.path.basename(video_path).split('.')[0]}.wav"
@@ -47,24 +48,51 @@ def extract_audio(video_path: str) -> str:
     except ffmpeg.Error as e:
         raise Exception(f"Audio extraction failed: {str(e)}")
 
-def transcribe_audio_whisperx(audio_path: str) -> list:
+def transcribe_audio_whisperx(audio_path: str, generate_subtitles: bool = False) -> tuple[list, list]:
     """Transcribe audio using faster-whisper"""
-    logger.info(f"Starting faster-whisper transcription for: {audio_path}")
+    logger.info(f"Starting faster-whisper transcription for: {audio_path}, generate_subtitles: {generate_subtitles}")
     
     try:
-        # Transcribe using faster-whisper
-        segments_generator, info = bached_model.transcribe(audio_path, batch_size=8, beam_size=5)
+        segments_generator, info = bached_model.transcribe(
+            audio_path, 
+            batch_size=8, 
+            beam_size=5,
+            word_timestamps=generate_subtitles 
+        )
         
-        # Convert generator to list and format similar to whisperx
         segments = []
+        subtitle_segments = []
+        
         for segment in segments_generator:
             segments.append({
                 'start': segment.start,
                 'end': segment.end,
                 'text': segment.text
             })
+
+            # if subtitles === true
+            if generate_subtitles:
+                if hasattr(segment, 'words') and segment.words:
+                    for word in segment.words:
+                        subtitle_segments.append({
+                            'start': word.start,
+                            'end': word.end,
+                            'text': word.word.strip()
+                        })
+                else:
+                    # Fallback
+                    words = segment.text.split()
+                    word_duration = (segment.end - segment.start) / max(len(words), 1)
+                    for i, word in enumerate(words):
+                        word_start = segment.start + (i * word_duration)
+                        word_end = word_start + word_duration
+                        subtitle_segments.append({
+                            'start': word_start,
+                            'end': word_end,
+                            'text': word.strip()
+                        })
         
-        return segments
+        return segments, subtitle_segments
         
     except Exception as e:
         raise Exception(f"Transcription failed: {str(e)}")
@@ -183,7 +211,7 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
     rate_limit='2/m'  # Max 2 transcriptions per minute per worker
 )
 
-def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id):
+def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id, subtitles=False):
     """Transcription task - queues clip task after completion"""
     audio_path = None
     
@@ -195,7 +223,12 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
         
         update_task_status(task_id, TaskStatus.TRANSCRIBING, 60, "Transcribing audio")
         
-        segments = transcribe_audio_whisperx(audio_path)
+        # Get both segments and subtitle data if subtitles enabled
+        if subtitles:
+            segments, subtitle_segments = transcribe_audio_whisperx(audio_path, generate_subtitles=True)
+        else:
+            segments, _ = transcribe_audio_whisperx(audio_path, generate_subtitles=False)
+            subtitle_segments = []
         
         update_task_status(task_id, TaskStatus.ANALYZING, 80, "Finding viral moments")
         
@@ -219,10 +252,10 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
                     'confidence_score': m.confidence_score
                 })
 
-        # Queue to clip queue
+        # Queue to clip queue with subtitle data
         celery_app.send_task(
             'clip_task',
-            args=[task_id, video_path, viral_moments_serialized, aspect_ratio, multiple_clips, user_id],
+            args=[task_id, video_path, viral_moments_serialized, subtitle_segments, aspect_ratio, multiple_clips, user_id, subtitles],
             queue='clip',
             routing_key='clip'
         )

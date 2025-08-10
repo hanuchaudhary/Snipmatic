@@ -144,7 +144,7 @@ def download_video(url: str, timeout_minutes: int = None) -> tuple[str, dict]:
         raise
 
 @celery_app.task(name='download_task', bind=True)
-def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None):
+def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None, subtitles=False):
     """Download video task - handles queuing of next task to appropriate queue"""
    
     video_path = None
@@ -169,7 +169,7 @@ def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips
             # Queue to transcribe queue
                 celery_app.send_task(
                     'transcribe_task',
-                    args=[task_id, video_path, url, aspect_ratio, multiple_clips, video_info, user_id],
+                    args=[task_id, video_path, url, aspect_ratio, multiple_clips, video_info, user_id, subtitles],
                     queue='transcribe',
                     routing_key='transcribe'
                 )
@@ -182,7 +182,7 @@ def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips
             # Queue to clip queue
                 celery_app.send_task(
                     'manual_clip_task',
-                    args=[task_id, video_path, start_time, end_time, aspect_ratio, user_id],
+                    args=[task_id, video_path, start_time, end_time, aspect_ratio, user_id, subtitles],
                     queue='clip',
                     routing_key='clip'
                 )

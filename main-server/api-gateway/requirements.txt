@@ -5,3 +5,4 @@ redis
 pydantic
 yt_dlp
 requests
+ffmpeg-python

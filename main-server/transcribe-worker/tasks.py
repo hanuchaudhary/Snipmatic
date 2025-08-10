@@ -147,7 +147,7 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
         - `content`: The exact transcript excerpt for the clip
         - `reason`: A detailed explanation of why this moment is compelling and viral, including emotional impact, platform fit, and hook strength
         - `confidence_score`: float (0.0–1.0) based on your certainty of virality
-        - `platform_fit`: A dictionary specifying suitability for TikTok, YouTube Shorts, and Instagram Reels (e.g., `{"TikTok": 0.9, "YouTube Shorts": 0.8, "Instagram Reels": 0.7}`)
+        - `platform_fit`: A dictionary specifying suitability for TikTok, YouTube Shorts, and Instagram Reels (e.g., "{{"TikTok": 0.9, "YouTube Shorts": 0.8, "Instagram Reels": 0.7}}")
         - `visual_notes`: Optional notes on implied visual elements (e.g., "Speaker's shocked expression could enhance impact")
         - `suggested_caption`: A concise, platform-friendly caption to accompany the clip (max 15 words)
 
@@ -204,7 +204,7 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
 
     try:
         response = gemini_client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt
         )
         

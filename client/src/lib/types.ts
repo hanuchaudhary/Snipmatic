@@ -23,7 +23,7 @@ export interface User {
   id: string;
   email: string;
   name?: string;
-  subscription: "FREE_TIER" | "SNIPPER_TIER";
+  credits: number;
   tasks: ITask[];
   createdAt: Date;
   updatedAt: Date;

@@ -12,7 +12,7 @@ export function BgWrapper() {
           pathname.startsWith("/signin") ||
           pathname.startsWith("/signup") ||
           pathname.startsWith("/verify") ||
-          pathname.startsWith("/subscription/success")
+          pathname.startsWith("/credits/success")
             ? "top-[100%] blur-md dark:blur-none"
             : "top-[70%] dark:blur-none blur-md"
         } -translate-x-1/2 -translate-y-1/2  z-[-1] h-screen`}
@@ -22,7 +22,7 @@ export function BgWrapper() {
             pathname.startsWith("/signin") ||
             pathname.startsWith("/signup") ||
             pathname.startsWith("/verify") ||
-            pathname.startsWith("/subscription")
+            pathname.startsWith("/credits")
               ? "text-[50vh]"
               : ""
           }`}

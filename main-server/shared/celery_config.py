@@ -1,5 +1,8 @@
 from celery import Celery
 import os
+from kombu import Queue
+
+
 
 # Redis/Message Broker Configuration
 # Environment variables will be loaded by Docker Compose
@@ -21,7 +24,11 @@ celery_app.conf.update(
         'clip_task': {'queue': 'clip'},
         'manual_clip_task': {'queue': 'clip'},
     },
-    
+     task_queues=[
+        Queue('download', routing_key='download'),
+        Queue('transcribe', routing_key='transcribe'),
+        Queue('clip', routing_key='clip')
+    ],
     # Worker configuration
     worker_prefetch_multiplier=1,  # Process one task at a time per worker
     task_acks_late=True,           # Acknowledge task only after completion
@@ -66,6 +73,7 @@ celery_app.conf.update(
     task_send_sent_event=True,
 )
 
+
 # Queue definitions with proper concurrency settings
 QUEUE_CONFIG = {
     'download': {
@@ -87,7 +95,6 @@ QUEUE_CONFIG = {
         'prefetch_count': 1
     }
 }
-
 # Storage paths
 STORAGE_BASE_PATH = os.getenv('STORAGE_BASE_PATH', '/home/kush-chaudhary/CodeGround/SystemProj/Clipper/microservices-celery/storage')
 VIDEO_STORAGE_PATH = os.path.join(STORAGE_BASE_PATH, 'videos')

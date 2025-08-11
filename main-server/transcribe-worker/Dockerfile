@@ -8,13 +8,13 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
     wget \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 COPY shared/ ./shared/
 COPY transcribe-worker/ ./
 
-RUN mkdir -p /app/storage/videos /app/storage/audio /app/storage/clips && \
-    chown -R celeryuser:celeryuser /app
+RUN mkdir chown -R celeryuser:celeryuser /app
 
 RUN pip install --no-cache-dir -r requirements.txt
 

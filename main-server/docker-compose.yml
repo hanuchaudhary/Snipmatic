@@ -35,10 +35,14 @@ services:
     build:
       context: .
       dockerfile: download-worker/Dockerfile
+    environment:
+      - TZ=UTC
     env_file:
       - ./download-worker/.env
     volumes:
       - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro  # Sync time with host
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -52,14 +56,13 @@ services:
       context: .
       dockerfile: transcribe-worker/Dockerfile
     environment:
-      - REDIS_URL=redis://redis:6379/0
-      - STORAGE_BASE_PATH=/app/storage
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - EMAIL_SERVER_URL=http://email-server:8080/send-completion-email
+      - TZ=UTC
     env_file:
       - ./transcribe-worker/.env
     volumes:
       - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro 
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -74,8 +77,12 @@ services:
       dockerfile: clip-worker/Dockerfile
     env_file:
       - ./clip-worker/.env
+    environment:
+      - TZ=UTC 
     volumes:
       - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro  # Sync time with host
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       redis:
         condition: service_healthy

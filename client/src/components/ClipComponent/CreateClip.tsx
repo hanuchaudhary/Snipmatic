@@ -81,21 +81,25 @@ export function CreateClipPage() {
 
     try {
       setIsProcessing(true);
-
-      // Check subscription limits
       try {
-        const subsCheck = await axios.get("/api/pre");
-        if (subsCheck.status === 403) {
+        const creditCheck = await axios.post("/api/credits/check", {
+          clipType: watchClipType,
+          multipleClips: watchMultiple,
+          subtitles: watch("subtitles"),
+        });
+        
+        if (creditCheck.status === 403) {
           toast.error(
-            "Your subscription limits have been exceeded. Please upgrade your plan."
+            "Insufficient credits to create this clip. Please purchase more credits."
           );
           setIsProcessing(false);
           return;
         }
-      } catch (subsError: any) {
-        if (subsError.response?.status === 403) {
+      } catch (creditError: any) {
+        if (creditError.response?.status === 403) {
+          const errorData = creditError.response.data;
           toast.error(
-            "Your subscription limits have been exceeded. Please upgrade your plan."
+            `Insufficient credits. You need ${errorData.creditsRequired} credits but only have ${errorData.currentCredits}.`
           );
           setIsProcessing(false);
           return;
@@ -490,6 +494,7 @@ export function CreateClipPage() {
                 className="md:space-y-6 space-y-4"
                 onSubmit={handleSubmit(onSubmit)}
               >
+
                 <div className="space-y-2">
                   <Controller
                     control={control}

@@ -31,6 +31,6 @@ export interface Task {
     id: string;
     email: string;
     name?: string;
-    subscription: string;
+    credits: number;
   };
 }

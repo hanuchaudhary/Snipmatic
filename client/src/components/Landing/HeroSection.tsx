@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { ContainerScroll } from "../ui/ContainerScroll";
+import { useRef } from "react";
 import { Navbar } from "./Navbar";
 import { GradientText } from "../ui/GradientText";
+import { ArrowIcons } from "./ArrowIcons";
+import { VideoCard, DynamicArrow } from "../ui";
 
 export function HeroSection() {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -59,73 +63,83 @@ export function HeroSection() {
   return (
     <section className="relative flex flex-col justify-center">
       <Navbar />
-      <ContainerScroll
-        titleComponent={
-          <motion.div
-            className="mx-auto z-10 relative md:pt-0 pt-40 md:w-4xl md:text-[5rem] text-4xl"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.h1
-              className="mt-20 mx-auto font-instrumental text-center leading-none"
-              variants={itemVariants}
-            >
-              Snip Your Way
-            </motion.h1>
-
-            <motion.h1
-              className="mx-auto font-instrumental text-center leading-none flex items-center justify-center md:gap-3 gap-1"
-              variants={itemVariants}
-            >
-              to Virality with
-              <GradientText
-                colors={["#ff4500", "#ff8c00", "#ffd700"]}
-                animationSpeed={5}
-                showBorder={false}
-                className="custom-class"
-              >
-                Snipmatic
-              </GradientText>
-            </motion.h1>
-
-            <motion.p
-              className="md:text-lg text-sm font-jost md:px-0 px-4 text-muted-foreground my-8 text-center mx-auto max-w-2xl"
-              variants={itemVariants}
-            >
-              Snip viral-ready shorts from any YouTube   video — fast, effortless,
-              and powered by Snipmatic AI.
-            </motion.p>
-
-            <motion.div
-              className="flex flex-wrap gap-2 md:text-base text-sm font-jost tracking-wider items-center justify-center"
-              variants={buttonVariants}
-            >
-              <Link href="/signin">
-                <motion.button
-                  style={{
-                    boxShadow:
-                      "rgba(255, 255, 255, 0.16) 0px 2px 6px -2px inset",
-                  }}
-                  className="border hover:scale-105 transition-transform px-7 py-3 rounded-xl font-semibold bg-neutral-900 dark:text-muted-foreground text-white cursor-pointer flex items-center gap-2"
-                  whileHover={{
-                    boxShadow:
-                      "rgba(255, 255, 255, 0.25) 0px 4px 12px -4px inset",
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Start Creating Now
-                  <ArrowUpRight />
-                </motion.button>
-              </Link>
-            </motion.div>
-          </motion.div>
-        }
+      <motion.div
+        className="mx-auto z-10 min-h-[calc(100vh-15rem)] flex items-center flex-col justify-center relative md:pt-0 pt-40 md:w-4xl md:text-[5rem] text-4xl"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        <div className="h-full w-full rounded-3xl overflow-hidden border-4">
-          <img src="/image.png" alt="" className="h-full w-full object-cover " />
-        </div>
-      </ContainerScroll>
+        <motion.h1
+          className="mt-20 mx-auto font-instrumental text-center leading-none"
+          variants={itemVariants}
+        >
+          Snip Your Way
+        </motion.h1>
+
+        <motion.h1
+          className="mx-auto font-instrumental text-center leading-none flex items-center justify-center md:gap-3 gap-1"
+          variants={itemVariants}
+        >
+          to Virality with
+          <GradientText
+            colors={["#ff4500", "#ff8c00", "#ffd700"]}
+            animationSpeed={5}
+            showBorder={false}
+            className="custom-class"
+          >
+            Snipmatic
+          </GradientText>
+        </motion.h1>
+
+        <motion.p
+          className="md:text-lg text-sm font-jost md:px-0 px-4 text-muted-foreground my-8 text-center mx-auto max-w-2xl"
+          variants={itemVariants}
+        >
+          Snip viral-ready shorts from any YouTube video — fast, effortless, and
+          powered by Snipmatic AI.
+        </motion.p>
+
+        <motion.div
+          className="flex flex-wrap flex-col gap-2 md:text-base text-sm font-jost tracking-wider items-center justify-center"
+          variants={buttonVariants}
+        >
+          <Link href="/signin">
+            <motion.button
+              ref={buttonRef}
+              style={{
+                boxShadow: "rgba(255, 255, 255, 0.16) 0px 2px 6px -2px inset",
+              }}
+              className="border hover:scale-105 transition-transform px-7 py-3 rounded-xl font-semibold bg-neutral-900 dark:text-muted-foreground text-white cursor-pointer flex items-center gap-2"
+              whileHover={{
+                boxShadow: "rgba(255, 255, 255, 0.25) 0px 4px 12px -4px inset",
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Start Creating Now
+              <ArrowUpRight />
+            </motion.button>
+          </Link>
+        </motion.div>
+      </motion.div>
+
+      <motion.div
+        className="w-full mx-auto overflow-hidden px-4 sm:px-2 mt-12 lg:mt-16"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 1.2 }}
+      >
+        <VideoCard
+          imageUrl="/placeholder.jpg"
+          videoUrl="/demo-video.mp4"
+          className="w-full"
+        />
+      </motion.div>
+
+      <div>
+        <div></div>
+      </div>
+
+      <DynamicArrow targetRef={buttonRef} />
 
       <motion.div
         className="w-full fixed -bottom-10 left-1/2 -translate-x-1/2 bg-white/70 dark:bg-black/70 h-20 blur-2xl"

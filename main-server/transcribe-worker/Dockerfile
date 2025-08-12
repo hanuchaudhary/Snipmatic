@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 COPY shared/ ./shared/
 COPY transcribe-worker/ ./
 
-RUN mkdir chown -R celeryuser:celeryuser /app
+RUN chown -R celeryuser:celeryuser /app
 
 RUN pip install --no-cache-dir -r requirements.txt
 

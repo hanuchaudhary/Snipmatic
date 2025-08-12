@@ -92,7 +92,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
             <img
               src={
                 task.thumbnailUrl ||
-                (task.youtubeUrl ? getYouTubeThumbnail(task.youtubeUrl) : null) ||
+                (task.youtubeUrl
+                  ? getYouTubeThumbnail(task.youtubeUrl)
+                  : null) ||
                 "/placeholder.jpg"
               }
               alt={task.title}
@@ -101,7 +103,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
               }`}
               onError={(e) => {
                 // If image fails to load, try YouTube thumbnail fallback
-                if (task.youtubeUrl && e.currentTarget.src !== getYouTubeThumbnail(task.youtubeUrl)) {
+                if (
+                  task.youtubeUrl &&
+                  e.currentTarget.src !== getYouTubeThumbnail(task.youtubeUrl)
+                ) {
                   e.currentTarget.src = getYouTubeThumbnail(task.youtubeUrl);
                 } else {
                   e.currentTarget.src = "/placeholder.jpg";
@@ -143,7 +148,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 <span>•</span>
                 <span>{task.clipType}</span>
                 <span>•</span>
-                <span>{task.quality}</span>
+                {/* <span>{task.quality}</span> */}
               </div>
             </div>
             {task.clipURL && (
@@ -171,9 +176,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
             )}
             <div className="bg-muted/50 p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Aspect Ratio</p>
-              <p className="text-sm font-medium">
-                {task.aspectRatio || "original"}
-              </p>
+              <p className="text-sm font-medium">{"original"}</p>
             </div>
             <div className="bg-muted/50 p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Duration</p>
@@ -183,33 +186,42 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
             </div>
           </div>
 
-          {task.result?.viral_moments &&
-            task.result.viral_moments.length > 0 && (
+          {task.clipsData?.viral_moments &&
+            task.clipsData.viral_moments.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {task.result.viral_moments.map((moment, index) => (
-                  <MinimalCard key={index} className="relative">
-                    <MinimalCardImage
-                      src={
-                        task.thumbnailUrl ||
-                        getYouTubeThumbnail(task.youtubeUrl) ||
-                        "/placeholder.jpg"
-                      }
-                      alt={`Viral moment thumbnail`}
-                    />
-                    <MinimalCardTitle className="line-clamp-2">
-                      {moment.reason}
-                    </MinimalCardTitle>
-                    <MinimalCardDescription className="line-clamp-3 mask-b-from-0%">
-                      {moment.content}
-                    </MinimalCardDescription>
-                    <div className="absolute top-2 right-2 font-semibold bg-secondary text-primary m-1 text-xs px-2 py-1 rounded-full border">
-                      Clip Score{" "}
-                      <span className="text-orange-500">
-                        {moment.confidence_score * 100}%
-                      </span>
-                    </div>
-                  </MinimalCard>
-                ))}
+                {task.clipsData.viral_moments.map(
+                  (
+                    moment: {
+                      reason: string;
+                      content: string;
+                      confidence_score: number;
+                    },
+                    index: number
+                  ) => (
+                    <MinimalCard key={index} className="relative">
+                      <MinimalCardImage
+                        src={
+                          task.thumbnailUrl ||
+                          getYouTubeThumbnail(task.youtubeUrl) ||
+                          "/placeholder.jpg"
+                        }
+                        alt={`Viral moment thumbnail`}
+                      />
+                      <MinimalCardTitle className="line-clamp-2">
+                        {moment.reason}
+                      </MinimalCardTitle>
+                      <MinimalCardDescription className="line-clamp-3 mask-b-from-0%">
+                        {moment.content}
+                      </MinimalCardDescription>
+                      <div className="absolute top-2 right-2 font-semibold bg-secondary text-primary m-1 text-xs px-2 py-1 rounded-full border">
+                        Clip Score{" "}
+                        <span className="text-orange-500">
+                          {moment.confidence_score * 100}%
+                        </span>
+                      </div>
+                    </MinimalCard>
+                  )
+                )}
               </div>
             )}
 

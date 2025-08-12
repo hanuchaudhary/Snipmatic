@@ -6,3 +6,5 @@ pydantic
 yt_dlp
 requests
 ffmpeg-python
+sqlalchemy
+psycopg2-binary

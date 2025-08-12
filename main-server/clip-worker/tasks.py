@@ -3,15 +3,17 @@ import zipfile
 import ffmpeg
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import sys
 import os
 import boto3
 from typing import Optional
-
+import time
+import random
 from shared.celery_config import celery_app, CLIP_STORAGE_PATH
 from shared.models import TaskStatus, ViralMoment
 from shared.utils import update_task_status, cleanup_files, time_to_seconds, send_email_notification, format_srt_time
-
+from threading import Lock
+# Initialize a lock for thread-safe operations
+lock = Lock()
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -112,7 +114,7 @@ def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, 
         # styles
         subtitle_style = (
             "FontName=Arial Black,"
-            "FontSize=2"
+            "FontSize=3"
             "PrimaryColour=&Hffffff&,"  # White text
             "SecondaryColour=&H000000&,"  # Black secondary
             "OutlineColour=&H000000&,"   # Black outline
@@ -333,7 +335,12 @@ def clip_task(self, task_id, video_path, viral_moments, subtitle_segments, aspec
                 
                 for i, future in enumerate(as_completed(futures)):
                     clip_path = future.result()
-                    clip_paths.append(clip_path)
+                    time.sleep(random.uniform(0.01, 0.05))
+                    with lock:
+                        if not os.path.exists(clip_path):
+                            logger.error(f"[CLIP_WORKER] Task {task_id}: Clip creation failed for moment {i+1}")
+                            continue
+                        clip_paths.append(clip_path)
                     logger.info(f"[CLIP_WORKER] Task {task_id}: Clip {i+1}/{len(viral_moments)} created: {clip_path}")
         else:
             
@@ -453,7 +460,7 @@ def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_rat
         # Cleanup video file
         if video_path and os.path.exists(video_path):
             logger.info(f"[CLIP_WORKER] Task {task_id}: Cleaning up video file: {video_path}")
-            cleanup_files(video_path)
+            # cleanup_files(video_path)
 
 if __name__ == "__main__":
     # Run as Celery worker - CPU bound, moderate concurrency

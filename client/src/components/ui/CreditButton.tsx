@@ -37,7 +37,10 @@ export function CreditButton() {
     <Link href="/credits" className="group">
       <Button variant="outline" size="sm" className="flex items-center gap-2">
         <span className="font-mono">
-          {loading ? "..." : credits}
+          {loading ? "..." : credits.toLocaleString("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          })}
         </span>
         <span className="text-xs text-muted-foreground group-hover:text-orange-400 transition-colors">Credits</span>
       </Button>

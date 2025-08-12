@@ -3,4 +3,5 @@ redis
 yt-dlp
 pydantic
 gevent
+ffmpeg-python
 requests

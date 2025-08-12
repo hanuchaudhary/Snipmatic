@@ -36,6 +36,7 @@ export function CreateClipPage() {
     formState: { errors },
     watch,
     setValue,
+    reset,
   } = useForm<FormValues>({
     defaultValues: {
       url: "",
@@ -87,7 +88,7 @@ export function CreateClipPage() {
           multipleClips: watchMultiple,
           subtitles: watch("subtitles"),
         });
-        
+
         if (creditCheck.status === 403) {
           toast.error(
             "Insufficient credits to create this clip. Please purchase more credits."
@@ -224,6 +225,7 @@ export function CreateClipPage() {
         },
       });
 
+      reset();
       store.videoInfo = { thumbnail: "", title: "", duration: 0, url: "" };
 
       toast.dismiss();
@@ -494,7 +496,6 @@ export function CreateClipPage() {
                 className="md:space-y-6 space-y-4"
                 onSubmit={handleSubmit(onSubmit)}
               >
-
                 <div className="space-y-2">
                   <Controller
                     control={control}

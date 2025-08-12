@@ -8,6 +8,7 @@ import os
 import ffmpeg
 from shared.models import TaskStatus
 from shared.celery_config import REDIS_URL
+from shared.database import update_task_in_postgres
 import requests
 EMAIL_SERVER_URL = os.getenv("EMAIL_SERVER_URL")  
 EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
@@ -28,7 +29,7 @@ def format_srt_time(seconds: float) -> str:
 
 def update_task_status(user_id: Optional[str], task_id: str, status: TaskStatus, progress: int = 0, 
                       message: str = "", result: Optional[dict] = None):
-    """Update task status in Redis"""
+    """Update task status in Redis and PostgreSQL"""
     try:
         # Get existing status or create new one
         existing_data = redis_client.get(f"task_status:{task_id}")
@@ -58,14 +59,27 @@ def update_task_status(user_id: Optional[str], task_id: str, status: TaskStatus,
         # # Publish to Redis channel for real-time updates
         # redis_client.publish(f"status:{task_id}", json.dumps(task_data, default=str))
 
-        # Store with 24 hour TTL
+        # Store with 24 hour TTL in Redis
         redis_client.setex(
             f"task_status:{task_id}",
             86400,  # 24 hours
             json.dumps(task_data, default=str)
         )
         
-        logger.info(f"Status updated for task {task_id}: {status} ({progress}%) - {message}")
+        # Update PostgreSQL database as well
+        postgres_success = update_task_in_postgres(
+            task_id=task_id,
+            status=status.value,  # Convert enum to string
+            progress=progress,
+            message=message,
+            result=result,
+            user_id=user_id
+        )
+        
+        if postgres_success:
+            logger.info(f"Status updated for task {task_id}: {status} ({progress}%) - {message} [Redis & PostgreSQL]")
+        else:
+            logger.warning(f"Status updated for task {task_id}: {status} ({progress}%) - {message} [Redis only - PostgreSQL failed]")
         
     except Exception as e:
         logger.error(f"Failed to update status for task {task_id}: {e}")

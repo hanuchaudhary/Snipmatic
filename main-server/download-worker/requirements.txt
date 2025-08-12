@@ -5,3 +5,5 @@ pydantic
 gevent
 ffmpeg-python
 requests
+sqlalchemy
+psycopg2-binary

@@ -453,7 +453,7 @@ def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_rat
         # Cleanup video file
         if video_path and os.path.exists(video_path):
             logger.info(f"[CLIP_WORKER] Task {task_id}: Cleaning up video file: {video_path}")
-            # cleanup_files(video_path)
+            cleanup_files(video_path)
 
 if __name__ == "__main__":
     # Run as Celery worker - CPU bound, moderate concurrency

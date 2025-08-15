@@ -32,6 +32,8 @@ async def get_video_info(url: str):
     """Get video information - placeholder for future implementation"""
     with YoutubeDL() as ydl:
         info = ydl.extract_info(url, download=False)
+        if info is None:
+            raise HTTPException(status_code=400, detail="Could not extract video information")
         return {
             "url": url,
             "title": info.get("title"),
@@ -55,7 +57,7 @@ async def create_video_clip(request: ClipRequest):
             logger.info(f"[API] Queuing download task for AI workflow - task {task_id}")
             celery_app.send_task(
                 'download_task',
-                args=[task_id, request.url, request.user_id, request.aspectRatio, request.multipleClips, request.clipType, None, None],
+                args=[task_id, request.url, request.user_id, request.aspectRatio, request.multipleClips, request.clipType, None, None, request.subtitles, request.duration],
                 queue='download',
                 routing_key='download'
             )
@@ -66,7 +68,7 @@ async def create_video_clip(request: ClipRequest):
             logger.info(f"[API] Queuing download task for manual workflow - task {task_id}")
             celery_app.send_task(
                 'download_task',
-                args=[task_id, request.url, request.user_id, request.aspectRatio, None, "MANUAL", request.startTime, request.endTime],
+                args=[task_id, request.url, request.user_id, request.aspectRatio, None, "MANUAL", request.startTime, request.endTime, request.subtitles],
                 queue='download',
                 routing_key='download'
             )
@@ -80,7 +82,7 @@ async def create_video_clip(request: ClipRequest):
         
     except Exception as e:
         logger.error(f"[API] Failed to queue task {task_id}: {e}")
-        update_task_status(task_id, TaskStatus.FAILED, 0, f"Failed to queue task: {str(e)}")
+        update_task_status(request.user_id, task_id, TaskStatus.FAILED, 0, f"Failed to queue task: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to queue processing task")
 
 @app.get("/status/{task_id}")

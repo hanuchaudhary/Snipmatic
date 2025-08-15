@@ -7,3 +7,6 @@ ffmpeg-python
 google-genai
 pydantic
 requests
+ffmpeg-python
+sqlalchemy
+psycopg2-binary

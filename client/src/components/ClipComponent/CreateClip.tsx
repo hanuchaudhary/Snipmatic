@@ -29,6 +29,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function CreateClipPage() {
   const { data: session } = useSession();
   const store = useSnipStore();
+  const { startPolling } = store;
 
   const {
     control,
@@ -36,6 +37,7 @@ export function CreateClipPage() {
     formState: { errors },
     watch,
     setValue,
+    reset,
   } = useForm<FormValues>({
     defaultValues: {
       url: "",
@@ -53,9 +55,6 @@ export function CreateClipPage() {
   const watchMultiple = watch("multipleClips");
   const watchClipType = watch("clipType");
   const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
-  const [taskId, setTaskId] = React.useState<string | null>(
-    typeof window !== "undefined" ? localStorage.getItem("taskId") : null
-  );
 
   React.useEffect(() => {
     // Validate YouTube URL format
@@ -79,27 +78,36 @@ export function CreateClipPage() {
       return;
     }
 
+    let creditCheck: any = null;
+
     try {
       setIsProcessing(true);
 
-      // Check subscription limits
+      // Check credits first
       try {
-        const subsCheck = await axios.get("/api/pre");
-        if (subsCheck.status === 403) {
+        creditCheck = await axios.post("/api/credits/check", {
+          clipType: watchClipType,
+          multipleClips: watchMultiple,
+          subtitles: watch("subtitles"),
+        });
+
+        if (creditCheck.status === 403) {
           toast.error(
-            "Your subscription limits have been exceeded. Please upgrade your plan."
+            "Insufficient credits to create this clip. Please purchase more credits."
           );
           setIsProcessing(false);
           return;
         }
-      } catch (subsError: any) {
-        if (subsError.response?.status === 403) {
+      } catch (creditError: any) {
+        if (creditError.response?.status === 403) {
+          const errorData = creditError.response.data;
           toast.error(
-            "Your subscription limits have been exceeded. Please upgrade your plan."
+            `Insufficient credits. You need ${errorData.creditsRequired} credits but only have ${errorData.currentCredits}.`
           );
           setIsProcessing(false);
           return;
         }
+        throw creditError; // Re-throw other credit errors
       }
 
       if (!watchUrl) {
@@ -187,6 +195,7 @@ export function CreateClipPage() {
           clipType: data.clipType,
           multipleClips: data.multipleClips,
           user_id: session.user.id,
+          duration: store.videoInfo.duration,
         },
         {
           headers: {
@@ -204,11 +213,9 @@ export function CreateClipPage() {
         return;
       }
 
-      setTaskId(taskId);
-      localStorage.setItem("taskId", taskId);
-
       await axios.post(`/api/task/${taskId}`, {
         youtubeUrl: data.url || "",
+        creditsToDeduct: creditCheck.data.creditsRequired,
         videoInfo: {
           duration: store.videoInfo.duration,
           multipleClips: data.multipleClips,
@@ -219,9 +226,17 @@ export function CreateClipPage() {
         },
       });
 
+      store.fetchCredits();
+      startPolling();
+
+      reset();
       store.videoInfo = { thumbnail: "", title: "", duration: 0, url: "" };
+      setIsProcessing(false);
 
       toast.dismiss();
+      toast.success(
+        "Video processing started! Check your dashboard for progress."
+      );
     } catch (error) {
       toast.dismiss();
       setIsProcessing(false);
@@ -232,188 +247,6 @@ export function CreateClipPage() {
       );
     }
   };
-
-  useEffect(() => {
-    let statusInterval: NodeJS.Timeout;
-    let heartbeatInterval: NodeJS.Timeout;
-
-    if (!taskId) return;
-
-    const fetchTaskStatus = async () => {
-      try {
-        const mainServerResponse = await axios.get(
-          `${MAIN_SERVER_URL}/status/${taskId}`
-        );
-        if (mainServerResponse.status !== 200) {
-          throw new Error(
-            `Failed to fetch task status: ${mainServerResponse.statusText}`
-          );
-        }
-
-        const mainServerData = mainServerResponse.data;
-
-        console.log(
-          `Polling task status for taskId: ${taskId} progress: ${mainServerData.progress} status: ${mainServerData.status}`
-        );
-
-        // Update database with main server data
-        const updatedTask = await axios.put(`/api/task/${taskId}`, {
-          status: mainServerData.status,
-          progress: mainServerData.progress,
-          statusMessage: mainServerData.message || mainServerData.statusMessage,
-          errorMessage: mainServerData.errorMessage || "",
-          clipURL:
-            watchMultiple === true
-              ? mainServerData.result?.zip_s3_url
-              : mainServerData.result?.s3_urls?.[0],
-          clipsData: mainServerData.result?.viral_moments || null,
-          completedAt: ["COMPLETED", "FAILED"].includes(mainServerData.status)
-            ? new Date(mainServerData.updated_at || new Date())
-            : null,
-        });
-
-        const unifiedTaskData = {
-          taskId: taskId,
-          status: mainServerData.status,
-          progress: mainServerData.progress,
-          youtubeUrl: updatedTask.data.youtubeUrl || "",
-          statusMessage: mainServerData.message || mainServerData.statusMessage,
-          errorMessage: mainServerData.errorMessage || "",
-          clipURL:
-            watchMultiple === true
-              ? mainServerData.result?.zip_s3_url
-              : mainServerData.result?.s3_urls?.[0],
-          clipsData: mainServerData.result?.viral_moments || null,
-          result: mainServerData.result || null,
-          createdAt: mainServerData.created_at,
-          updatedAt: mainServerData.updated_at,
-          completedAt: ["COMPLETED", "FAILED"].includes(mainServerData.status)
-            ? mainServerData.updated_at
-            : null,
-        };
-
-        console.log("Updated task:", updatedTask);
-
-        store.setTasks([
-          ...(store.tasks || []),
-          {
-            ...unifiedTaskData,
-            userId: session?.user?.id,
-            youtubeUrl: store.videoInfo.url,
-            title: updatedTask.data.task.title,
-            duration: store.videoInfo.duration,
-            thumbnailUrl: updatedTask.data.task.thumbnailUrl || "",
-            clipType: watchClipType,
-            multipleClips: watchMultiple,
-            subtitle: watch("subtitles"),
-            createdAt: new Date(unifiedTaskData.createdAt),
-            updatedAt: new Date(unifiedTaskData.updatedAt),
-            status: unifiedTaskData.status,
-            progress: unifiedTaskData.progress,
-            statusMessage: unifiedTaskData.statusMessage,
-            taskId: unifiedTaskData.taskId,
-            completedAt: unifiedTaskData.completedAt,
-          },
-        ]);
-
-        if (unifiedTaskData.status === "COMPLETED") {
-          setIsProcessing(false);
-          toast.success("Task completed successfully!");
-          setValue("url", "");
-          localStorage.removeItem("taskId");
-          clearInterval(statusInterval);
-          clearInterval(heartbeatInterval);
-        } else if (unifiedTaskData.status === "FAILED") {
-          setIsProcessing(false);
-          toast.error("Task failed. Please try again.");
-          setValue("url", "");
-          localStorage.removeItem("taskId");
-          clearInterval(statusInterval);
-          clearInterval(heartbeatInterval);
-        }
-        console.log("Task status updated successfully");
-      } catch (error) {
-        console.error("Error fetching task status:", error);
-        // Fallback to local database
-        try {
-          const response = await axios.get(`/api/task/${taskId}`);
-          if (response.status === 200) {
-            const dbTaskData = response.data.task;
-
-            // Create unified structure from database data
-            const unifiedTaskData = {
-              taskId: dbTaskData.taskId,
-              status: dbTaskData.status,
-              progress: dbTaskData.progress,
-              statusMessage: dbTaskData.statusMessage,
-              errorMessage: dbTaskData.errorMessage,
-              clipURL: dbTaskData.clipURL,
-              clipsData: dbTaskData.clipsData,
-              result: dbTaskData.clipsData
-                ? {
-                    viral_moments: dbTaskData.clipsData,
-                    s3_urls: dbTaskData.clipURL ? [dbTaskData.clipURL] : [],
-                  }
-                : null,
-              createdAt: dbTaskData.createdAt,
-              updatedAt: dbTaskData.updatedAt,
-              thumbnailUrl: dbTaskData.thumbnailUrl,
-              completedAt: dbTaskData.completedAt,
-            };
-
-            store.setTasks([
-              ...(store.tasks || []),
-              {
-                ...unifiedTaskData,
-                userId: session?.user?.id,
-                youtubeUrl: store.videoInfo.url,
-                title: store.videoInfo.title,
-                duration: store.videoInfo.duration,
-                clipType: watchClipType,
-                multipleClips: watchMultiple,
-                subtitle: watch("subtitles"),
-                createdAt: new Date(unifiedTaskData.createdAt),
-                updatedAt: new Date(unifiedTaskData.updatedAt),
-                status: unifiedTaskData.status,
-                progress: unifiedTaskData.progress,
-                statusMessage: unifiedTaskData.statusMessage,
-                taskId: unifiedTaskData.taskId,
-                completedAt: unifiedTaskData.completedAt,
-                clipURL: unifiedTaskData.clipURL,
-                clipsData: unifiedTaskData.clipsData,
-                result: unifiedTaskData.result || undefined,
-              },
-            ]);
-            console.log("Fallback: using database data", unifiedTaskData);
-          }
-        } catch (fallbackError) {
-          console.error("Fallback fetch also failed:", fallbackError);
-        }
-      }
-    };
-
-    const sendHeartbeat = async () => {
-      try {
-        await axios.post(
-          `${EMAIL_SERVER_URL}/active`,
-          { taskId, userId: session?.user?.id },
-          { headers: { "Content-Type": "application/json" } }
-        );
-        console.log(`Heartbeat sent for task ${taskId}`);
-      } catch (error) {
-        console.error(`Heartbeat failed for task ${taskId}:`, error);
-      }
-    };
-
-    fetchTaskStatus();
-    statusInterval = setInterval(fetchTaskStatus, 7000); // Poll every 7 seconds
-    heartbeatInterval = setInterval(sendHeartbeat, 5000); // Send heartbeat every 5 seconds
-
-    return () => {
-      clearInterval(statusInterval);
-      clearInterval(heartbeatInterval);
-    };
-  }, [taskId, session?.user?.id]);
 
   return (
     <div className="relative min-h-screen md:pt-10 pt-26 p-4 flex items-center justify-center">

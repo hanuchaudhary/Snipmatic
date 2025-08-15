@@ -5,8 +5,10 @@ from typing import Optional
 from datetime import datetime
 import sys
 import os
+import ffmpeg
 from shared.models import TaskStatus
 from shared.celery_config import REDIS_URL
+from shared.database import update_task_in_postgres
 import requests
 EMAIL_SERVER_URL = os.getenv("EMAIL_SERVER_URL")  
 EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
@@ -16,15 +18,24 @@ logger = logging.getLogger(__name__)
 # Redis client for status storage
 redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 
+def format_srt_time(seconds: float) -> str:
+    """Convert seconds to SRT time format (HH:MM:SS,mmm)"""
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    millisecs = int((seconds % 1) * 1000)
+    
+    return f"{hours:02d}:{minutes:02d}:{secs:02d},{millisecs:03d}"
+
 def update_task_status(user_id: Optional[str], task_id: str, status: TaskStatus, progress: int = 0, 
                       message: str = "", result: Optional[dict] = None):
-    """Update task status in Redis"""
+    """Update task status in Redis and PostgreSQL"""
     try:
         # Get existing status or create new one
         existing_data = redis_client.get(f"task_status:{task_id}")
         
         if existing_data:
-            task_data = json.loads(existing_data)
+            task_data = json.loads(str(existing_data))
             task_data.update({
                 'status': status,
                 'progress': progress,
@@ -48,14 +59,27 @@ def update_task_status(user_id: Optional[str], task_id: str, status: TaskStatus,
         # # Publish to Redis channel for real-time updates
         # redis_client.publish(f"status:{task_id}", json.dumps(task_data, default=str))
 
-        # Store with 24 hour TTL
+        # Store with 24 hour TTL in Redis
         redis_client.setex(
             f"task_status:{task_id}",
             86400,  # 24 hours
             json.dumps(task_data, default=str)
         )
         
-        logger.info(f"Status updated for task {task_id}: {status} ({progress}%) - {message}")
+        # Update PostgreSQL database as well
+        postgres_success = update_task_in_postgres(
+            task_id=task_id,
+            status=status.value,  # Convert enum to string
+            progress=progress,
+            message=message,
+            result=result,
+            user_id=user_id
+        )
+        
+        if postgres_success:
+            logger.info(f"Status updated for task {task_id}: {status} ({progress}%) - {message} [Redis & PostgreSQL]")
+        else:
+            logger.warning(f"Status updated for task {task_id}: {status} ({progress}%) - {message} [Redis only - PostgreSQL failed]")
         
     except Exception as e:
         logger.error(f"Failed to update status for task {task_id}: {e}")
@@ -65,7 +89,7 @@ def get_task_status(task_id: str) -> Optional[dict]:
     try:
         data = redis_client.get(f"task_status:{task_id}")
         if data:
-            return json.loads(data)
+            return json.loads(str(data))
         return None
     except Exception as e:
         logger.error(f"Failed to get status for task {task_id}: {e}")
@@ -99,6 +123,7 @@ def time_to_seconds(time_str: str) -> float:
             return float(parts[0])
     except:
         return 0.0
+
 def send_email_notification(task_id: str):
     """Send email notification when clips are generated"""
     if not EMAIL_SERVER_URL:

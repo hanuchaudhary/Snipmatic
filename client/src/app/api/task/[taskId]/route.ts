@@ -76,7 +76,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { youtubeUrl, videoInfo } = body;
+    const { youtubeUrl, videoInfo, creditsToDeduct } = body;
 
     if (!youtubeUrl) {
       return NextResponse.json(
@@ -85,32 +85,77 @@ export async function POST(
       );
     }
 
-    // first entry in the database
-    const task = await prisma.task.create({
-      data: {
-        taskId,
-        userId: session.user.id,
-        youtubeUrl,
-        title: videoInfo.title || "Untitled Clip",
-        status: "QUEUED",
-        progress: 0,
-        thumbnailUrl: videoInfo.thumbnail || "",
-        statusMessage: "Task initialized",
-        clipType: videoInfo.clipType || "FULL_VIDEO",
-        duration: videoInfo.duration || 0,
-        multipleClips: videoInfo.multipleClips || false,
-        subtitle: videoInfo.subtitle || false,
-      },
+    if (!creditsToDeduct || creditsToDeduct <= 0) {
+      return NextResponse.json(
+        { error: "Credits to deduct is required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: session.user.id },
+        select: { credits: true },
+      });
+
+      if (!user || user.credits < creditsToDeduct) {
+        throw new Error("Insufficient credits");
+      }
+
+      const task = await tx.task.create({
+        data: {
+          taskId,
+          userId: session.user.id,
+          youtubeUrl,
+          title: videoInfo.title || "Untitled Clip",
+          status: "QUEUED",
+          progress: 0,
+          thumbnailUrl: videoInfo.thumbnail || "",
+          statusMessage: "Task initialized",
+          clipType: videoInfo.clipType,
+          duration: videoInfo.duration,
+          multipleClips: videoInfo.multipleClips,
+          subtitle: videoInfo.subtitle,
+        },
+      });
+
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: {
+          credits: {
+            decrement: creditsToDeduct,
+          },
+        },
+      });
+
+      await tx.creditUsage.create({
+        data: {
+          userId: session.user.id,
+          taskId: taskId,
+          creditsUsed: creditsToDeduct,
+          actionType: `${videoInfo.clipType}_CLIP${
+            videoInfo.multipleClips ? "_MULTIPLE" : ""
+          }${videoInfo.subtitle ? "_SUBTITLE" : ""}`,
+          description: `Credits used for ${videoInfo.clipType} clip${
+            videoInfo.multipleClips ? " (multiple)" : ""
+          }${videoInfo.subtitle ? " with subtitles" : ""}`,
+        },
+      });
+
+      return task;
     });
 
-    // notify the email server about the new task
-    await axios.post(`${EMAIL_SERVER_URL}/set_task`, {
-      email: session.user.email,
-      task_id: taskId,
-    });
+    try {
+      await axios.post(`${EMAIL_SERVER_URL}/set_task`, {
+        email: session.user.email,
+        task_id: taskId,
+      });
+    } catch (emailError) {
+      console.warn("Failed to notify email server:", emailError);
+    }
 
     console.log(
-      `Task created with ID: ${task.taskId} for user: ${session.user.id}`
+      `Task created with ID: ${result.taskId} for user: ${session.user.id}, credits deducted: ${creditsToDeduct}`
     );
 
     return NextResponse.json(
@@ -118,17 +163,25 @@ export async function POST(
         success: true,
         message: "Task created successfully",
         task: {
-          taskId: task.taskId,
-          status: task.status,
-          progress: task.progress,
-          statusMessage: task.statusMessage,
-          thumbnailUrl: task.thumbnailUrl,
+          taskId: result.taskId,
+          status: result.status,
+          progress: result.progress,
+          statusMessage: result.statusMessage,
+          thumbnailUrl: result.thumbnailUrl,
         },
       },
       { status: 201 }
     );
   } catch (error) {
     console.error("Error creating task:", error);
+
+    if (error instanceof Error && error.message === "Insufficient credits") {
+      return NextResponse.json(
+        { error: "Insufficient credits to create this task" },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to create task" },
       { status: 500 }

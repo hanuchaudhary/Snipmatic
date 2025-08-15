@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Logo } from "../Logo";
 import { ThemeSwitcher } from "../ThemeToggle";
+import { CreditButton } from "../ui/CreditButton";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "../ui/button";
 import { Menu, X } from "lucide-react";
@@ -45,22 +46,14 @@ export function Navbar() {
 
             <div className="hidden md:block">
               <Button variant="default" size={"sm"} asChild>
-                <Link href="/subscription">Upgrade</Link>
+                <Link href="/credits">Buy Credits</Link>
               </Button>
             </div>
           </div>
 
           <div className="hidden md:flex items-center gap-2">
             <ThemeSwitcher />
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={async () => {
-                await axios.post("/api/task/010101");
-              }}
-            >
-              <Logo />
-            </motion.div>
+            {session && <CreditButton />}
             {session && (
               <Button
                 size={"sm"}
@@ -76,7 +69,6 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -165,8 +157,8 @@ export function Navbar() {
                     {/* Upgrade Button */}
                     <motion.div whileTap={{ scale: 0.95 }} className="w-full">
                       <Button variant="default" asChild className="w-full">
-                        <Link href="/subscription" onClick={closeMobileMenu}>
-                          Upgrade
+                        <Link href="/credits" onClick={closeMobileMenu}>
+                          Buy Credits
                         </Link>
                       </Button>
                     </motion.div>

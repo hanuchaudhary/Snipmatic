@@ -1,6 +1,6 @@
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { creditMiddleware } from "@/lib/creditMiddleware";
-import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
     if (!result.canProceed) {
       return NextResponse.json(
         {
-          error: "Insufficient credits",
-          message: result.message,
+          error: result.message,
+          canProceed: false,
           creditsRequired: result.creditsRequired,
           currentCredits: result.currentCredits,
         },
@@ -38,14 +38,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { 
-        message: "Credits sufficient to proceed",
-        creditsRequired: result.creditsRequired,
-        currentCredits: result.currentCredits,
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      success: true,
+      canProceed: true,
+      creditsRequired: result.creditsRequired,
+      currentCredits: result.currentCredits,
+    });
   } catch (error) {
     console.error("Error checking credits:", error);
     return NextResponse.json(

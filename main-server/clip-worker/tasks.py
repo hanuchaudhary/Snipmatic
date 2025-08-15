@@ -3,22 +3,26 @@ import zipfile
 import ffmpeg
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import sys
 import os
 import boto3
-
+from typing import Optional
+import time
+import random
 from shared.celery_config import celery_app, CLIP_STORAGE_PATH
 from shared.models import TaskStatus, ViralMoment
-from shared.utils import update_task_status, cleanup_files, time_to_seconds,  send_email_notification
-
+from shared.utils import update_task_status, cleanup_files, time_to_seconds, send_email_notification, format_srt_time
+from threading import Lock
+# Initialize a lock for thread-safe operations
+lock = Lock()
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+CLOUDFRONT_URL = os.getenv("CLOUDFRONT_URL")
 
 s3_client = None
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and S3_BUCKET_NAME:
@@ -35,6 +39,132 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and S3_BUCKET_NAME:
         s3_client = None
 else:
     logger.warning("S3 credentials not configured - S3 upload will be disabled")
+
+def generate_subtitle_file(subtitle_segments: list, clip_start: float, clip_end: float, output_path: str) -> str:
+    """Generate SRT subtitle file for a specific clip timeframe"""
+    
+    clip_segments = []
+    for seg in subtitle_segments:
+        # Check if segment overlaps with clip
+        if seg['start'] < clip_end and seg['end'] > clip_start:
+            # Adjust timing relative to clip start
+            adjusted_start = max(0, seg['start'] - clip_start)
+            adjusted_end = min(clip_end - clip_start, seg['end'] - clip_start)
+            
+            if adjusted_start < adjusted_end:  # Valid segment
+                clip_segments.append({
+                    'start': adjusted_start,
+                    'end': adjusted_end,
+                    'text': seg['text']
+                })
+    
+    # Group words into subtitle chunks (3-5 words per subtitle)
+    subtitle_chunks = []
+    current_chunk = []
+    chunk_start = 0
+    words_per_chunk = 4
+    
+    for i, seg in enumerate(clip_segments):
+        if len(current_chunk) == 0:
+            chunk_start = seg['start']
+        
+        current_chunk.append(seg['text'])
+        
+        # Create chunk when we have enough words or reach end
+        if len(current_chunk) >= words_per_chunk or i == len(clip_segments) - 1:
+            if current_chunk:
+                subtitle_chunks.append({
+                    'start': chunk_start,
+                    'end': seg['end'],
+                    'text': ' '.join(current_chunk)
+                })
+            current_chunk = []
+    
+    # Generate SRT content
+    srt_content = ""
+    for i, chunk in enumerate(subtitle_chunks, 1):
+        start_time = format_srt_time(chunk['start'])
+        end_time = format_srt_time(chunk['end'])
+        
+        srt_content += f"{i}\n"
+        srt_content += f"{start_time} --> {end_time}\n"
+        srt_content += f"{chunk['text']}\n\n"
+    
+    # Write to file
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(srt_content)
+    
+    return output_path
+
+
+def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, video_width: int = 1080, video_height: int = 1920):
+    """Burn subtitles into video using FFmpeg"""
+    
+    try:
+        logger.info(f"Burning subtitles: {input_video} -> {output_video}")
+        logger.info(f"SRT file: {srt_file}")
+        
+        # Verify input file has audio
+        probe = ffmpeg.probe(input_video)
+        audio_streams = [stream for stream in probe['streams'] if stream['codec_type'] == 'audio']
+        video_streams = [stream for stream in probe['streams'] if stream['codec_type'] == 'video']
+        
+        logger.info(f"Input video has {len(video_streams)} video streams and {len(audio_streams)} audio streams")
+        
+        # styles
+        subtitle_style = (
+            "FontName=Arial Black,"
+            "FontSize=3"
+            "PrimaryColour=&Hffffff&,"  # White text
+            "SecondaryColour=&H000000&,"  # Black secondary
+            "OutlineColour=&H000000&,"   # Black outline
+            "BackColour=&H80000000&,"    # Semi-transparent background
+            "Bold=1,"
+            "Italic=0,"
+            "Underline=0,"
+            "BorderStyle=3,"  # Box background
+            "Outline=2,"      # Outline thickness
+            "Shadow=0,"
+            "Alignment=2,"    # Bottom center
+            f"MarginL=40,"
+            f"MarginR=40,"
+            f"MarginV=40"  # Distance from bottom
+        )
+        
+        # Create input stream
+        input_stream = ffmpeg.input(input_video)
+        
+        if len(audio_streams) > 0:
+            # Apply subtitle filter to video stream only and keep audio
+            video_with_subtitles = input_stream['v'].filter('subtitles', srt_file, force_style=subtitle_style)
+            audio = input_stream['a']
+            
+            # Output with both video (with subtitles) and audio
+            out = ffmpeg.output(video_with_subtitles, audio, output_video, vcodec='libx264', acodec='aac', crf=23)
+        else:
+            # No audio stream, just video with subtitles
+            logger.warning("No audio stream found in input video!")
+            video_with_subtitles = input_stream.filter('subtitles', srt_file, force_style=subtitle_style)
+            out = ffmpeg.output(video_with_subtitles, output_video, vcodec='libx264', crf=23)
+        
+        # Run the command
+        ffmpeg.run(out, overwrite_output=True, capture_stdout=True, capture_stderr=True)
+        
+        # Verify output has audio
+        if os.path.exists(output_video):
+            output_probe = ffmpeg.probe(output_video)
+            output_audio_streams = [stream for stream in output_probe['streams'] if stream['codec_type'] == 'audio']
+            logger.info(f"Output video has {len(output_audio_streams)} audio streams")
+        
+        return output_video
+        
+    except ffmpeg.Error as e:
+        stderr_output = e.stderr.decode() if e.stderr else "No stderr captured"
+        logger.error(f"FFmpeg error during subtitle burning: {stderr_output}")
+        raise Exception(f"Subtitle burning failed: {stderr_output}")
+    except Exception as e:
+        logger.error(f"Unexpected error during subtitle burning: {str(e)}")
+        raise Exception(f"Subtitle burning failed: {str(e)}")
 
 
 def upload_to_s3(file_path: str, clip_id: str, user_id: str, is_zip: bool = False) -> str:
@@ -60,8 +190,8 @@ def upload_to_s3(file_path: str, clip_id: str, user_id: str, is_zip: bool = Fals
             s3_key,
             ExtraArgs={'ContentType': content_type}
         )
-        
-        cloudfront_url = f"https://d10d2f3sgu39wn.cloudfront.net/{s3_key}"
+
+        cloudfront_url = f"{CLOUDFRONT_URL}/{s3_key}"
         logger.info(f"Upload successful. CloudFront URL: {cloudfront_url}")
         return cloudfront_url
         
@@ -89,13 +219,11 @@ def upload_clips_to_s3(clip_paths: list, user_id: str) -> list:
     return s3_urls
 
 
-def create_clip(video_path: str, start_time: float, end_time: float, aspect_ratio: str) -> str:
-    """Create a clip from video with specified aspect ratio"""
+def create_clip(video_path: str, start_time: float, end_time: float, aspect_ratio: str, subtitle_segments: Optional[list] = None, enable_subtitles: bool = False) -> str:
+    """Create a clip from video with specified aspect ratio and optional subtitles"""
 
     clip_id = str(uuid.uuid4())[:8]
-
     output_filename = f"clip_{clip_id}_{start_time}_{end_time}.mp4"
-
     output_path = os.path.join(CLIP_STORAGE_PATH, output_filename)
 
     try:
@@ -106,31 +234,36 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
             video = input_stream['v'].filter('scale', 1080, 1920, force_original_aspect_ratio='decrease') \
                                     .filter('pad', 1080, 1920, '(ow-iw)/2', '(oh-ih)/2', color='black')
         elif aspect_ratio == "square":
-            
             video = input_stream['v'].filter('scale', 1080, 1080, force_original_aspect_ratio='decrease') \
                                     .filter('pad', 1080, 1080, '(ow-iw)/2', '(oh-ih)/2', color='black')
         else:
-            
             video = input_stream['v']
 
         # Explicitly reference the audio stream
         audio = input_stream['a']
       
-
         if duration > 2:
             video = video.filter('fade', type='in', start_time=0, duration=0.5) \
                          .filter('fade', type='out', start_time=duration - 1, duration=0.5)
-
             audio = audio.filter('afade', type='in', start_time=0, duration=0.5) \
                          .filter('afade', type='out', start_time=duration - 1, duration=0.5)
         else:
             logger.info("Duration too short for fade effects. Skipping fade.")
 
+        # Create temporary output for the clip (without subtitles)
+        temp_output = None
+        final_output = output_path
+
+        if enable_subtitles and subtitle_segments:
+            # Create temporary file for clip without subtitles
+            temp_output = os.path.join(CLIP_STORAGE_PATH, f"temp_clip_{clip_id}.mp4")
+            final_output = temp_output
+            
         logger.info("Setting up FFmpeg output stream")
         out = ffmpeg.output(
             video,
             audio,
-            output_path,
+            final_output,
             vcodec='libx264',
             acodec='aac',
             crf=23,
@@ -139,8 +272,27 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
         logger.debug(f"Compiled command: {' '.join(ffmpeg.compile(out))}")
         ffmpeg.run(out, overwrite_output=True, capture_stdout=True, capture_stderr=True)
 
-        if not os.path.exists(output_path):
+        if not os.path.exists(final_output):
             raise Exception("Clip creation failed - output file missing")
+
+        # if subtitles === true
+        if enable_subtitles and subtitle_segments and temp_output:
+            logger.info(f"Adding subtitles to clip {clip_id}")
+            
+            # SRT file
+            srt_filename = f"subtitles_{clip_id}.srt"
+            srt_path = os.path.join(CLIP_STORAGE_PATH, srt_filename)
+            
+            generate_subtitle_file(subtitle_segments, start_time, end_time, srt_path)
+            
+            # Burn subtitles into the final video
+            burn_subtitles_to_video(temp_output, srt_path, output_path)
+            
+            # Clean up temporary files
+            if os.path.exists(temp_output):
+                os.remove(temp_output)
+            if os.path.exists(srt_path):
+                os.remove(srt_path)
 
         size = os.path.getsize(output_path)
         logger.info(f"Clip created successfully: {output_path} (size: {size} bytes)")
@@ -156,12 +308,12 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
 
 
 @celery_app.task(name='clip_task', bind=True)
-def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_clips, user_id):
+def clip_task(self, task_id, video_path, viral_moments, subtitle_segments, aspect_ratio, multiple_clips, user_id, subtitles=False):
     """Clip generation task for AI-identified viral moments"""
   
     try:
-        
-        update_task_status(task_id, TaskStatus.CREATING_CLIPS, 90, "Generating clips")
+
+        update_task_status(user_id, task_id, TaskStatus.CREATING_CLIPS, 90, "Generating clips")
         clip_paths = []
         
         if multiple_clips:
@@ -174,14 +326,21 @@ def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_c
                         video_path, 
                         moment['start_time'], 
                         moment['end_time'], 
-                        aspect_ratio
+                        aspect_ratio,
+                        subtitle_segments,
+                        subtitles
                     )
                     for moment in viral_moments
                 ]
                 
                 for i, future in enumerate(as_completed(futures)):
                     clip_path = future.result()
-                    clip_paths.append(clip_path)
+                    time.sleep(random.uniform(0.01, 0.05))
+                    with lock:
+                        if not os.path.exists(clip_path):
+                            logger.error(f"[CLIP_WORKER] Task {task_id}: Clip creation failed for moment {i+1}")
+                            continue
+                        clip_paths.append(clip_path)
                     logger.info(f"[CLIP_WORKER] Task {task_id}: Clip {i+1}/{len(viral_moments)} created: {clip_path}")
         else:
             
@@ -194,7 +353,9 @@ def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_c
                 video_path, 
                 best_moment['start_time'], 
                 best_moment['end_time'], 
-                aspect_ratio
+                aspect_ratio,
+                subtitle_segments,
+                subtitles
             )
             clip_paths.append(clip_path)
         
@@ -226,17 +387,18 @@ def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_c
         }
         
         update_task_status(
-            task_id, 
-            TaskStatus.COMPLETED, 
-            100, 
-            "Clips created successfully", 
+            user_id,
+            task_id,
+            TaskStatus.COMPLETED,
+            100,
+            "Clips created successfully",
             result
         )
         send_email_notification(task_id) 
         return result
     except Exception as e:
         logger.error(f"[CLIP_WORKER] Task {task_id}: AI clip creation failed with error: {str(e)}")
-        update_task_status(task_id, TaskStatus.FAILED, 0, f"Clip creation failed: {str(e)}")
+        update_task_status(user_id, task_id, TaskStatus.FAILED, 0, f"Clip creation failed: {str(e)}")
         raise
     finally:
         # Cleanup video file after clip processing is complete
@@ -245,22 +407,25 @@ def clip_task(self, task_id, video_path, viral_moments, aspect_ratio, multiple_c
             cleanup_files(video_path)
 
 @celery_app.task(name='manual_clip_task', bind=True)
-def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_ratio, user_id):
+def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_ratio, user_id, subtitles=False):
     """Manual clip creation task"""
     
     try:
-        
-        update_task_status(task_id, TaskStatus.CREATING_CLIPS, 90, "Generating clip")
-        
-       
+
+        update_task_status(user_id, task_id, TaskStatus.CREATING_CLIPS, 90, "Generating clip")
+
+
         start_seconds = time_to_seconds(start_time)
         end_seconds = time_to_seconds(end_time)
         
+        # TODO: ADD SUBTITLES FEATURE FOR MANUAL CLIPS
         clip_path = create_clip(
             video_path,
             start_seconds,
             end_seconds,
-            aspect_ratio
+            aspect_ratio,
+            subtitle_segments=[],  # Empty for manual clips
+            enable_subtitles=False  # manual subtitles === False for now
         )
         
         logger.info(f"[CLIP_WORKER] Task {task_id}: Uploading clip to S3")
@@ -278,17 +443,18 @@ def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_rat
         
         logger.info(f"[CLIP_WORKER] Task {task_id}: Manual clip task completed successfully")
         update_task_status(
-            task_id, 
-            TaskStatus.COMPLETED, 
-            100, 
-            "Manual clip created successfully", 
+            user_id,
+            task_id,
+            TaskStatus.COMPLETED,
+            100,
+            "Manual clip created successfully",
             result
         )
         
         return result
     except Exception as e:
         logger.error(f"[CLIP_WORKER] Task {task_id}: Manual clip creation failed with error: {str(e)}")
-        update_task_status(task_id, TaskStatus.FAILED, 0, f"Manual clip creation failed: {str(e)}")
+        update_task_status(user_id, task_id, TaskStatus.FAILED, 0, f"Manual clip creation failed: {str(e)}")
         raise
     finally:
         # Cleanup video file

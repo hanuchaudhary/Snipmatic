@@ -14,7 +14,7 @@ export function Dashboard() {
   );
 
   const [isLoading, setIsLoading] = useState(false);
-  const { tasks, setTasks } = useSnipStore();
+  const { tasks, setTasks, startPolling, stopPolling, isPolling } = useSnipStore();
 
   const fetchTasks = async () => {
     try {
@@ -30,8 +30,19 @@ export function Dashboard() {
   };
 
   React.useEffect(() => {
+    // Fetch all tasks initially
     fetchTasks();
-  }, [activeTab]);
+    
+    // Start polling for active tasks to get real-time updates
+    if (!isPolling) {
+      startPolling();
+    }
+
+    // Cleanup polling when component unmounts
+    return () => {
+      stopPolling();
+    };
+  }, [startPolling]);
 
   const processingTasks = tasks.filter(
     (task) => !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
@@ -86,7 +97,7 @@ export function Dashboard() {
               animate={{ opacity: 1, filter: "blur(0px)" }}
               exit={{ opacity: 0, filter: "blur(10px)" }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="space-y-4"
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-4 gap-2"
             >
               {processingTasks.length > 0 ? (
                 processingTasks.map((task) => (

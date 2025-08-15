@@ -1,0 +1,39 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
+import axios from "axios";
+import Link from "next/link";
+import { useSnipStore } from "@/lib/snipStore";
+
+export function CreditButton() {
+  const { data: session } = useSession();
+  const store = useSnipStore();
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      store.fetchCredits();
+    }
+  }, [session?.user?.id]);
+
+  if (!session?.user) {
+    return null;
+  }
+
+  return (
+    <Link href="/credits" className="group">
+      <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <span className="font-mono">
+          {store.credits.toLocaleString("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          })}
+        </span>
+        <span className="text-xs text-muted-foreground group-hover:text-orange-400 transition-colors">
+          Credits
+        </span>
+      </Button>
+    </Link>
+  );
+}

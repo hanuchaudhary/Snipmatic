@@ -8,10 +8,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -22,20 +20,45 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { subscriptionSchema } from "@/lib/validation";
 
-type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
+const purchaseSchema = z.object({
+  city: z.string().min(1, "City is required"),
+  country: z.string().min(1, "Country is required"),
+  state: z.string().min(1, "State is required"),
+  street: z.string().min(1, "Street address is required"),
+  zipcode: z.string().min(1, "Zipcode is required"),
+});
 
-export function SubscriptionDialog() {
-  const [open, setOpen] = useState(false);
+type PurchaseFormData = z.infer<typeof purchaseSchema>;
+
+export interface CreditPackage {
+  id: string;
+  name: string;
+  credits: number;
+  price: number;
+  description: string;
+  popular?: boolean;
+}
+
+interface CreditPurchaseDialogProps {
+  package: CreditPackage;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function CreditPurchaseDialog({ 
+  package: pkg, 
+  open, 
+  onOpenChange 
+}: CreditPurchaseDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<SubscriptionFormData>({
-    resolver: zodResolver(subscriptionSchema),
+  const form = useForm<PurchaseFormData>({
+    resolver: zodResolver(purchaseSchema),
     defaultValues: {
       city: "",
       country: "",
@@ -45,51 +68,49 @@ export function SubscriptionDialog() {
     },
   });
 
-  const onSubmit = async (data: SubscriptionFormData) => {
+  const onSubmit = async (data: PurchaseFormData) => {
     setIsSubmitting(true);
     try {
-      const response = await axios.post(`/api/subscription/`, data);
-      console.log("Response from subscription API:", response.data);
+      const response = await axios.post(`/api/credits/packages`, {
+        credits: pkg.credits,
+        ...data,
+      });
 
       if (response.data.error) {
-        console.error("Error creating subscription:", response.data.error);
-        toast.error("Failed to create subscription. Please try again later.");
+        toast.error("Failed to create payment link. Please try again later.");
         setIsSubmitting(false);
         return;
       }
 
-      const { subscriptionId, paymentLink } = response.data;
+      const { paymentLink } = response.data;
       window.location.href = paymentLink;
-      console.log("Subscription created with ID:", subscriptionId);
 
       form.reset();
-      setOpen(false);
+      onOpenChange(false);
     } catch (error) {
-      console.error("Submission error:", error);
-    } finally {
+      console.error("Purchase error:", error);
+      toast.error("An error occurred while processing your purchase.");
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className="border rounded-[20px] p-1">
-        <Button>Become Snipper</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[555px] font-mono p-0 rounded-3xl overflow-hidden">
         <DialogHeader className="px-6 pt-14 pb-5">
-          <h2 className="text-2xl bg-gradient-to-b from-orange-500 to-orange-400 bg-clip-text text-transparent font-semibold mb-2">
-            $4.99/month{" "}
+          <div className="text-2xl bg-gradient-to-b from-orange-500 to-orange-400 bg-clip-text text-transparent font-semibold mb-2">
+            ${pkg.price}{" "}
             <span className="text-sm text-muted-foreground">
-              (billed monthly)
+              ({pkg.credits} credits)
             </span>
-          </h2>
+          </div>
 
-          <DialogTitle className="md:text-xl">Subscription Details</DialogTitle>
+          <DialogTitle className="md:text-xl">{pkg.name}</DialogTitle>
           <DialogDescription>
-            Please enter your billing details.
+            {pkg.description}
           </DialogDescription>
         </DialogHeader>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="p-6 space-y-6">
@@ -124,7 +145,7 @@ export function SubscriptionDialog() {
                   control={form.control}
                   name="state"
                   render={({ field }) => (
-                    <FormItem className="">
+                    <FormItem>
                       <FormLabel>State</FormLabel>
                       <FormControl>
                         <Input placeholder="NY" {...field} />
@@ -153,7 +174,7 @@ export function SubscriptionDialog() {
                   name="zipcode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Zip Code</FormLabel>
+                      <FormLabel>Zipcode</FormLabel>
                       <FormControl>
                         <Input placeholder="10001" {...field} />
                       </FormControl>
@@ -163,26 +184,22 @@ export function SubscriptionDialog() {
                 />
               </div>
             </div>
-            <DialogFooter className="w-full border-t grid grid-cols-2 gap-0">
-              <button
-                className={`py-5 w-full font-semibold leading-none hover:bg-secondary/30 border-r cursor-pointer`}
-                type="button"
-                onClick={() => {
-                  setOpen(false);
-                  form.reset();
-                }}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </button>
-              <button
+            <div className="bg-secondary/30 p-6">
+              <Button
                 type="submit"
-                className={`w-full font-semibold leading-none bg-blue-600 hover:bg-blue-500 text-white cursor-pointer disabled:opacity-50`}
+                className="w-full"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Subscribing..." : "Subscribe"}
-              </button>
-            </DialogFooter>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  `Purchase ${pkg.credits} Credits`
+                )}
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Thread pool for download operations - increased for batch processing
-download_executor = ThreadPoolExecutor(max_workers=5, thread_name_prefix="download-thread")
+download_executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="download-thread")
 
 # Cleanup function to shutdown the thread pool
 def cleanup_thread_pool():
@@ -94,7 +94,7 @@ def download_video(url: str, timeout_minutes: int = 0, video_duration: int = 0) 
     logger.info(f"Starting download for video_id: {video_id}")
     
     ydl_opts = {
-        'format': 'best[ext=mp4]/best',
+        'format': 'bestvideo+bestaudio/best',
         'outtmpl': output_path,
         'quiet': True,
     }
@@ -141,6 +141,7 @@ def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips
     try:
         update_task_status(user_id, task_id, TaskStatus.DOWNLOADING, 10, "Downloading video")
         video_path, video_info = download_video(url, video_duration=duration)
+        print(f"Video downloaded successfully: {video_path}")
         
     except Exception as download_error:
             logger.error(f"[DOWNLOAD_WORKER] Task {task_id}: Download failed with error: {str(download_error)}")
@@ -185,8 +186,8 @@ if __name__ == "__main__":
             '-Q', 'download',
             '--loglevel=info', 
             '-P', 'processes',
-            '--concurrency=10', 
-            '--prefetch-multiplier=5',
+            '--concurrency=5', 
+            '--prefetch-multiplier=1',
             '-n', 'download_worker@%h'
         ])
     except KeyboardInterrupt:

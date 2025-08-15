@@ -26,27 +26,64 @@ gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 # gets audio file for segmented transcription 
 def extract_audio(video_path: str) -> str:
     """Extract audio from video file"""
+    if not os.path.exists(video_path):
+        raise FileNotFoundError(f"Video file not found: {video_path}")
+        
     audio_filename = f"audio_{os.path.basename(video_path).split('.')[0]}.wav"
     audio_path = os.path.join(AUDIO_STORAGE_PATH, audio_filename)
     
     logger.info(f"Extracting audio from {video_path} to {audio_path}")
     
     try:
-        (
+        # Verify video file is readable first
+        probe = ffmpeg.probe(video_path)
+        if not any(stream['codec_type'] == 'audio' for stream in probe['streams']):
+            raise Exception("No audio stream found in video file")
+            
+        # Create output directory if it doesn't exist
+        os.makedirs(AUDIO_STORAGE_PATH, exist_ok=True)
+        
+        stream = (
             ffmpeg
             .input(video_path)
-            .output(audio_path, acodec='pcm_s16le', ac=1, ar='16000')
+            .output(
+                audio_path,
+                acodec='pcm_s16le',
+                ac=1, 
+                ar='16000',
+                loglevel='warning'  # Capture FFmpeg logs
+            )
             .overwrite_output()
-            .run(quiet=True)
         )
+        
+        # Run FFmpeg with detailed error output
+        out, err = stream.run(capture_stdout=True, capture_stderr=True)
         
         if not os.path.exists(audio_path):
             raise Exception("Audio extraction failed - output file not created")
             
+        # Verify the output file size
+        if os.path.getsize(audio_path) == 0:
+            raise Exception("Audio extraction failed - output file is empty")
+            
         return audio_path
         
     except ffmpeg.Error as e:
-        raise Exception(f"Audio extraction failed: {str(e)}")
+        error_message = f"FFmpeg error: {str(e)}\n"
+        if e.stderr:
+            error_message += f"FFmpeg stderr: {e.stderr.decode()}"
+        logger.error(error_message)
+        raise Exception(error_message)
+        
+    except Exception as e:
+        logger.error(f"Audio extraction failed: {str(e)}")
+        # Clean up partial output file if it exists
+        if os.path.exists(audio_path):
+            try:
+                os.remove(audio_path)
+            except OSError:
+                pass
+        raise
 
 def transcribe_audio_whisperx(audio_path: str, generate_subtitles: bool = False) -> tuple[list, list]:
     """Transcribe audio using faster-whisper"""
@@ -319,4 +356,4 @@ if __name__ == "__main__":
         ])
     except KeyboardInterrupt:
         logger.info("Received keyboard interrupt, shutting down...")
-    
+

@@ -30,9 +30,21 @@ async def root():
 @app.get("/video-info")
 async def get_video_info(url: str):
     """Get video information - placeholder for future implementation"""
-    with YoutubeDL({
-        "proxy": "socks5://[2409:40d2:116a:f60c:15c1:ce89:d96:6513]:1080"
-    }) as ydl:
+    ydl_opts = {
+        "--cookies": "/path/to/cookies.txt",
+        "--no-warnings": True
+    }
+
+    cookies_file_path = os.getenv("COOKIES_FILE_PATH", "/app/cookies/cookies.txt")
+
+    if os.path.exists(cookies_file_path):
+            ydl_opts['cookiefile'] = cookies_file_path
+            logger.info(f"Using cookies file: {cookies_file_path}")
+    else:
+        logger.warning(f"Cookies file not found at: {cookies_file_path}")
+        logger.warning("Proceeding without cookies - some videos may not be accessible")
+
+    with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         if info is None:
             raise HTTPException(status_code=400, detail="Could not extract video information")

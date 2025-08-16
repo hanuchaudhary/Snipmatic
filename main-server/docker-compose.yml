@@ -37,6 +37,7 @@ services:
       dockerfile: download-worker/Dockerfile
     environment:
       - TZ=UTC
+      - COOKIES_FILE_PATH=/app/cookies.txt
     env_file:
       - ./download-worker/.env
     volumes:

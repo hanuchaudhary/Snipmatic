@@ -93,11 +93,23 @@ def download_video(url: str, timeout_minutes: int = 0, video_duration: int = 0) 
     output_path = os.path.join(VIDEO_STORAGE_PATH, f"video_{video_id}.%(ext)s")
     logger.info(f"Starting download for video_id: {video_id}")
     
+    # Get cookies file path from environment or use default
+    cookies_file_path = os.getenv("COOKIES_FILE_PATH", "/app/cookies.txt")
+    
     ydl_opts = {
         'format': 'bestvideo+bestaudio/best',
         'outtmpl': output_path,
         'quiet': True,
+        "--no-warnings": True
     }
+    
+    # Add cookies file if it exists
+    if os.path.exists(cookies_file_path):
+        ydl_opts['cookiefile'] = cookies_file_path
+        logger.info(f"Using cookies file: {cookies_file_path}")
+    else:
+        logger.warning(f"Cookies file not found at: {cookies_file_path}")
+        logger.warning("Proceeding without cookies - some videos may not be accessible")
     
     # Submit download task to thread pool
     future = download_executor.submit(_download_with_ydl, url, ydl_opts)

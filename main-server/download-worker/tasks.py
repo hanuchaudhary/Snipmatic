@@ -100,13 +100,13 @@ def download_video(url: str, timeout_minutes: int = 0, video_duration: int = 0) 
         'format': 'bestvideo+bestaudio/best',
         'outtmpl': output_path,
         'quiet': True,
-        "--no-warnings": True
+        "no_warnings": True
     }
     
     # Add cookies file if it exists
     if os.path.exists(cookies_file_path):
-        ydl_opts['cookies'] = cookies_file_path
-        logger.info(f"Using cookies file: {cookies_file_path}")
+        ydl_opts['cookiefile'] = cookies_file_path
+        logger.info(f"Using cookies file: {ydl_opts}")
     else:
         logger.warning(f"Cookies file not found at: {cookies_file_path}")
         logger.warning("Proceeding without cookies - some videos may not be accessible")

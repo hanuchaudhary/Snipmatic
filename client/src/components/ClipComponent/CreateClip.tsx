@@ -19,7 +19,7 @@ import {
   IconLoader2,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
-import { EMAIL_SERVER_URL, MAIN_SERVER_URL } from "../../../config";
+import { MAIN_SERVER_URL } from "../../../config";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
 import { useSnipStore } from "@/lib/snipStore";

@@ -31,11 +31,11 @@ async def root():
 async def get_video_info(url: str):
     """Get video information - placeholder for future implementation"""
     ydl_opts = {
-        "--cookies": "/path/to/cookies.txt",
-        "--no-warnings": True
+        "no_warnings": True,
+        "cookiefile": ""
     }
 
-    cookies_file_path = os.getenv("COOKIES_FILE_PATH", "/app/cookies/cookies.txt")
+    cookies_file_path = os.getenv("COOKIES_FILE_PATH", "/app/cookies.txt")
 
     if os.path.exists(cookies_file_path):
             ydl_opts['cookiefile'] = cookies_file_path

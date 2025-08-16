@@ -30,7 +30,9 @@ async def root():
 @app.get("/video-info")
 async def get_video_info(url: str):
     """Get video information - placeholder for future implementation"""
-    with YoutubeDL() as ydl:
+    with YoutubeDL({
+        "proxy": "socks5://[2409:40d2:116a:f60c:15c1:ce89:d96:6513]:1080"
+    }) as ydl:
         info = ydl.extract_info(url, download=False)
         if info is None:
             raise HTTPException(status_code=400, detail="Could not extract video information")

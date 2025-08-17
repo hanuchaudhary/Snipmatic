@@ -46,8 +46,9 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
     }
 
     try {
+      // Use local API route instead of backend server
       const response = await axios.get(
-        `${MAIN_SERVER_URL}/video-info?url=${encodeURIComponent(url)}`
+        `/api/video-info?url=${encodeURIComponent(url)}`
       );
       const data = response.data;
 
@@ -64,6 +65,20 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
       });
     } catch (error) {
       console.error("Error fetching video info:", error);
+      
+      // Handle API errors gracefully
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error || "Failed to fetch video info";
+        set({
+          videoInfo: {
+            url: "",
+            duration: 0,
+            title: "",
+            thumbnail: "",
+            message: errorMessage,
+          },
+        });
+      }
     } finally {
       set({ isFetching: false });
     }

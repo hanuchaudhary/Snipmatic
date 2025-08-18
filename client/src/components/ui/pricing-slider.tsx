@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CreditPurchaseDialog,
@@ -7,20 +6,18 @@ import {
 } from "@/app/(main)/credits/CreditPurchaseDialog";
 
 const CREDIT_PACKAGES = [
-  { credits: 50, price: 5 },
-  { credits: 100, price: 9 },
-  { credits: 200, price: 17 },
-  { credits: 500, price: 40 },
-  { credits: 1000, price: 75 },
-  { credits: 2000, price: 140 },
-  { credits: 5000, price: 320 },
-  { credits: 10000, price: 600 },
-  { credits: 20000, price: 1100 },
+  { credits: 80, price: 5 },
+  { credits: 160, price: 9 },
+  { credits: 320, price: 17 },
+  { credits: 800, price: 40 },
+  { credits: 1600, price: 75 },
+  // { credits: 3200, price: 140 },
+  // { credits: 8000, price: 320 },
+  // { credits: 16000, price: 600 },
+  // { credits: 32000, price: 1100 },
 ];
 
-const CREDIT_VALUES = [
-  50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000,
-];
+const CREDIT_VALUES = [80, 160, 320, 800, 1600];
 
 const getPriceForCredits = (
   credits: number
@@ -48,7 +45,7 @@ const getPriceForCredits = (
     };
   }
 
-  const basePricePerCredit = 0.055; // 5.5 cents per credit for bulk
+  const basePricePerCredit = 0.055;
   const price = Math.round(credits * basePricePerCredit);
   return {
     price,
@@ -393,7 +390,7 @@ export const CreditPricingSlider: React.FC = () => {
               </AnimatePresence>
 
               <motion.button
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors"
+                className="w-full bg-orange-500 cursor-pointer hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors"
                 onClick={handlePurchase}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

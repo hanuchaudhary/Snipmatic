@@ -1,7 +1,14 @@
-import ytdl from "ytdl-core";
+import ytdl from "@distube/ytdl-core";
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs/promises";
+import path from "path";
 
 export async function GET(request: NextRequest) {
+  const cookiesPath = path.join(process.cwd(), "src", "app", "api", "video-info", "cookies.json");
+  const agent = ytdl.createAgent(
+    JSON.parse(await fs.readFile(cookiesPath, "utf-8"))
+  );
+  
   try {
     const { searchParams } = new URL(request.url);
     const url = searchParams.get("url");
@@ -22,7 +29,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const info = await ytdl.getBasicInfo(url);
+    const info = await ytdl.getBasicInfo(url, { agent });
     const videoDetails = info.videoDetails;
     const duration = parseInt(videoDetails.lengthSeconds);
 

@@ -29,20 +29,20 @@ export function Dashboard() {
     }
   };
 
-  React.useEffect(() => {
-    // Fetch all tasks initially
-    fetchTasks();
+  // React.useEffect(() => {
+  //   // Fetch all tasks initially
+  //   fetchTasks();
     
-    // Start polling for active tasks to get real-time updates
-    if (!isPolling) {
-      startPolling();
-    }
+  //   // Start polling for active tasks to get real-time updates
+  //   if (!isPolling) {
+  //     startPolling();
+  //   }
 
-    // Cleanup polling when component unmounts
-    return () => {
-      stopPolling();
-    };
-  }, [startPolling]);
+  //   // Cleanup polling when component unmounts
+  //   return () => {
+  //     stopPolling();
+  //   };
+  // }, [startPolling]);
 
   const processingTasks = tasks.filter(
     (task) => !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())

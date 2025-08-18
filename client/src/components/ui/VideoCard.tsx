@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import BlurVignette from "./blur-vignette";
 
 interface VideoCardProps {
   imageUrl?: string;
@@ -62,35 +63,44 @@ export const VideoCard: React.FC<VideoCardProps> = ({
   };
 
   return (
-    <div className={`bg-border rounded-[2rem] p-[0.25rem] ${className}`}>
-      <div className="relative h-64 sm:h-72 md:h-80 lg:h-96 rounded-[1.75rem] bg-card flex items-center justify-center overflow-hidden">
-        {imageUrl && (
-          <img
-            src={imageUrl}
-            alt="Preview"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-              showVideo ? "opacity-0 pointer-events-none" : "opacity-100"
-            }`}
-          />
-        )}
-        {videoUrl && (
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            muted
-            playsInline
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
-              showVideo ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-          />
-        )}
+    <div
+      className={`dark:bg-border/10 bg-border/80 max-w-5xl border rounded-[44px] p-3 ${className}`}
+    >
+      <div className="relative rounded-4xl border border-border/40 bg-card flex items-center justify-center overflow-hidden">
+        <BlurVignette
+          radius="14px"
+          inset="20px"
+          transitionLength="120px"
+          blur="15px"
+        >
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt="Preview"
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                showVideo ? "opacity-0 pointer-events-none" : "opacity-100"
+              }`}
+            />
+          )}
+          {videoUrl && (
+            <video
+              ref={videoRef}
+              src={videoUrl}
+              muted
+              playsInline
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                showVideo ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}
+            />
+          )}
+        </BlurVignette>
         {!showVideo && videoUrl && imageUrl && (
           <button
             onClick={handlePlayButtonClick}
-            className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-20 p-2 sm:p-3 bg-accent/30 hover:bg-accent/50 text-accent-foreground backdrop-blur-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+            className="absolute cursor-pointer top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 bg-accent/30 hover:bg-accent/50 text-accent-foreground backdrop-blur-sm rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label="Play video"
           >
-            <PlayIcon className="w-4 h-4 sm:w-5 sm:h-6" />
+            <PlayIcon className="size-20" />
           </button>
         )}
         {!imageUrl && !videoUrl && (

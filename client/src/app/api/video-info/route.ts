@@ -13,25 +13,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Validate if it's a valid YouTube URL
-    if (!ytdl.validateURL(url)) {
+    const validate = ytdl.validateURL(url);
+
+    if (!validate) {
       return NextResponse.json(
         { error: "Invalid YouTube URL" },
         { status: 400 }
       );
     }
 
-    // Get video info using ytdl-core
-    const info = await ytdl.getInfo(url);
+    const info = await ytdl.getBasicInfo(url);
     const videoDetails = info.videoDetails;
-
-    // Parse duration from seconds to total seconds
     const duration = parseInt(videoDetails.lengthSeconds);
 
-    // Get the best quality thumbnail
     const thumbnails = videoDetails.thumbnails;
     const thumbnail = thumbnails && thumbnails.length > 0 
-      ? thumbnails[thumbnails.length - 1].url // Get highest quality thumbnail
+      ? thumbnails[thumbnails.length - 1].url
       : undefined;
 
     const responseData = {
@@ -45,9 +42,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error("Error fetching video info:", error);
-    
-    // Handle specific ytdl errors
     if (error instanceof Error) {
       if (error.message.includes("Video unavailable")) {
         return NextResponse.json(

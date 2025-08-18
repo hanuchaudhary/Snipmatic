@@ -23,14 +23,14 @@ export function CreditButton() {
 
   return (
     <Link href="/credits" className="group">
-      <Button variant="outline" size="sm" className="flex items-center gap-2">
+      <Button variant="outline" size="sm" className="flex items-center gap-2 backdrop-blur-sm font-mono text-orange-400">
         <span className="font-mono">
           {store.credits.toLocaleString("en-US", {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
           })}
         </span>
-        <span className="text-xs text-muted-foreground group-hover:text-orange-400 transition-colors">
+        <span className="text-xs text-muted-foreground">
           Credits
         </span>
       </Button>

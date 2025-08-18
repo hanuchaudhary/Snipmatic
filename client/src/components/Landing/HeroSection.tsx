@@ -123,14 +123,14 @@ export function HeroSection() {
       </motion.div>
 
       <motion.div
-        className="w-full mx-auto overflow-hidden px-4 sm:px-2 mt-12 lg:mt-16"
+        className="w-full mx-auto overflow-hidden px-4 sm:px-2 mt-12 lg:my-16"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 1.2 }}
       >
         <VideoCard
-          imageUrl="/placeholder.jpg"
-          videoUrl="/demo-video.mp4"
+          imageUrl="https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-08-17 21-39-13.png"
+          videoUrl="https://d10d2f3sgu39wn.cloudfront.net/snipmatic-demo-1754599920218.mp4"
           className="w-full"
         />
       </motion.div>
@@ -138,8 +138,6 @@ export function HeroSection() {
       <div>
         <div></div>
       </div>
-
-      <DynamicArrow targetRef={buttonRef} />
 
       <motion.div
         className="w-full fixed -bottom-10 left-1/2 -translate-x-1/2 bg-white/70 dark:bg-black/70 h-20 blur-2xl"

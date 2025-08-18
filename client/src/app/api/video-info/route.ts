@@ -27,9 +27,10 @@ export async function GET(request: NextRequest) {
     const duration = parseInt(videoDetails.lengthSeconds);
 
     const thumbnails = videoDetails.thumbnails;
-    const thumbnail = thumbnails && thumbnails.length > 0 
-      ? thumbnails[thumbnails.length - 1].url
-      : undefined;
+    const thumbnail =
+      thumbnails && thumbnails.length > 0
+        ? thumbnails[thumbnails.length - 1].url
+        : undefined;
 
     const responseData = {
       url: url,
@@ -40,8 +41,9 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json(responseData);
-
   } catch (error) {
+    console.log(`Failed to generate videoInfo: ${error}`);
+
     if (error instanceof Error) {
       if (error.message.includes("Video unavailable")) {
         return NextResponse.json(

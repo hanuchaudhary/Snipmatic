@@ -10,8 +10,11 @@ import { Button } from "../ui/button";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export function Navbar() {
+  const router = useRouter();
   const { data: session } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -43,17 +46,11 @@ export function Navbar() {
                 Snipmatic
               </span>
             </Link>
-
-            <div className="hidden md:block">
-              <Button variant="default" size={"sm"} asChild>
-                <Link href="/credits">Buy Credits</Link>
-              </Button>
-            </div>
+              <CreditButton />
           </div>
 
           <div className="hidden md:flex items-center gap-2">
             <ThemeSwitcher />
-            {session && <CreditButton />}
             {session && (
               <Button
                 size={"sm"}
@@ -151,10 +148,8 @@ export function Navbar() {
                   </button>
                 </div>
 
-                {/* Navigation Items */}
                 <nav className="flex-1 p-6">
                   <div className="space-y-4">
-                    {/* Upgrade Button */}
                     <motion.div whileTap={{ scale: 0.95 }} className="w-full">
                       <Button variant="default" asChild className="w-full">
                         <Link href="/credits" onClick={closeMobileMenu}>
@@ -163,16 +158,13 @@ export function Navbar() {
                       </Button>
                     </motion.div>
 
-                    {/* Divider */}
                     <div className="border-t my-4" />
 
-                    {/* Theme Switcher */}
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Theme</span>
                       <ThemeSwitcher />
                     </div>
 
-                    {/* Logo Action */}
                     <motion.div
                       whileTap={{ scale: 0.95 }}
                       className="flex items-center justify-between cursor-pointer p-3 hover:bg-accent rounded-lg transition-colors"

@@ -18,7 +18,7 @@ export function BgWrapper() {
         } -translate-x-1/2 -translate-y-1/2  z-[-1] h-screen`}
       >
         <h1
-          className={`md:text-[44vh] text-[34vh] font-instrumental scale-y-125 dark:text-secondary/40 mask-b-from-[20%] text-black/60 font-black ${
+          className={`md:text-[44vh] text-[34vh] font-instrumental scale-y-125 dark:text-secondary/40 mask-b-from-0% text-black/60 font-black ${
             pathname.startsWith("/signin") ||
             pathname.startsWith("/signup") ||
             pathname.startsWith("/verify") ||

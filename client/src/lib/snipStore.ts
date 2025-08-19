@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { MAIN_SERVER_URL } from "../../config";
+import { MAIN_SERVER_URL } from "../config/config";
 import axios from "axios";
 import { Task, JobStatus } from "@/types/task";
 
@@ -46,7 +46,6 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
     }
 
     try {
-      // Use local API route instead of backend server
       const response = await axios.get(
         `/api/video-info?url=${encodeURIComponent(url)}`
       );
@@ -65,10 +64,9 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
       });
     } catch (error) {
       console.error("Error fetching video info:", error);
-      
-      // Handle API errors gracefully
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.error || "Failed to fetch video info";
+        const errorMessage =
+          error.response?.data?.error || "Failed to fetch video info";
         set({
           videoInfo: {
             url: "",
@@ -107,7 +105,6 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
           );
 
           if (activeTask) {
-            // Task is still active, update with latest info
             return { ...task, ...activeTask };
           } else if (
             !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
@@ -145,7 +142,7 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
   },
 
   startPolling: () => {
-    const { isPolling, pollingInterval } = get();
+    const { isPolling } = get();
 
     if (isPolling) {
       console.log("Polling already started");

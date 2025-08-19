@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -25,6 +25,7 @@ export async function GET() {
         clipURL: true,
         clipsData: true,
         updatedAt: true,
+        clipType: true,
         title: true,
         youtubeUrl: true,
         thumbnailUrl: true,
@@ -48,6 +49,7 @@ export async function GET() {
         updatedAt: task.updatedAt,
         title: task.title,
         youtubeUrl: task.youtubeUrl,
+        clipType: task.clipType,
         thumbnailUrl: task.thumbnailUrl,
         completedAt: task.completedAt,
         result: task.clipsData ? {

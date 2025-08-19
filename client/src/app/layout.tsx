@@ -57,7 +57,13 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider attribute="class" defaultTheme="dark">
               <main>{children}</main> 
-            <Toaster position="top-center" className="border-none" />
+            <Toaster position="top-center" className="border-none" toastOptions={{
+              style:{
+                fontFamily: "var(--font-jost)",
+                border: "1px solid var(--border-orange-400)",
+                color: "orange",
+              }
+            }} />
           </ThemeProvider>
         </SessionProvider>
       </body>

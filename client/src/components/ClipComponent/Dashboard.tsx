@@ -14,7 +14,8 @@ export function Dashboard() {
   );
 
   const [isLoading, setIsLoading] = useState(false);
-  const { tasks, setTasks, startPolling, stopPolling, isPolling } = useSnipStore();
+  const { tasks, setTasks, startPolling, stopPolling, isPolling } =
+    useSnipStore();
 
   const fetchTasks = async () => {
     try {
@@ -29,20 +30,17 @@ export function Dashboard() {
     }
   };
 
-  // React.useEffect(() => {
-  //   // Fetch all tasks initially
-  //   fetchTasks();
-    
-  //   // Start polling for active tasks to get real-time updates
-  //   if (!isPolling) {
-  //     startPolling();
-  //   }
+  React.useEffect(() => {
+    fetchTasks();
 
-  //   // Cleanup polling when component unmounts
-  //   return () => {
-  //     stopPolling();
-  //   };
-  // }, [startPolling]);
+    // if (!isPolling) {
+    //   startPolling();
+    // }
+
+    return () => {
+      stopPolling();
+    };
+  }, []);
 
   const processingTasks = tasks.filter(
     (task) => !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
@@ -61,7 +59,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-[87vh] px-4 font-jost">
-      <div className="max-w-6xl mx-auto  h-full min-h-[80vh] bg-background/30 backdrop-blur-xs">
+      <div className="max-w-6xl mx-auto rounded-4xl p-2 h-full min-h-[80vh] bg-background/30 backdrop-blur-xs">
         <div className="flex items-center justify-between md:mb-6 mb-4">
           <TaskTypeSwitch taskType={activeTab} setTaskType={setActiveTab} />
 
@@ -91,24 +89,24 @@ export function Dashboard() {
               <div className="text-muted-foreground">Loading tasks...</div>
             </motion.div>
           ) : activeTab === "PROCESSING" ? (
-            <motion.div
-              key="processing"
-              initial={{ opacity: 0, filter: "blur(10px)" }}
-              animate={{ opacity: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, filter: "blur(10px)" }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-4 gap-2"
-            >
-              {processingTasks.length > 0 ? (
-                processingTasks.map((task) => (
+            processingTasks.length <= 0 ? (
+              <div className="text-center text-muted-foreground py-12">
+                {getEmptyMessage()}
+              </div>
+            ) : (
+              <motion.div
+                key="processing"
+                initial={{ opacity: 0, filter: "blur(10px)" }}
+                animate={{ opacity: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, filter: "blur(10px)" }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-4 gap-2"
+              >
+                {processingTasks.map((task) => (
                   <TaskCard task={task} key={task.taskId} />
-                ))
-              ) : (
-                <div className="text-center text-muted-foreground py-12">
-                  {getEmptyMessage()}
-                </div>
-              )}
-            </motion.div>
+                ))}
+              </motion.div>
+            )
           ) : (
             <motion.div
               key="completed"

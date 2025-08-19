@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,7 +19,6 @@ import {
   IconLoader2,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
-import { MAIN_SERVER_URL } from "../../../config";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
 import { useSnipStore } from "@/lib/snipStore";
@@ -29,7 +28,6 @@ type FormValues = z.infer<typeof formSchema>;
 export function CreateClipPage() {
   const { data: session } = useSession();
   const store = useSnipStore();
-  const { startPolling } = store;
 
   const {
     control,
@@ -57,7 +55,6 @@ export function CreateClipPage() {
   const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    // Validate YouTube URL format
     let isValidUrl = watchUrl?.match(
       /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=)?([a-zA-Z0-9_-]{11})/
     );
@@ -78,37 +75,8 @@ export function CreateClipPage() {
       return;
     }
 
-    let creditCheck: any = null;
-
     try {
       setIsProcessing(true);
-
-      // Check credits first
-      try {
-        creditCheck = await axios.post("/api/credits/check", {
-          clipType: watchClipType,
-          multipleClips: watchMultiple,
-          subtitles: watch("subtitles"),
-        });
-
-        if (creditCheck.status === 403) {
-          toast.error(
-            "Insufficient credits to create this clip. Please purchase more credits."
-          );
-          setIsProcessing(false);
-          return;
-        }
-      } catch (creditError: any) {
-        if (creditError.response?.status === 403) {
-          const errorData = creditError.response.data;
-          toast.error(
-            `Insufficient credits. You need ${errorData.creditsRequired} credits but only have ${errorData.currentCredits}.`
-          );
-          setIsProcessing(false);
-          return;
-        }
-        throw creditError; // Re-throw other credit errors
-      }
 
       if (!watchUrl) {
         toast.error("Please enter a valid YouTube URL");
@@ -184,50 +152,26 @@ export function CreateClipPage() {
 
       toast.loading("Starting video processing...");
 
-      const response = await axios.post(
-        `${MAIN_SERVER_URL}/clip`,
-        {
-          url: data.url,
-          startTime: data.startTime,
-          endTime: data.endTime,
-          aspectRatio: data.aspectRatio,
-          subtitles: data.subtitles,
-          clipType: data.clipType,
-          multipleClips: data.multipleClips,
-          user_id: session.user.id,
-          duration: store.videoInfo.duration,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.post("/api/task", {
+        url: data.url,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        aspectRatio: data.aspectRatio,
+        subtitles: data.subtitles,
+        clipType: data.clipType,
+        multipleClips: data.multipleClips,
+        duration: store.videoInfo.duration,
+        title: store.videoInfo.title,
+        thumbnail: store.videoInfo.thumbnail,
+      });
 
-      const resData = response.data;
-      const taskId = resData.task_id;
-
-      if (!taskId) {
+      if (!response.data.success) {
         toast.error("Failed to create clip. Please try again.");
         setIsProcessing(false);
         return;
       }
 
-      await axios.post(`/api/task/${taskId}`, {
-        youtubeUrl: data.url || "",
-        creditsToDeduct: creditCheck.data.creditsRequired,
-        videoInfo: {
-          duration: store.videoInfo.duration,
-          multipleClips: data.multipleClips,
-          title: store.videoInfo.title,
-          thumbnail: store.videoInfo.thumbnail,
-          clipType: data.clipType,
-          subtitle: data.subtitles,
-        },
-      });
-
       store.fetchCredits();
-      startPolling();
 
       reset();
       store.videoInfo = { thumbnail: "", title: "", duration: 0, url: "" };
@@ -235,14 +179,23 @@ export function CreateClipPage() {
 
       toast.dismiss();
       toast.success(
-        "Video processing started! Check your dashboard for progress."
+        "Video processing started! Scroll down to check your dashboard for progress."
       );
-    } catch (error) {
+    } catch (error: any) {
       toast.dismiss();
       setIsProcessing(false);
+      
+      if (error.response?.status === 403) {
+        const errorData = error.response.data;
+        toast.error(
+          `Insufficient credits. You need ${errorData.creditsRequired} credits but only have ${errorData.currentCredits}.`
+        );
+        return;
+      }
+      
       toast.error(
         `An error occurred: ${
-          error instanceof Error ? error.message : "Unknown error"
+          error.response?.data?.error || error.message || "Unknown error"
         }`
       );
     }

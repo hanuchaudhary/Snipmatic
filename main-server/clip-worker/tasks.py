@@ -318,7 +318,7 @@ def clip_task(self, task_id, video_path, viral_moments, subtitle_segments, aspec
         
         if multiple_clips:
             # Process all viral moments with ThreadPoolExecutor
-            with ThreadPoolExecutor(max_workers=5) as executor:
+            with ThreadPoolExecutor(max_workers=3) as executor:
                 logger.info(f"[CLIP_WORKER] Task {task_id}: Starting ThreadPoolExecutor with 5 workers")
                 futures = [
                     executor.submit(
@@ -460,7 +460,7 @@ def manual_clip_task(self, task_id, video_path, start_time, end_time, aspect_rat
         # Cleanup video file
         if video_path and os.path.exists(video_path):
             logger.info(f"[CLIP_WORKER] Task {task_id}: Cleaning up video file: {video_path}")
-            # cleanup_files(video_path)
+            cleanup_files(video_path)
 
 if __name__ == "__main__":
     # Run as Celery worker - CPU bound, moderate concurrency

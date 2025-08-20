@@ -19,8 +19,6 @@ services:
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
-    ports:
-      - "8000:8000"
     env_file:
       - ./api-gateway/.env
     volumes:
@@ -101,6 +99,18 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    restart: unless-stopped
+
+  # Add nginx service
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"  # Expose nginx on port 80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./storage:/usr/share/nginx/html/storage:ro  # For static file serving
+    depends_on:
+      - api-gateway
     restart: unless-stopped
 
 volumes:

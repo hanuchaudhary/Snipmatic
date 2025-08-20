@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: api-gateway/Dockerfile
     env_file:
-      - ./api-gateway/.env
+      - ./.env
     volumes:
       - ./storage:/app/storage
     depends_on:
@@ -37,7 +37,7 @@ services:
       - TZ=UTC
       - COOKIES_FILE_PATH=/app/cookies.txt
     env_file:
-      - ./download-worker/.env
+      - ./.env
     volumes:
       - ./storage:/app/storage
       - /etc/localtime:/etc/localtime:ro  # Sync time with host
@@ -57,7 +57,7 @@ services:
     environment:
       - TZ=UTC
     env_file:
-      - ./transcribe-worker/.env
+      - ./.env
     volumes:
       - ./storage:/app/storage
       - /etc/localtime:/etc/localtime:ro 
@@ -75,7 +75,7 @@ services:
       context: .
       dockerfile: clip-worker/Dockerfile
     env_file:
-      - ./clip-worker/.env
+      - ./.env
     environment:
       - TZ=UTC 
     volumes:

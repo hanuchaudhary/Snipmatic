@@ -1,19 +1,4 @@
 services:
-  # Redis - Message Broker and Result Backend
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
   # API Gateway - FastAPI application
   api-gateway:
     build:
@@ -23,9 +8,11 @@ services:
       - ./.env
     volumes:
       - ./storage:/app/storage
-    depends_on:
-      redis:
-        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
     restart: unless-stopped
 
   # Download Workers
@@ -40,13 +27,14 @@ services:
       - ./.env
     volumes:
       - ./storage:/app/storage
-      - /etc/localtime:/etc/localtime:ro  # Sync time with host
+      - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-    depends_on:
-      redis:
-        condition: service_healthy
     deploy:
-      replicas: 2
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
     restart: unless-stopped
 
   # Transcribe Workers
@@ -62,11 +50,12 @@ services:
       - ./storage:/app/storage
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro
-    depends_on:
-      redis:
-        condition: service_healthy
     deploy:
       replicas: 1
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
     restart: unless-stopped
 
   # Clip Workers
@@ -80,35 +69,36 @@ services:
       - TZ=UTC 
     volumes:
       - ./storage:/app/storage
-      - /etc/localtime:/etc/localtime:ro  # Sync time with host
-      - /etc/timezone:/etc/timezone:ro
-    depends_on:
-      redis:
-        condition: service_healthy
-    deploy:
-      replicas: 1
-    restart: unless-stopped
-
-  # Celery Flower
-  flower:
-    image: mher/flower:2.0.1
-    ports:
-      - "5555:5555"
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - FLOWER_PORT=5555
-      - FLOWER_BROKER=redis://redis:6379/0
-      - FLOWER_BASIC_AUTH=admin:password
-      - TZ=UTC
-    volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-    depends_on:
-      redis:
-        condition: service_healthy
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
     restart: unless-stopped
-    command: ["celery", "flower", "--broker=redis://redis:6379/0", "--port=5555", "--persistent=true", "--db=/data/flower.db"]
+
+  # # Celery Flower - Uncomment only when needed for debugging
+  # flower:
+  #   image: mher/flower:2.0.1
+  #   ports:
+  #     - "5555:5555"
+  #   environment:
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
+  #     - FLOWER_PORT=5555
+  #     - FLOWER_BROKER=redis://redis:6379/0
+  #     - FLOWER_BASIC_AUTH=admin:password
+  #     - TZ=UTC
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - /etc/timezone:/etc/timezone:ro
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   command: ["celery", "flower", "--broker=redis://redis:6379/0", "--port=5555", "--persistent=true", "--db=/data/flower.db"]
 
   # Add nginx service
   nginx:
@@ -122,6 +112,4 @@ services:
       - api-gateway
     restart: unless-stopped
 
-volumes:
-  redis_data:
-    driver: local
+# volumes section removed - using external Upstash Redis

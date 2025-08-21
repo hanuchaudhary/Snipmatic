@@ -18,13 +18,27 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./server
 # Final stage
 FROM alpine:latest
 
+# Install CA certs
 RUN apk --no-cache add ca-certificates
 
-WORKDIR /root/
+# Create a non-root user for running the app
+RUN addgroup -S appgroup && adduser -S app -G appgroup
 
+WORKDIR /app
+
+# Copy the built binary from the builder stage
 COPY --from=builder /app/main .
 
-# Expose port
+# Ensure the binary is owned by the non-root user
+RUN chown app:appgroup /app/main
+
+# Default port (can be overridden by Render via the PORT env var)
+ENV PORT=8080
+
+# Switch to non-root user
+USER app
+
+# Expose port (informational)
 EXPOSE 8080
 
 # Command to run

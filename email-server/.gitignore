@@ -16,7 +16,6 @@
 
 # Go workspace file
 go.work
-
 # Build artifacts
 bin/
 dist/

@@ -1,4 +1,17 @@
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
   # API Gateway - FastAPI application
   api-gateway:
     build:
@@ -30,7 +43,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
           memory: 1G
@@ -54,11 +67,8 @@ services:
       replicas: 1
       resources:
         limits:
-          memory: 4G
-          cpus: '2.0'
-        reservations:
-          memory: 1G
-          cpus: '0.5'
+          memory: 2G
+          cpus: '1.0'
     restart: unless-stopped
 
   # Clip Workers
@@ -75,15 +85,15 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
-          memory: 1.5G
+          memory: 2G
           cpus: '1.5'
     restart: unless-stopped
 
   # # Celery Flower - Uncomment only when needed for debugging
-  # flower: 
+  # flower:
   #   image: mher/flower:2.0.1
   #   ports:
   #     - "5555:5555"
@@ -105,26 +115,17 @@ services:
 
   # Add nginx service
   nginx:
+    image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:80"  # Expose nginx on port 80
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./storage:/usr/share/nginx/html/storage:ro
-      - ./ssl:/etc/nginx/ssl:ro
-      - ./logs/nginx:/var/log/nginx  # Log to host for monitoring
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-        reservations:
-          memory: 128M
-          cpus: '0.1'
+      - ./storage:/usr/share/nginx/html/storage:ro  # For static file serving
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
 
 # volumes section removed - using external Upstash Redis
+volumes:
+  redis_data:
+    driver: local

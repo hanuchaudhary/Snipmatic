@@ -30,7 +30,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     deploy:
-      replicas: 1
+      replicas: 2
       resources:
         limits:
           memory: 1G
@@ -54,8 +54,11 @@ services:
       replicas: 1
       resources:
         limits:
-          memory: 2G
-          cpus: '1.0'
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
     restart: unless-stopped
 
   # Clip Workers
@@ -72,15 +75,15 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     deploy:
-      replicas: 1
+      replicas: 2
       resources:
         limits:
-          memory: 2G
+          memory: 1.5G
           cpus: '1.5'
     restart: unless-stopped
 
   # # Celery Flower - Uncomment only when needed for debugging
-  # flower:
+  # flower: 
   #   image: mher/flower:2.0.1
   #   ports:
   #     - "5555:5555"
@@ -102,14 +105,26 @@ services:
 
   # Add nginx service
   nginx:
-    image: nginx:alpine
     ports:
-      - "80:80"  # Expose nginx on port 80
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./storage:/usr/share/nginx/html/storage:ro  # For static file serving
-    depends_on:
-      - api-gateway
-    restart: unless-stopped
+      - ./storage:/usr/share/nginx/html/storage:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx  # Log to host for monitoring
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
 
 # volumes section removed - using external Upstash Redis

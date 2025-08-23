@@ -33,9 +33,9 @@ export function Dashboard() {
   React.useEffect(() => {
     fetchTasks();
 
-    // if (!isPolling) {
-    //   startPolling();
-    // }
+    if (!isPolling) {
+      startPolling();
+    }
 
     return () => {
       stopPolling();

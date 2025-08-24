@@ -82,19 +82,6 @@ export async function POST(request: NextRequest) {
       thumbnail,
     } = body;
 
-    console.log("Received request to create clip:", {
-      url,
-      startTime,
-      endTime,
-      aspectRatio,
-      subtitles,
-      clipType,
-      multipleClips,
-      duration,
-      title,
-      thumbnail,
-    });
-
     if (!url) {
       return NextResponse.json(
         { error: "YouTube URL is required" },

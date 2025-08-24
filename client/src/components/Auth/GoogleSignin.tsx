@@ -2,9 +2,8 @@ import React from "react";
 import { Button } from "../ui/button";
 import { signIn } from "next-auth/react";
 export function GoogleSignin() {
-  
-  const handleGoogleSignin = () => {
-    signIn("google", {
+  const handleGoogleSignin = async () => {
+    await signIn("google", {
       redirectTo: "/clip",
     });
   };

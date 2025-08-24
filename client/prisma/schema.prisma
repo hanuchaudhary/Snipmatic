@@ -15,7 +15,7 @@ model User {
   email         String          @unique
   emailVerified DateTime?
   image         String?
-  credits       Int             @default(0)
+  credits       Int             @default(20)
   accounts      Account[]
   sessions      Session[]
   tasks         Task[]
@@ -67,7 +67,7 @@ model VerificationToken {
 }
 
 model Task {
-  taskId          String @id 
+  taskId          String @id @default(cuid())
   userId          String 
   youtubeUrl      String
   title           String?

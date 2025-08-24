@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import axios from "axios";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import axios from "axios";
+import { NextRequest, NextResponse } from "next/server";
+import { creditMiddleware } from "@/lib/creditMiddleware";
 import { EMAIL_SERVER_URL, MAIN_SERVER_URL } from "@/config/config";
 
 export async function GET() {
@@ -48,7 +49,7 @@ export async function GET() {
         multipleClips: task.multipleClips,
         subtitle: task.subtitle,
         aspectRatio: "original",
-        quality: "HD", 
+        quality: "HD",
       })),
     });
   } catch (error) {
@@ -68,17 +69,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { 
-      url, 
-      startTime, 
-      endTime, 
-      aspectRatio, 
-      subtitles, 
-      clipType, 
-      multipleClips, 
+    const {
+      url,
+      startTime,
+      endTime,
+      aspectRatio,
+      subtitles,
+      clipType,
+      multipleClips,
       duration,
       title,
-      thumbnail 
+      thumbnail,
     } = body;
 
     console.log("Received request to create clip:", {
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
       multipleClips,
       duration,
       title,
-      thumbnail
+      thumbnail,
     });
 
     if (!url) {
@@ -108,7 +109,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { creditMiddleware } = await import("@/lib/creditMiddleware");
     const creditCheck = await creditMiddleware(
       session.user.id,
       clipType,
@@ -127,36 +127,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await axios.post(
-      `${MAIN_SERVER_URL}/clip`,
-      {
-        url,
-        startTime,
-        endTime,
-        aspectRatio,
-        subtitles,
-        clipType,
-        multipleClips,
-        user_id: session.user.id,
-        duration,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const taskId = response.data.task_id || response.data.taskId;
-
-    if (!taskId) {
-      return NextResponse.json(
-        { error: "Failed to create task" },
-        { status: 500 }
-      );
-    }
-
     const result = await prisma.$transaction(async (tx) => {
+      
       const user = await tx.user.findUnique({
         where: { id: session.user.id },
         select: { credits: true },
@@ -170,7 +142,6 @@ export async function POST(request: NextRequest) {
 
       const task = await tx.task.create({
         data: {
-          taskId,
           userId: session.user.id,
           youtubeUrl: url,
           title: title || "Untitled Clip",
@@ -185,6 +156,32 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      const response = await axios.post(
+        `${MAIN_SERVER_URL}/clip`,
+        {
+          url,
+          startTime,
+          endTime,
+          aspectRatio,
+          subtitles,
+          clipType,
+          multipleClips,
+          user_id: session.user.id,
+          duration,
+          task_id: task.taskId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status !== 200) {
+        console.error("Error from main server:", response.data);
+        throw new Error("Failed to create clip on main server");
+      }
+
       await tx.user.update({
         where: { id: session.user.id },
         data: {
@@ -197,32 +194,29 @@ export async function POST(request: NextRequest) {
       await tx.creditUsage.create({
         data: {
           userId: session.user.id,
-          taskId,
+          taskId: task.taskId,
           creditsUsed: creditsRequired,
-          actionType: `${clipType}_CLIP${
-            multipleClips ? "_MULTIPLE" : ""
-          }${subtitles ? "_SUBTITLE" : ""}`,
+          actionType: `${clipType}_CLIP${multipleClips ? "_MULTIPLE" : ""}${
+            subtitles ? "_SUBTITLE" : ""
+          }`,
           description: `Credits used for ${clipType} clip${
             multipleClips ? " (multiple)" : ""
           }${subtitles ? " with subtitles" : ""}`,
         },
       });
 
+      await axios.post(`${EMAIL_SERVER_URL}/set_task`, {
+        email: session.user.email,
+        task_id: task.taskId,
+      });
+
       return task;
     });
 
-    // Notify email server
-    try {
-      await axios.post(`${EMAIL_SERVER_URL}/set_task`, {
-        email: session.user.email,
-        task_id: taskId,
-      });
-    } catch (emailError) {
-      console.warn("Failed to notify email server:", emailError);
-    }
-
     console.log(
-      `Task created with ID: ${result.taskId} for user: ${session.user.id}, credits deducted: ${creditCheck.creditsRequired || 0}`
+      `Task created with ID: ${result.taskId} for user: ${
+        session.user.id
+      }, credits deducted: ${creditCheck.creditsRequired || 0}`
     );
 
     return NextResponse.json(

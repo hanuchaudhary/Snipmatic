@@ -61,8 +61,7 @@ async def get_video_info(url: str):
 @app.post("/clip", response_model=ClipResponse)
 async def create_video_clip(request: ClipRequest):
     """Create video clip - dispatches to appropriate Celery queue"""
-    task_id = str(uuid.uuid4())
-    
+    task_id = request.task_id
     try:
         # Update initial status
         update_task_status(request.user_id, task_id, TaskStatus.QUEUED, 0, "Task queued for processing")

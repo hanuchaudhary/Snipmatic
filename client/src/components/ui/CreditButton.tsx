@@ -23,7 +23,7 @@ export function CreditButton() {
     if (store.credits > 0) {
       const interval = setInterval(() => {
         setShowCredits((prev) => !prev);
-      }, 5000);
+      }, 10000);
 
       return () => clearInterval(interval);
     }

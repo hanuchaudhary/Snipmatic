@@ -19,6 +19,7 @@ class ClipType(str, Enum):
 
 class ClipRequest(BaseModel):
     user_id: str
+    task_id: str
     url: str
     startTime: Optional[str] = None
     endTime: Optional[str] = None

@@ -160,7 +160,7 @@ func CompletionEmailTemplate(message, userEmail string) string {
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">✂️ <span style="color: #ea580c;">Snipmatic</span></div>
+            <div class="logo"><span style="color: #ea580c;">Snipmatic</span></div>
             <div class="header-subtitle">AI-Powered Video Clipping</div>
         </div>
         
@@ -186,7 +186,7 @@ Download them now and share your viral moments across all your socials.
             
             <div class="divider"></div>
             
-            <a href="#" class="cta-button" style="color: white !important; text-decoration: none !important; background: #ea580c !important;">View Your Clips</a>
+            <a href="https://snipmatic.vercel.app/clip" class="cta-button" style="color: white !important; text-decoration: none !important; background: #ea580c !important;">View Your Clips</a>
             
             <p style="text-align: center; color: #718096; font-size: 14px; margin-top: 20px;">
                 Click the button above to access your processed video clips and start sharing!

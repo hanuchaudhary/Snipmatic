@@ -23,6 +23,16 @@ export function Dashboard() {
       const response = await axios.get(`/api/task`);
       const data = (response.data.tasks as Task[]) || [];
       setTasks(data);
+      
+      // Check if there are processing tasks and start polling if needed
+      const processingTasks = data.filter(
+        (task) => !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
+      );
+      
+      if (processingTasks.length > 0 && !isPolling) {
+        console.log(`Found ${processingTasks.length} processing tasks, starting polling...`);
+        startPolling();
+      }
     } catch (error) {
       console.error("Error fetching tasks:", error);
     } finally {
@@ -33,14 +43,10 @@ export function Dashboard() {
   React.useEffect(() => {
     fetchTasks();
 
-    if (!isPolling) {
-      startPolling();
-    }
-
     return () => {
       stopPolling();
     };
-  }, []);
+  }, [activeTab]);
 
   const processingTasks = tasks.filter(
     (task) => !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())

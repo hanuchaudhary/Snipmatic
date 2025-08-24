@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
 import { useSnipStore } from "@/lib/snipStore";
+import { EMAIL_SERVER_URL } from "@/config/config";
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -150,8 +151,6 @@ export function CreateClipPage() {
         }
       }
 
-      toast.loading("Starting video processing...");
-
       const response = await axios.post("/api/task", {
         url: data.url,
         startTime: data.startTime,
@@ -172,9 +171,14 @@ export function CreateClipPage() {
       }
 
       store.fetchCredits();
-
+      store.startPollingOnNewTask();
+      store.setVideoInfo({
+        url: "",
+        duration: 0,
+        title: "",
+        thumbnail: "",
+      });
       reset();
-      store.videoInfo = { thumbnail: "", title: "", duration: 0, url: "" };
       setIsProcessing(false);
 
       toast.dismiss();
@@ -184,7 +188,7 @@ export function CreateClipPage() {
     } catch (error: any) {
       toast.dismiss();
       setIsProcessing(false);
-      
+
       if (error.response?.status === 403) {
         const errorData = error.response.data;
         toast.error(
@@ -192,7 +196,7 @@ export function CreateClipPage() {
         );
         return;
       }
-      
+
       toast.error(
         `An error occurred: ${
           error.response?.data?.error || error.message || "Unknown error"

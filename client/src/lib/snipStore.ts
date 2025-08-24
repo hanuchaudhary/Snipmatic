@@ -13,6 +13,7 @@ export interface VideoInfo {
 
 interface SnipStore {
   fetchVideoInfo: (url: string) => Promise<void>;
+  setVideoInfo: (info: VideoInfo) => void;
   videoInfo: VideoInfo;
   isFetching?: boolean;
 
@@ -26,6 +27,7 @@ interface SnipStore {
   stopPolling: () => void;
   isPolling: boolean;
   pollingInterval?: NodeJS.Timeout;
+  startPollingOnNewTask: () => void;
 }
 
 export const useSnipStore = create<SnipStore>((set, get) => ({
@@ -37,6 +39,9 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
     message: "",
   },
   isFetching: false,
+  setVideoInfo: (info) => {
+    set({ videoInfo: info });
+  },
   fetchVideoInfo: async (url) => {
     set({ isFetching: true });
     if (url.trim() === get().videoInfo.url) {
@@ -130,8 +135,19 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
 
         set({ tasks: updatedTasks });
 
+        const processingTasks = updatedTasks.filter(
+          (task) => !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
+        );
+
+        if (processingTasks.length === 0 && get().isPolling) {
+          console.log("No processing tasks remaining, stopping polling...");
+          get().stopPolling();
+        }
+
         console.log(
-          `Polled ${activeTasks.length} active tasks${
+          `Polled ${activeTasks.length} active tasks, ${
+            processingTasks.length
+          } still processing${
             hasTasksCompleted ? ", some tasks completed" : ""
           }`
         );
@@ -151,6 +167,7 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
 
     console.log("Starting task polling...");
     set({ isPolling: true });
+
     get().pollActiveTasks();
 
     const interval = setInterval(() => {
@@ -170,6 +187,11 @@ export const useSnipStore = create<SnipStore>((set, get) => ({
 
     set({ isPolling: false });
     console.log("Stopped task polling");
+  },
+
+  startPollingOnNewTask: () => {
+    console.log("Starting polling due to new task creation...");
+    get().startPolling();
   },
 
   credits: 0,

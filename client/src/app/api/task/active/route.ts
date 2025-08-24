@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import axios from "axios";
+import { EMAIL_SERVER_URL } from "@/config/config";
 
 export async function GET() {
   try {
@@ -13,8 +15,8 @@ export async function GET() {
       where: {
         userId: session.user.id,
         status: {
-          notIn: ['COMPLETED', 'FAILED']
-        }
+          notIn: ["COMPLETED", "FAILED"],
+        },
       },
       select: {
         taskId: true,
@@ -29,16 +31,35 @@ export async function GET() {
         title: true,
         youtubeUrl: true,
         thumbnailUrl: true,
-        completedAt: true
+        completedAt: true,
       },
       orderBy: {
-        updatedAt: 'desc'
-      }
+        updatedAt: "desc",
+      },
     });
+
+    // TODO: send email status to all active task_ids
+    let emailPoll = false;
+    if (activeTasks.length > 0) {
+      try {
+        const activeEmailReq = await axios.post(`${EMAIL_SERVER_URL}/active`, {
+          email: session.user.email,
+          task_id: activeTasks[0].taskId,
+        });
+
+        if (activeEmailReq.status == 200) {
+          emailPoll = true;
+        }
+      } catch (emailError) {
+        emailPoll = false;
+        console.warn("Failed to notify email server:", emailError);
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      tasks: activeTasks.map(task => ({
+      emailStatus: emailPoll,
+      tasks: activeTasks.map((task) => ({
         taskId: task.taskId,
         status: task.status,
         progress: task.progress,
@@ -52,14 +73,15 @@ export async function GET() {
         clipType: task.clipType,
         thumbnailUrl: task.thumbnailUrl,
         completedAt: task.completedAt,
-        result: task.clipsData ? {
-          viral_moments: task.clipsData,
-          s3_urls: task.clipURL ? [task.clipURL] : [],
-          zip_s3_url: task.clipURL || ""
-        } : null
-      }))
+        result: task.clipsData
+          ? {
+              viral_moments: task.clipsData,
+              s3_urls: task.clipURL ? [task.clipURL] : [],
+              zip_s3_url: task.clipURL || "",
+            }
+          : null,
+      })),
     });
-
   } catch (error) {
     console.error("Error fetching active tasks:", error);
     return NextResponse.json(

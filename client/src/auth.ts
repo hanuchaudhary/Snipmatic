@@ -5,6 +5,7 @@ import authConfig from "./auth.config";
 import { prisma } from "@/lib/prisma";
 import NextAuth from "next-auth";
 import "next-auth/jwt";
+import Google from "next-auth/providers/google";
 
 declare module "next-auth" {
   interface Session {
@@ -30,11 +31,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     verifyRequest: "/verify",
   },
   providers: [
-    ...authConfig.providers,
+    // ...authConfig.providers,
     Resend({
-      apiKey: process.env.AUTH_RESEND_KEY!,
-      from: process.env.AUTH_RESEND_DOMAIN!,
+      apiKey: process.env.AUTH_RESEND_KEY as string,
+      from: process.env.AUTH_RESEND_DOMAIN as string,
       name: "Snipmatic",
+    }),
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID as string,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
   ],
   callbacks: {

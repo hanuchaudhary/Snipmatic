@@ -169,16 +169,19 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
         2. **Clip Selection Criteria**:
         - **Length**: 
             - Short videos (<10 minutes): Extract 1–2 clips, ideally 15–45 seconds.
-            - Medium videos (10–30 minutes): Extract 2–3 clips, ideally 30–60 seconds.
-            - Long videos (>30 minutes): Extract 3–4 clips, prioritizing quality over quantity.
+            - Medium videos (10–30 minutes): Extract 3-4 clips, ideally 30–60 seconds.
+            - Long videos (>30 minutes): Extract 5-7 clips, prioritizing quality over quantity, ideally 30–60 seconds.
         - **Hook Strength**: The clip should have a strong opening (first 3–5 seconds) to stop scrollers.
         - **Emotional Impact**: Prioritize moments that evoke strong emotions (laughter, awe, empathy, shock).
+        - **Pacing and Energy**: Look for moments with high energy, rapid dialogue, or a dynamic shift in tone.
         - **Platform Fit**: Ensure clips align with platform trends (e.g., TikTok favors humor/trends, Instagram favors polished/inspirational, YouTube Shorts favors broad appeal).
         - **Standalone Value**: Clips should be understandable without additional context.
         - **Visual Potential**: If the transcript implies visual elements (e.g., dramatic gestures, reactions), highlight their role in virality.
+        - **Cliffhanger Potential**: Identify moments that end on a point of high tension or an unanswered question to drive comments and engagement.
 
         3. **Output Requirements**:
         For each clip, provide:
+        - `title`: A short, catchy title for the clip (max 5 words).
         - `start_time`: float (in seconds, precise to 0.1)
         - `end_time`: float (in seconds, precise to 0.1)
         - `content`: The exact transcript excerpt for the clip
@@ -187,8 +190,10 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
         - `platform_fit`: A dictionary specifying suitability for TikTok, YouTube Shorts, and Instagram Reels (e.g., "{{"TikTok": 0.9, "YouTube Shorts": 0.8, "Instagram Reels": 0.7}}")
         - `visual_notes`: Optional notes on implied visual elements (e.g., "Speaker's shocked expression could enhance impact")
         - `suggested_caption`: A concise, platform-friendly caption to accompany the clip (max 15 words)
+        - `hashtags`: An array of 3-5 relevant hashtags (e.g., `["#viral", "#funny", "#storytime"]`)
 
         4. **Additional Considerations**:
+        - **The Golden Clip**: Always try to identify the single best clip—the "golden clip"—that has the highest potential to go viral. It should be your top recommendation.
         - Avoid moments that require heavy editing to make sense (e.g., complex setups or callbacks).
         - Prioritize diversity in emotional tone across clips (e.g., one funny, one heartfelt, one shocking).
         - If the transcript includes timestamps, use them for precision; otherwise, estimate based on pacing.

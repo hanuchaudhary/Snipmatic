@@ -6,6 +6,7 @@ import (
 
 	"email-server/internal/config"
 	"email-server/internal/models"
+	"email-server/internal/templates"
 
 	"github.com/resend/resend-go/v2"
 )
@@ -57,9 +58,9 @@ func (s *EmailService) SendCompletionEmail(req models.EmailRequest) error {
 	params := &resend.SendEmailRequest{
 		From:    s.config.FromEmail,
 		To:      []string{taskStatus.Email},
-		Subject: "Task Completion Notification",
-		Html:    fmt.Sprintf("<h1>Task Completed</h1><p>Your task has been completed.</p><p>Message: %s</p>", req.Message),
-		Text:    fmt.Sprintf("Task has been completed. Message: %s", req.Message),
+		Subject: "🎉 Your Snipmatic Video Clips Are Ready!",
+		Html:    templates.CompletionEmailTemplate(req.Message, taskStatus.Email),
+		Text:    fmt.Sprintf("Great news! Your Snipmatic video processing task has been completed successfully. Your viral clips are now ready for download. Task details: %s", req.Message),
 	}
 
 	sent, err := s.client.Emails.Send(params)

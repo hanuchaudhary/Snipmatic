@@ -138,7 +138,7 @@ Configure using environment variables:
    make run
    
    # Or directly with Go
-   go run ./cmd/server
+   go run ./server/main.go
    ```
 
 ### Using Makefile

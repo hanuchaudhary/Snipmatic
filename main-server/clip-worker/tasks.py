@@ -399,6 +399,9 @@ def clip_task(self, task_id, video_path, viral_moments, subtitle_segments, aspec
     except Exception as e:
         logger.error(f"[CLIP_WORKER] Task {task_id}: AI clip creation failed with error: {str(e)}")
         update_task_status(user_id, task_id, TaskStatus.FAILED, 0, f"Clip creation failed: {str(e)}")
+        if video_path and os.path.exists(video_path):
+            logger.info(f"[CLIP_WORKER] Task {task_id}: Cleaning up video file: {video_path}")
+            cleanup_files(video_path)
         raise
     finally:
         # Cleanup video file after clip processing is complete

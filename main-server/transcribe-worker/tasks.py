@@ -298,7 +298,7 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
 
         audio_path = extract_audio(video_path)
 
-        update_task_status(user_id, task_id, TaskStatus.TRANSCRIBING, 60, "Transcribing audio")
+        
 
         # Get both segments and subtitle data if subtitles enabled
         if subtitles:
@@ -306,19 +306,17 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
         else:
             segments, _ = transcribe_audio_whisperx(audio_path, generate_subtitles=False)
             subtitle_segments = []
-
-        update_task_status(user_id, task_id, TaskStatus.ANALYZING, 80, "Finding viral moments")
-
+        update_task_status(user_id, task_id, TaskStatus.TRANSCRIBING, 60, "Transcribing audio")
         logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Finding viral moments using AI")
         viral_moments = find_viral_moments(segments, video_info)
-        
+        update_task_status(user_id, task_id, TaskStatus.ANALYZING, 80, "Finding viral moments")
         # Serialize viral moments
         viral_moments_serialized = []
         for m in viral_moments:
             if hasattr(m, 'model_dump'):
                 viral_moments_serialized.append(m.model_dump())
-            elif hasattr(m, 'dict'):
-                viral_moments_serialized.append(m.dict())
+            # elif hasattr(m, 'dict'):
+            #     viral_moments_serialized.append(m.dict())
             else:
                 # Fallback to manual serialization
                 viral_moments_serialized.append({
@@ -342,6 +340,9 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
     except Exception as e:
         logger.error(f"[TRANSCRIBE_WORKER] Task {task_id}: Transcription failed with error: {str(e)}")
         update_task_status(user_id, task_id, TaskStatus.FAILED, 0, f"Transcription failed: {str(e)}")
+        if audio_path and os.path.exists(audio_path):
+            logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Cleaning up audio file: {audio_path}")
+            cleanup_files(audio_path)
         raise
     finally:
         # Cleanup audio file immediately

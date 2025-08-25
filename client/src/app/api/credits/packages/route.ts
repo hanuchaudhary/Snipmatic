@@ -95,23 +95,29 @@ export async function POST(request: NextRequest) {
       product_cart: [
         {
           product_id: process.env.NEXT_PUBLIC_DODO_PRODUCT_ID!,
-          quantity: price
+          quantity: price,
         },
       ],
       payment_link: true,
+      allowed_payment_method_types: [
+        "upi_collect",
+        "debit",
+        "credit",
+        "amazon_pay",
+      ],
       billing_currency: "USD",
       return_url:
         process.env.NEXT_PUBLIC_RETURN_URL ||
         `${process.env.NEXTAUTH_URL}/credits/status`,
-        metadata: {
-          type: "credit_package",
-          credits: packageData.credits.toString(),
-          price: price.toString(),
-          userId: session.user.id,
-        },
+      metadata: {
+        type: "credit_package",
+        credits: packageData.credits.toString(),
+        price: price.toString(),
+        userId: session.user.id,
+      },
     });
 
-    console.log(payment);
+    // console.log(payment);
 
     if (!payment) {
       return NextResponse.json({ error: "Payment link creation failed" });

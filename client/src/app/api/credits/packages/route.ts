@@ -8,7 +8,7 @@ import { CREDIT_PACKAGES } from "@/lib/creditMiddleware";
 
 const dodoClient = new DodoPayments({
   bearerToken: process.env["DODO_API_KEY"],
-  environment: "test_mode",
+  environment: "live_mode",
 });
 
 export interface CreditPackageOption {

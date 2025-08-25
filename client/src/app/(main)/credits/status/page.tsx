@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import axios from "axios";
 import { useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
 
-export default function CreditPurchaseStatus() {
+function CreditPurchaseStatusContent() {
   const { data: session } = useSession();
   const [credits, setCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -161,5 +161,40 @@ export default function CreditPurchaseStatus() {
         </Card>
       </motion.div>
     </div>
+  );
+}
+
+function StatusLoading() {
+  return (
+    <div className="min-h-screen font-mono flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-xl p-2 border rounded-[40px] bg-secondary/20 backdrop-blur-sm"
+      >
+        <Card className="border shadow-xl">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl mb-2">Loading...</CardTitle>
+            <p className="text-muted-foreground">
+              Checking payment status
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6 border-border/10">
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}
+
+export default function CreditPurchaseStatus() {
+  return (
+    <Suspense fallback={<StatusLoading />}>
+      <CreditPurchaseStatusContent />
+    </Suspense>
   );
 }

@@ -81,12 +81,7 @@ export async function POST(request: Request) {
                 description: `${credits.toLocaleString()} credits package`,
               },
             });
-
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { credits: { increment: credits } },
-            });
-
+            
             await prisma.transaction.create({
               data: {
                 userId: user.id,

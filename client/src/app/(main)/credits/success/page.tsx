@@ -31,26 +31,15 @@ export default function CreditPurchaseSuccess() {
   }, [session]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-orange-50/30 to-orange-100/20 dark:from-orange-950/10 dark:to-orange-900/5">
+    <div className="min-h-screen font-mono flex items-center justify-center p-4 bg-gradient-to-br from-orange-50/30 to-orange-100/20 dark:from-orange-950/10 dark:to-orange-900/5">
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-md"
+        className="w-full max-w-xl p-2 border rounded-[40px] bg-secondary/20 backdrop-blur-sm"
       >
-        <Card className="border-2 border-green-200 dark:border-green-800 shadow-xl">
+        <Card className="border shadow-xl">
           <CardHeader className="text-center pb-4">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.5, type: "spring", bounce: 0.6 }}
-              className="flex justify-center mb-4"
-            >
-              <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
-                <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
-              </div>
-            </motion.div>
-            
             <CardTitle className="text-2xl text-green-700 dark:text-green-300 mb-2">
               Payment Successful!
             </CardTitle>
@@ -59,14 +48,13 @@ export default function CreditPurchaseSuccess() {
             </p>
           </CardHeader>
           
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 border-border/10">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4, duration: 0.3 }}
-              className="flex items-center justify-center gap-3 p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800"
+              className="flex items-center justify-center gap-3 p-4"
             >
-              <Coins className="h-6 w-6 text-orange-500" />
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Current Balance</div>
                 <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
@@ -76,9 +64,6 @@ export default function CreditPurchaseSuccess() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.3 }}
               className="space-y-3"
             >
               <Button asChild className="w-full" size="lg">
@@ -88,7 +73,7 @@ export default function CreditPurchaseSuccess() {
                 </Link>
               </Button>
               
-              <Button variant="outline" asChild className="w-full">
+              <Button variant="ghost" asChild className="w-full">
                 <Link href="/credits">
                   Buy More Credits
                 </Link>

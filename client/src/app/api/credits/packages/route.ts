@@ -35,14 +35,11 @@ const CREDIT_PACKAGES: CreditPackageOption[] = [
   { credits: 20000, price: 1100 },
 ];
 
-// Function to calculate price for any credit amount
 const calculatePrice = (credits: number): number => {
   const packageData = CREDIT_PACKAGES.find((pkg) => credits <= pkg.credits);
   if (packageData) {
     return packageData.price;
   }
-
-  // For higher credit amounts, use bulk pricing
   const basePricePerCredit = 0.055; // 5.5 cents per credit for bulk
   return Math.round(credits * basePricePerCredit);
 };
@@ -61,12 +58,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  console.log({
-    api: process.env.DODO_API_KEY,
-    productId: process.env.NEXT_PUBLIC_DODO_PRODUCT_ID,
-  });
+  // console.log({
+  //   api: process.env.DODO_API_KEY,
+  //   productId: process.env.NEXT_PUBLIC_DODO_PRODUCT_ID,
+  // });
   if (!process.env.DODO_API_KEY || !process.env.NEXT_PUBLIC_DODO_PRODUCT_ID) {
-    console.error("❌ Missing DODO_API_KEY in server environment");
+    console.error("Missing DODO_API_KEY in server environment");
 
     return NextResponse.json(
       { error: "Server misconfiguration: missing DODO_API_KEY" },

@@ -35,7 +35,6 @@ export async function POST(request: Request) {
     const userEmail = payload.data.customer.email;
     const metadata = payload.data.metadata || {};
 
-    // Find or create the user
     const user = await prisma.user.upsert({
       where: { email: userEmail },
       update: {},
@@ -47,7 +46,6 @@ export async function POST(request: Request) {
 
     console.log(`Processing webhook for user: ${userEmail}`);
 
-    // Calculate total paid from quantity (since $1 per quantity)
     const quantity = payload.data.product_cart?.[0]?.quantity || 0;
     const unitPrice = 1; // $1 fixed in Dodo dashboard
     const totalPrice = quantity * unitPrice;

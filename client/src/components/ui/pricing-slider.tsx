@@ -1,23 +1,14 @@
+"use client";
+
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CreditPurchaseDialog,
   CreditPackage,
 } from "@/app/(main)/credits/CreditPurchaseDialog";
+import { CREDIT_PACKAGES } from "@/lib/creditMiddleware";
 
-const CREDIT_PACKAGES = [
-  { credits: 80, price: 5 },
-  { credits: 160, price: 9 },
-  { credits: 320, price: 17 },
-  { credits: 800, price: 40 },
-  { credits: 1600, price: 75 },
-  // { credits: 3200, price: 140 },
-  // { credits: 8000, price: 320 },
-  // { credits: 16000, price: 600 },
-  // { credits: 32000, price: 1100 },
-];
-
-const CREDIT_VALUES = [80, 160, 320, 800, 1600];
+export const CREDIT_VALUES = [80, 160, 320, 800, 1600];
 
 const getPriceForCredits = (
   credits: number

@@ -12,3 +12,13 @@ export const formSchema = z.object({
   clipType: z.enum(["AI", "MANUAL"]).optional(),
   multipleClips: z.boolean().optional(),
 });
+
+
+export const creditPackageSchema = z.object({
+  credits: z.number().min(50, "Minimum 50 credits required"),
+  city: z.string().min(1, "City is required"),
+  country: z.string().min(1, "Country is required"),
+  state: z.string().min(1, "State is required"),
+  street: z.string().min(1, "Street is required"),
+  zipcode: z.string().min(1, "Zipcode is required"),
+});

@@ -3,37 +3,18 @@ import { auth } from "@/auth";
 import { z } from "zod";
 import DodoPayments from "dodopayments";
 import { CountryCode } from "dodopayments/resources/misc.mjs";
+import { creditPackageSchema } from "@/lib/validation";
+import { CREDIT_PACKAGES } from "@/lib/creditMiddleware";
 
 const dodoClient = new DodoPayments({
   bearerToken: process.env["DODO_API_KEY"],
   environment: "test_mode",
 });
 
-const creditPackageSchema = z.object({
-  credits: z.number().min(50, "Minimum 50 credits required"),
-  city: z.string().min(1, "City is required"),
-  country: z.string().min(1, "Country is required"),
-  state: z.string().min(1, "State is required"),
-  street: z.string().min(1, "Street is required"),
-  zipcode: z.string().min(1, "Zipcode is required"),
-});
-
 export interface CreditPackageOption {
   credits: number;
   price: number; // in dollars
 }
-
-const CREDIT_PACKAGES: CreditPackageOption[] = [
-  { credits: 50, price: 5 },
-  { credits: 100, price: 9 },
-  { credits: 200, price: 17 },
-  { credits: 500, price: 40 },
-  { credits: 1000, price: 75 },
-  { credits: 2000, price: 140 },
-  { credits: 5000, price: 320 },
-  { credits: 10000, price: 600 },
-  { credits: 20000, price: 1100 },
-];
 
 const calculatePrice = (credits: number): number => {
   const packageData = CREDIT_PACKAGES.find((pkg) => credits <= pkg.credits);
@@ -91,12 +72,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log({
-      credits: packageData.credits,
-      price,
-      userId: session.user.id,
-      body,
-    });
+    // console.log({
+    //   credits: packageData.credits,
+    //   price,
+    //   userId: session.user.id,
+    //   body,
+    // });
 
     const payment = await dodoClient.payments.create({
       billing: {
@@ -121,7 +102,7 @@ export async function POST(request: NextRequest) {
       billing_currency: "USD",
       return_url:
         process.env.NEXT_PUBLIC_RETURN_URL ||
-        `${process.env.NEXTAUTH_URL}/credits/success`,
+        `${process.env.NEXTAUTH_URL}/credits/status`,
         metadata: {
           type: "credit_package",
           credits: packageData.credits.toString(),

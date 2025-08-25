@@ -82,6 +82,11 @@ export async function POST(request: Request) {
               },
             });
 
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { credits: { increment: credits } },
+            });
+
             await prisma.transaction.create({
               data: {
                 userId: user.id,

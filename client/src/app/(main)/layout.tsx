@@ -1,5 +1,6 @@
 import { BgWrapper } from "@/components/BgWrapper";
 import { Navbar } from "@/components/Landing/Navbar";
+import { DisclaimerPopup } from "@/components/DisclaimerPopup";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function ClipLayout({
     >
       <Navbar />
       <div>{children}</div>
+      <DisclaimerPopup />
       <div className="fixed flex items-center justify-center inset-0 z-[-1] w-screen h-screen">
         <BgWrapper />
       </div>

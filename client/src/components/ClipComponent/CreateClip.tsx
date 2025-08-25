@@ -23,6 +23,7 @@ import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
 import { useSnipStore } from "@/lib/snipStore";
 import { EMAIL_SERVER_URL } from "@/config/config";
+import { calculateCreditsRequired } from "@/lib/creditMiddleware";
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -53,6 +54,11 @@ export function CreateClipPage() {
   const watchUrl = watch("url");
   const watchMultiple = watch("multipleClips");
   const watchClipType = watch("clipType");
+  const { totalCreditsRequired } = calculateCreditsRequired(
+    watchClipType as "MANUAL" | "AI",
+    watchMultiple,
+    watch("subtitles")
+  );
   const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
 
   React.useEffect(() => {
@@ -436,6 +442,7 @@ export function CreateClipPage() {
                 <div className="space-y-1">
                   <Label htmlFor="subtitles">Subtitles</Label>
                   <Controller
+                    disabled={isProcessing || watchClipType === "MANUAL"}
                     control={control}
                     name="subtitles"
                     render={({ field }) => (
@@ -466,7 +473,7 @@ export function CreateClipPage() {
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        Process Video
+                        Process Video({totalCreditsRequired})
                         <IconArrowUpRight />
                       </span>
                     )}

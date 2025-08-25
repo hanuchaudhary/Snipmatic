@@ -8,6 +8,7 @@ import { Download, Play, Clock, Globe } from "lucide-react";
 import { Task } from "@/types/task";
 import {
   cn,
+  downloadFile,
   formatDuration,
   formatTimestamp,
   getYouTubeThumbnail,
@@ -29,17 +30,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
   const isProcessing = !["COMPLETED", "FAILED"].includes(
     task.status.toUpperCase()
   );
-
-  const handleDownload = () => {
-    if (task.clipURL) {
-      const link = document.createElement("a");
-      link.href = task.clipURL;
-      link.download = `${task.title}.mp4`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
 
   const [progress, setProgress] = useState(task.progress || 0);
   const [displayProgress, setDisplayProgress] = useState(task.progress || 0);
@@ -102,7 +92,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 isProcessing ? "opacity-20" : ""
               }`}
               onError={(e) => {
-                // If image fails to load, try YouTube thumbnail fallback
                 if (
                   task.youtubeUrl &&
                   e.currentTarget.src !== getYouTubeThumbnail(task.youtubeUrl)
@@ -152,7 +141,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
               </div>
             </div>
             {task.clipURL && (
-              <WrapButton className="font-jost" href={task.clipURL}>
+              <WrapButton
+                className="font-jost"
+                onClick={() => {
+                  downloadFile(
+                    task.clipURL!,
+                    `${task.title?.slice(0, 10)}.mp4`
+                  );
+                }}
+              >
                 <Globe className="animate-spin h-5 w-5" />
                 Download
               </WrapButton>

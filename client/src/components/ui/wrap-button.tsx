@@ -8,15 +8,17 @@ interface WrapButtonProps {
   className?: string
   children: React.ReactNode
   href?: string
+  onClick?: () => void
 }
 
 const WrapButton: React.FC<WrapButtonProps> = ({
   className,
   children,
   href,
+  onClick,
 }) => {
   return (
-    <div className="flex items-center justify-center">
+    <div onClick={onClick} className="flex items-center justify-center">
       {href ? (
         <Link href={href}>
           <div

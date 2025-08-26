@@ -17,6 +17,7 @@ const getPriceForCredits = (
   label: string;
   aiClips: number;
   manualClips: number;
+  isComingSoon?: boolean;
 } => {
   if (credits >= 100000)
     return {
@@ -28,6 +29,17 @@ const getPriceForCredits = (
 
   const packageData = CREDIT_PACKAGES.find((pkg) => credits <= pkg.credits);
   if (packageData) {
+    // Lock pricing after $17 (320 credits package)
+    if (packageData.price > 17) {
+      return {
+        price: null,
+        label: `${credits.toLocaleString()} credits`,
+        aiClips: Math.floor(credits / 10),
+        manualClips: Math.floor(credits / 5),
+        isComingSoon: true,
+      };
+    }
+    
     return {
       price: packageData.price,
       label: `${credits.toLocaleString()} credits`,
@@ -53,13 +65,18 @@ export const CreditPricingSlider: React.FC = () => {
   );
 
   const credits = CREDIT_VALUES[sliderIndex];
-  const { price, label, aiClips, manualClips } = getPriceForCredits(credits);
+  const { price, label, aiClips, manualClips, isComingSoon } = getPriceForCredits(credits);
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSliderIndex(Number(e.target.value));
   };
 
   const handlePurchase = () => {
+    if (isComingSoon) {
+      // Don't allow purchase for coming soon packages
+      return;
+    }
+    
     if (price === null) {
       window.location.href =
         "mailto:support@snipmatic.com?subject=Enterprise%20pricing";
@@ -274,11 +291,16 @@ export const CreditPricingSlider: React.FC = () => {
                   className="mb-6"
                 >
                   <h4 className="text-3xl font-bold text-foreground mb-2">
-                    {price === null ? "Contact us" : `$${price}`}
+                    {isComingSoon ? "Will Be Available Soon" : price === null ? "Contact us" : `$${price}`}
                   </h4>
-                  {price !== null && (
+                  {price !== null && !isComingSoon && (
                     <div className="text-sm text-muted-foreground">
                       One-time payment
+                    </div>
+                  )}
+                  {isComingSoon && (
+                    <div className="text-sm text-orange-400 font-medium">
+                      Coming soon
                     </div>
                   )}
                 </motion.div>
@@ -341,7 +363,7 @@ export const CreditPricingSlider: React.FC = () => {
                     <div className="text-orange-400 font-semibold">*</div>
                     <span className="text-sm">All features included</span>
                   </motion.div>
-                  <motion.div
+                  {/* <motion.div
                     className="flex items-center gap-1"
                     variants={{
                       hidden: { opacity: 0, filter: "blur(6px)", y: 10 },
@@ -351,7 +373,7 @@ export const CreditPricingSlider: React.FC = () => {
                   >
                     <div className="text-orange-400 font-semibold">*</div>
                     <span className="text-sm">Priority processing</span>
-                  </motion.div>
+                  </motion.div> */}
                 </motion.div>
               </AnimatePresence>
 
@@ -370,7 +392,9 @@ export const CreditPricingSlider: React.FC = () => {
                   transition={{ duration: 0.2, ease: "easeOut", delay: 0.2 }}
                   className="text-sm text-muted-foreground leading-relaxed mb-8"
                 >
-                  {price === null
+                  {isComingSoon
+                    ? "This package will be available soon. Stay tuned for updates on larger credit packages with better value."
+                    : price === null
                     ? "Need custom pricing for large volumes? Contact us for enterprise solutions and volume discounts."
                     : credits <= 100
                     ? "Perfect for trying out Snipmatic. Create AI-powered clips and manual clips with no recurring fees."
@@ -381,13 +405,22 @@ export const CreditPricingSlider: React.FC = () => {
               </AnimatePresence>
 
               <motion.button
-                className="w-full bg-orange-500 cursor-pointer hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors"
+                className={`w-full px-6 py-3 rounded-lg font-semibold text-sm transition-colors ${
+                  isComingSoon
+                    ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    : "bg-orange-500 cursor-pointer hover:bg-orange-600 text-white"
+                }`}
                 onClick={handlePurchase}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                disabled={isComingSoon}
+                whileHover={!isComingSoon ? { scale: 1.02 } : {}}
+                whileTap={!isComingSoon ? { scale: 0.98 } : {}}
                 transition={{ duration: 0.2 }}
               >
-                {price === null ? "Contact Sales" : "Purchase Credits"}
+                {isComingSoon
+                  ? "Coming Soon"
+                  : price === null
+                  ? "Contact Sales"
+                  : "Purchase Credits"}
               </motion.button>
             </div>
           </motion.div>

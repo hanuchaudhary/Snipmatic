@@ -409,7 +409,7 @@ export function CreateClipPage() {
                               key={option.value}
                               type="button"
                               className={cn(
-                                "flex-1 relative border bg-secondary justify-center md:h-15 text-sm md:text-base cursor-pointer rounded-xl"
+                                "flex-1 relative border bg-secondary flex justify-center items-center h-12 text-sm md:text-base cursor-pointer rounded-xl transition-all duration-200"
                               )}
                             >
                               {isActive && (
@@ -422,7 +422,7 @@ export function CreateClipPage() {
                               {
                                 <span
                                   className={cn(
-                                    "relative m-auto px-4 z-30 font-[500]",
+                                    "relative z-30 font-medium py-3 px-4",
                                     isActive
                                       ? "text-primary-foreground"
                                       : "text-muted-foreground"

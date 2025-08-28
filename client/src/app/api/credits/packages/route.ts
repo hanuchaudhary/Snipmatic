@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         zipcode: packageData.zipcode as string,
       },
       customer: {
-        create_new_customer: true,
+        // create_new_customer: true,
         email: session.user.email!,
         name: `${session.user.name || session.user.email?.split("@")[0]}`,
       },

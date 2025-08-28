@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { useRef } from "react";
 import { Navbar } from "./Navbar";
 import { GradientText } from "../ui/GradientText";
@@ -11,7 +11,7 @@ import { VideoCard, DynamicArrow } from "../ui";
 
 export function HeroSection() {
   const buttonRef = useRef<HTMLButtonElement>(null);
-  
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -23,7 +23,7 @@ export function HeroSection() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: {
       y: 20,
       opacity: 0,
@@ -35,12 +35,12 @@ export function HeroSection() {
       filter: "blur(0px)",
       transition: {
         duration: 0.6,
-        ease: "easeOut",
+        ease: [0.25, 0.46, 0.45, 0.94],
       },
     },
   };
 
-  const buttonVariants = {
+  const buttonVariants: Variants = {
     hidden: {
       y: 20,
       opacity: 0,
@@ -54,7 +54,7 @@ export function HeroSection() {
       scale: 1,
       transition: {
         duration: 0.6,
-        ease: "easeOut",
+        ease: [0.25, 0.46, 0.45, 0.94],
         delay: 0.8,
       },
     },

@@ -1,0 +1,94 @@
+services:
+  # API Gateway - FastAPI application
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "8000:8000"  # Expose API Gateway port
+    env_file:
+      - ./.env
+    volumes:
+      - ./storage:/app/storage
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+    restart: unless-stopped
+
+  # Download Workers
+  download-worker:
+    build:
+      context: .
+      dockerfile: download-worker/Dockerfile
+    environment:
+      - TZ=UTC
+      - COOKIES_FILE_PATH=/app/cookies.txt
+    env_file:
+      - ./.env
+    volumes:
+      - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+        memswap_limit: 2G
+    restart: unless-stopped
+
+  # Transcribe Workers
+  transcribe-worker:
+    build:
+      context: .
+      dockerfile: transcribe-worker/Dockerfile
+    environment:
+      - TZ=UTC
+    env_file:
+      - ./.env
+    volumes:
+      - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro 
+      - /etc/timezone:/etc/timezone:ro
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 4G
+          cpus: '3.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+        memswap_limit: 6G
+    restart: unless-stopped
+
+  # Clip Workers
+  clip-worker:
+    build:
+      context: .
+      dockerfile: clip-worker/Dockerfile
+    env_file:
+      - ./.env
+    environment:
+      - TZ=UTC 
+    volumes:
+      - ./storage:/app/storage
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+        memswap_limit: 3G
+    restart: unless-stopped

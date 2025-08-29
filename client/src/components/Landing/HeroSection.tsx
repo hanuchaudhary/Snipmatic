@@ -6,8 +6,7 @@ import { motion, Variants } from "framer-motion";
 import { useRef } from "react";
 import { Navbar } from "./Navbar";
 import { GradientText } from "../ui/GradientText";
-import { ArrowIcons } from "./ArrowIcons";
-import { VideoCard, DynamicArrow } from "../ui";
+import { VideoCard } from "../ui";
 
 export function HeroSection() {
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -92,7 +91,7 @@ export function HeroSection() {
         </motion.h1>
 
         <motion.p
-          className="md:text-lg text-sm font-jost md:px-0 px-4 text-muted-foreground my-8 text-center mx-auto max-w-2xl"
+          className="md:text-lg text-sm font-jost md:px-0 px-4 text-neutral-300 my-8 text-center mx-auto max-w-2xl"
           variants={itemVariants}
         >
           Snip viral-ready shorts from any YouTube video — fast, effortless, and
@@ -123,7 +122,7 @@ export function HeroSection() {
       </motion.div>
 
       <motion.div
-        className="w-full mx-auto overflow-hidden px-4 sm:px-2 mt-12 lg:my-16"
+        className="w-full mx-auto overflow-hidden px-4 sm:px-2 mt-12"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 1.2 }}
@@ -134,21 +133,6 @@ export function HeroSection() {
           className="w-full"
         />
       </motion.div>
-
-      <div>
-        <div></div>
-      </div>
-
-      <motion.div
-        className="w-full fixed -bottom-10 left-1/2 -translate-x-1/2 bg-white/70 dark:bg-black/70 h-20 blur-2xl"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      />
-      <motion.div
-        className="w-full fixed -bottom-10 left-1/2 -translate-x-1/2 bg-white/50 dark:bg-black/50 h-20 blur-2xl"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      />
     </section>
   );
 }

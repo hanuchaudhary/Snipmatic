@@ -18,6 +18,7 @@
     "@distube/ytdl-core": "^4.16.12",
     "@hookform/resolvers": "^5.0.1",
     "@prisma/client": "6.12.0",
+    "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-progress": "^1.1.7",
@@ -37,6 +38,7 @@
     "framer-motion": "^12.12.0",
     "ioredis": "^5.6.1",
     "lucide-react": "^0.510.0",
+    "mathjs": "^14.6.0",
     "motion": "^12.11.4",
     "next": "15.3.2",
     "next-auth": "5.0.0-beta.29",
@@ -50,6 +52,7 @@
     "standardwebhooks": "^1.0.0",
     "tailwind-merge": "^3.3.0",
     "ts-node": "^10.9.2",
+    "unicornstudio-react": "^1.4.29-1",
     "vaul": "^1.1.2",
     "zod": "^3.24.4",
     "zustand": "^5.0.6"

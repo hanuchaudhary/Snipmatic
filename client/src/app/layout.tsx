@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif, Jost } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Instrument_Serif,
+  Jost,
+  VT323,
+} from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
+import { Footer } from "@/components/Landing/Footer";
+
+export const vt323 = VT323({
+  variable: "--font-vt323",
+  subsets: ["latin"],
+  weight: "400",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +41,13 @@ export const metadata: Metadata = {
     "ffmpeg clipping",
     "YouTube video cutter",
   ],
-  authors: [{ name: "Kush Chaudhary", url: "https://kushchaudhary.com" }],
+  authors: [
+    { name: "Kush Chaudhary", url: "https://kushchaudhary.com" },
+    {
+      name: "Kushagra Singhal",
+      url: "https://x.com/kuahxD",
+    },
+  ],
   creator: "Kush Chaudhary",
 };
 
@@ -56,14 +75,19 @@ export default function RootLayout({
       >
         <SessionProvider>
           <ThemeProvider attribute="class" defaultTheme="dark">
-              <main>{children}</main> 
-            <Toaster position="top-center" className="border-none" toastOptions={{
-              style:{
-                fontFamily: "var(--font-jost)",
-                border: "1px solid var(--border-orange-400)",
-                color: "orange",
-              }
-            }} />
+            <main>{children}</main>
+            <Footer />
+            <Toaster
+              position="top-center"
+              className="border-none"
+              toastOptions={{
+                style: {
+                  fontFamily: "var(--font-jost)",
+                  border: "1px solid var(--border-orange-400)",
+                  color: "orange",
+                },
+              }}
+            />
           </ThemeProvider>
         </SessionProvider>
       </body>

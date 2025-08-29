@@ -40,7 +40,7 @@ services:
         reservations:
           memory: 512M
           cpus: '0.5'
-        memswap_limit: 2G
+        # memswap_limit: 2G
     restart: unless-stopped
 
   # Transcribe Workers
@@ -65,7 +65,7 @@ services:
         reservations:
           memory: 1G
           cpus: '1.0'
-        memswap_limit: 6G
+        # memswap_limit: 6G
     restart: unless-stopped
 
   # Clip Workers
@@ -90,5 +90,5 @@ services:
         reservations:
           memory: 512M
           cpus: '0.5'
-        memswap_limit: 3G
+        # memswap_limit: 3G
     restart: unless-stopped

@@ -64,7 +64,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({
 
   return (
     <div
-      className={`dark:bg-border/10 bg-border/80 max-w-5xl border rounded-[44px] p-3 ${className}`}
+      className={`dark:bg-border/10 bg-border/80 max-w-5xl border rounded-[44px] backdrop-blur-sm p-3 ${className}`}
     >
       <div className="relative rounded-4xl border border-border/40 bg-card flex items-center justify-center overflow-hidden">
         <BlurVignette

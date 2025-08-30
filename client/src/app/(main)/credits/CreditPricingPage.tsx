@@ -32,29 +32,6 @@ const faqData = [
   },
 ];
 
-const creditCosts = [
-  {
-    action: "AI Video Clip",
-    cost: "10 credits",
-    description: "AI-powered clip generation",
-  },
-  {
-    action: "Manual Clip",
-    cost: "5 credits",
-    description: "Custom time-based clipping",
-  },
-  {
-    action: "Multiple Clips Add-on",
-    cost: "+5 credits",
-    description: "Generate multiple clips from one video",
-  },
-  {
-    action: "Subtitles Add-on",
-    cost: "+5 credits",
-    description: "Add subtitles to your clips",
-  },
-];
-
 export function CreditPricingPage() {
   return (
     <div className="min-h-screen p-4 pt-24 font-jost">

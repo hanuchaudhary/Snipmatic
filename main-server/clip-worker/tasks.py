@@ -268,6 +268,9 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
             acodec='aac',
             crf=23,
             preset='medium'
+            **{
+                'threads': 2
+            }
         )
         logger.debug(f"Compiled command: {' '.join(ffmpeg.compile(out))}")
         ffmpeg.run(out, overwrite_output=True, capture_stdout=True, capture_stderr=True)
@@ -473,7 +476,7 @@ if __name__ == "__main__":
             'worker', 
             '-Q', 'clip',
             '--loglevel=info', 
-            '--concurrency=4', 
+            '--concurrency=3', 
             '--prefetch-multiplier=1',
             '-n', 'clip_worker@%h'
         ])

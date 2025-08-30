@@ -12,7 +12,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
 import { Footer } from "@/components/Landing/Footer";
 
-export const vt323 = VT323({
+const vt323 = VT323({
   variable: "--font-vt323",
   subsets: ["latin"],
   weight: "400",

@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  CreditPurchaseDialog,
   CreditPackage,
-} from "@/app/(main)/credits/CreditPurchaseDialog";
+  PurchaseButton,
+} from "@/app/(main)/credits/PurchaseButton";
 import { CREDIT_PACKAGES } from "@/lib/creditMiddleware";
 
 export const CREDIT_VALUES = [80, 160, 320, 800, 1600];
@@ -60,9 +60,6 @@ const getPriceForCredits = (
 
 export const CreditPricingSlider: React.FC = () => {
   const [sliderIndex, setSliderIndex] = useState(2);
-  const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(
-    null
-  );
 
   const credits = CREDIT_VALUES[sliderIndex];
   const { price, label, aiClips, manualClips, isComingSoon } = getPriceForCredits(credits);
@@ -71,34 +68,18 @@ export const CreditPricingSlider: React.FC = () => {
     setSliderIndex(Number(e.target.value));
   };
 
-  const handlePurchase = () => {
-    if (isComingSoon) {
-      // Don't allow purchase for coming soon packages
-      return;
-    }
-    
-    if (price === null) {
-      window.location.href =
-        "mailto:support@snipmatic.com?subject=Enterprise%20pricing";
-      return;
-    }
-
-    const packageData: CreditPackage = {
-      id: `CUSTOM_${credits}`,
-      name: `${credits.toLocaleString()} Credits`,
-      credits,
-      price,
-      description: `Custom package with ${credits.toLocaleString()} credits`,
-    };
-
-    setSelectedPackage(packageData);
+  const packageData: CreditPackage = {
+    id: `CUSTOM_${credits}`,
+    name: `${credits.toLocaleString()} Credits`,
+    credits,
+    price: price || 0,
+    description: `Custom package with ${credits.toLocaleString()} credits`,
   };
 
   const pricePerCredit = price ? ((price / credits) * 100).toFixed(1) : null;
 
   return (
-    <>
-      <section className="md:max-w-4xl mx-auto md:p-6">
+    <section className="md:max-w-4xl mx-auto md:p-6">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-instrumental text-foreground">
             Choose Your <span className="text-orange-400">Credit Package</span>
@@ -404,36 +385,34 @@ export const CreditPricingSlider: React.FC = () => {
                 </motion.p>
               </AnimatePresence>
 
-              <motion.button
-                className={`w-full px-6 py-3 rounded-lg font-semibold text-sm transition-colors ${
-                  isComingSoon
-                    ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-                    : "bg-orange-500 cursor-pointer hover:bg-orange-600 text-white"
-                }`}
-                onClick={handlePurchase}
-                disabled={isComingSoon}
-                whileHover={!isComingSoon ? { scale: 1.02 } : {}}
-                whileTap={!isComingSoon ? { scale: 0.98 } : {}}
-                transition={{ duration: 0.2 }}
-              >
-                {isComingSoon
-                  ? "Coming Soon"
-                  : price === null
-                  ? "Contact Sales"
-                  : "Purchase Credits"}
-              </motion.button>
+              {isComingSoon ? (
+                <motion.button
+                  className="w-full px-6 py-3 rounded-lg font-semibold text-sm bg-gray-400 text-gray-600 cursor-not-allowed"
+                  disabled={true}
+                >
+                  Coming Soon
+                </motion.button>
+              ) : price === null ? (
+                <motion.button
+                  className="w-full px-6 py-3 rounded-lg font-semibold text-sm bg-orange-500 hover:bg-orange-600 text-white"
+                  onClick={() => window.location.href = "mailto:support@snipmatic.com?subject=Enterprise%20pricing"}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  Contact Sales
+                </motion.button>
+              ) : (
+                <PurchaseButton
+                  package={packageData}
+                  className="w-full px-6 py-3 rounded-lg font-semibold text-sm transition-colors bg-orange-500 cursor-pointer hover:bg-orange-600 text-white"
+                >
+                  Purchase Credits
+                </PurchaseButton>
+              )}
             </div>
           </motion.div>
         </motion.div>
       </section>
-
-      {selectedPackage && (
-        <CreditPurchaseDialog
-          package={selectedPackage}
-          open={!!selectedPackage}
-          onOpenChange={(open: boolean) => !open && setSelectedPackage(null)}
-        />
-      )}
-    </>
   );
 };

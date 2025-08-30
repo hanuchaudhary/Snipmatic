@@ -10,11 +10,6 @@ services:
       - ./.env
     volumes:
       - ./storage:/app/storage
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '0.5'
     restart: unless-stopped
 
   # Download Workers
@@ -40,6 +35,8 @@ services:
         reservations:
           memory: 512M
           cpus: '0.25'
+    cpu_quota: 150000      # 150% of CPU (1.5 cores)
+    cpu_period: 100000
     memswap_limit: 2G
     restart: unless-stopped
 

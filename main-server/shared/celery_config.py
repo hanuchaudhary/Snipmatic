@@ -11,8 +11,8 @@ REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/')
 # Celery application instance
 celery_app = Celery(
     'clipper_workers',
-    broker=REDIS_URL,
-    backend=REDIS_URL
+    broker=REDIS_URL+"/0",
+    backend=REDIS_URL+"/1"
 )
 
 # Celery configuration

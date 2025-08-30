@@ -7,12 +7,12 @@ from kombu import Queue
 # Redis/Message Broker Configuration
 # Environment variables will be loaded by Docker Compose
 REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/')
-
+REDIS_URL1 = os.getenv('REDIS_URL1', 'redis://localhost:6379/')
 # Celery application instance
 celery_app = Celery(
     'clipper_workers',
     broker=REDIS_URL,
-    backend=REDIS_URL
+    backend=REDIS_URL1
 )
 
 # Celery configuration

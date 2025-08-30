@@ -1,110 +1,148 @@
 from celery import Celery
 import os
-from kombu import Queue
+import urllib.parse
 
+# Environment Variables
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
+# Storage paths
+STORAGE_PATH = os.getenv("STORAGE_PATH", "/app/storage")
+DOWNLOAD_STORAGE_PATH = os.path.join(STORAGE_PATH, "downloads")
+TRANSCRIPTION_STORAGE_PATH = os.path.join(STORAGE_PATH, "transcriptions")
+CLIP_STORAGE_PATH = os.path.join(STORAGE_PATH, "clips")
 
-# Redis/Message Broker Configuration
-# Environment variables will be loaded by Docker Compose
-REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/')
+# Create directories if they don't exist
+os.makedirs(DOWNLOAD_STORAGE_PATH, exist_ok=True)
+os.makedirs(TRANSCRIPTION_STORAGE_PATH, exist_ok=True)
+os.makedirs(CLIP_STORAGE_PATH, exist_ok=True)
 
-# Celery application instance
+# Parse Redis URL for SSL configuration
+parsed_redis_url = urllib.parse.urlparse(REDIS_URL)
+
+# SSL/TLS configuration for Upstash
+broker_connection_retry_on_startup = True
+broker_connection_retry = True
+
+# SSL configuration for Upstash Redis
+if parsed_redis_url.scheme == 'rediss' or 'upstash' in REDIS_URL:
+    # SSL Redis connection (Upstash)
+    broker_use_ssl = {
+        'ssl_cert_reqs': None,
+        'ssl_ca_certs': None,
+        'ssl_certfile': None,
+        'ssl_keyfile': None,
+        'ssl_check_hostname': False,
+    }
+    
+    redis_backend_use_ssl = {
+        'ssl_cert_reqs': None,
+        'ssl_ca_certs': None,
+        'ssl_certfile': None,
+        'ssl_keyfile': None,
+        'ssl_check_hostname': False,
+    }
+    
+    # Transport options for broker
+    broker_transport_options = {
+        'ssl_cert_reqs': None,
+        'ssl_ca_certs': None,
+        'ssl_certfile': None,
+        'ssl_keyfile': None,
+        'visibility_timeout': 3600,
+        'fanout_prefix': True,
+        'fanout_patterns': True
+    }
+    
+    # Result backend transport options
+    result_backend_transport_options = {
+        'ssl_cert_reqs': None,
+        'ssl_ca_certs': None,
+        'ssl_certfile': None,
+        'ssl_keyfile': None,
+    }
+else:
+    # Regular Redis connection
+    broker_transport_options = {
+        'visibility_timeout': 3600,
+        'fanout_prefix': True,
+        'fanout_patterns': True
+    }
+
+# Create Celery app with proper configuration
 celery_app = Celery(
-    'clipper_workers',
-    broker=REDIS_URL+"/0",
-    backend=REDIS_URL+"/1"
+    'clip_microservices',
+    broker=REDIS_URL,
+    backend=REDIS_URL,
+    include=[
+        'download-worker.tasks',
+        'transcribe-worker.tasks', 
+        'clip-worker.tasks'
+    ]
 )
 
-# Celery configuration
+# Celery Configuration
 celery_app.conf.update(
-    # Task routing - Use simple task names that work across containers
-    task_routes={
-        'download_task': {'queue': 'download'},
-        'transcribe_task': {'queue': 'transcribe'},
-        'clip_task': {'queue': 'clip'},
-        'manual_clip_task': {'queue': 'clip'},
-    },
-     task_queues=[
-        Queue('download', routing_key='download'),
-        Queue('transcribe', routing_key='transcribe'),
-        Queue('clip', routing_key='clip')
-    ],
-    # Worker configuration
-    worker_prefetch_multiplier=1,  # Process one task at a time per worker
-    task_acks_late=True,           # Acknowledge task only after completion
-    worker_disable_rate_limits=False,
-    
-    # Queue configuration
-    task_create_missing_queues=True,
-    task_default_queue='default',
-    task_default_exchange='default',
-    task_default_exchange_type='direct',
-    task_default_routing_key='default',
-    
-    # Result backend configuration
-    result_expires=3600,  # Results expire after 1 hour
-    result_persistent=True,
-    
-    # Serialization
+    # Basic settings
     task_serializer='json',
     accept_content=['json'],
     result_serializer='json',
     timezone='UTC',
     enable_utc=True,
     
-    # Rate limiting and concurrency
-    task_annotations={
-        'transcribe_task': {
-            'rate_limit': '2/m',  # Max 2 transcriptions per minute
-        },
-        'download_task': {
-            'rate_limit': '50/m',  # Max 50 downloads per minute
-        },
-        'clip_task': {
-            'rate_limit': '100/m',  # Max 100 clips per minute
-        },
-        'manual_clip_task': {
-            'rate_limit': '40/m',  # Max 20 clips per minute
-        },
+    # Task routing
+    task_routes={
+        'download_task': {'queue': 'download'},
+        'transcribe_task': {'queue': 'transcribe'},
+        'clip_task': {'queue': 'clip'},
+        'manual_clip_task': {'queue': 'clip'}
     },
     
-    # Monitoring
-    worker_send_task_events=True,
-    task_send_sent_event=True,
+    # Task execution settings
+    task_always_eager=False,
+    task_eager_propagates=True,
+    task_ignore_result=False,
+    task_store_eager_result=True,
+    
+    # Result backend settings
+    result_expires=86400,  # 24 hours
+    result_persistent=True,
+    
+    # Worker settings
+    worker_prefetch_multiplier=1,
+    worker_max_tasks_per_child=50,
+    worker_disable_rate_limits=True,
+    
+    # Connection settings
+    broker_connection_retry_on_startup=True,
+    broker_connection_retry=True,
+    broker_pool_limit=10,
+    
+    # Task acknowledgment settings
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
+    
+    # SSL settings (added dynamically above based on URL)
+    **({
+        'broker_use_ssl': broker_use_ssl,
+        'redis_backend_use_ssl': redis_backend_use_ssl,
+        'broker_transport_options': broker_transport_options,
+        'result_backend_transport_options': result_backend_transport_options,
+    } if parsed_redis_url.scheme == 'rediss' or 'upstash' in REDIS_URL else {
+        'broker_transport_options': broker_transport_options
+    })
 )
 
+# Test Celery connection
+def test_celery_connection():
+    """Test Celery broker connection"""
+    try:
+        # Check broker connection
+        celery_app.control.inspect().stats()
+        print("Celery broker connection successful")
+        return True
+    except Exception as e:
+        print(f"Celery broker connection failed: {e}")
+        return False
 
-# Queue definitions with proper concurrency settings
-QUEUE_CONFIG = {
-    'download': {
-        'name': 'download',
-        'routing_key': 'download',
-        'max_workers': 10,  # I/O bound - can have higher concurrency
-        'prefetch_count': 5
-    },
-    'transcribe': {
-        'name': 'transcribe', 
-        'routing_key': 'transcribe',
-        'max_workers': 2,  # GPU bound - limit to 1-2 per GPU
-        'prefetch_count': 1
-    },
-    'clip': {
-        'name': 'clip',
-        'routing_key': 'clip', 
-        'max_workers': 5,  # CPU bound - moderate concurrency
-        'prefetch_count': 1
-    }
-}
-# Storage paths
-STORAGE_BASE_PATH = os.getenv('STORAGE_BASE_PATH', '/home/kush-chaudhary/CodeGround/SystemProj/Clipper/microservices-celery/storage')
-VIDEO_STORAGE_PATH = os.path.join(STORAGE_BASE_PATH, 'videos')
-AUDIO_STORAGE_PATH = os.path.join(STORAGE_BASE_PATH, 'audio')
-CLIP_STORAGE_PATH = os.path.join(STORAGE_BASE_PATH, 'clips')
-
-# API Configuration
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
-
-# Create storage directories
-os.makedirs(VIDEO_STORAGE_PATH, exist_ok=True)
-os.makedirs(AUDIO_STORAGE_PATH, exist_ok=True)
-os.makedirs(CLIP_STORAGE_PATH, exist_ok=True)
+if __name__ == "__main__":
+    test_celery_connection()

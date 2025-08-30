@@ -1,5 +1,6 @@
 celery[redis]
 redis
+upstash_redis
 ffmpeg-python
 pydantic
 boto3

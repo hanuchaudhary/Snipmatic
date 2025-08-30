@@ -1,5 +1,6 @@
 celery[redis]
 redis
+upstash_redis
 yt-dlp
 pydantic
 gevent

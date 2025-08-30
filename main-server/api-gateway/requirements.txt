@@ -2,7 +2,6 @@ fastapi
 uvicorn[standard]
 celery[redis]
 redis
-upstash_redis
 pydantic
 yt_dlp
 requests

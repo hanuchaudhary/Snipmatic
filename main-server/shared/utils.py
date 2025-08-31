@@ -3,10 +3,7 @@ import json
 import logging
 from typing import Optional
 from datetime import datetime
-import sys
 import os
-import ssl
-import ffmpeg
 from shared.models import TaskStatus
 from shared.celery_config import REDIS_URL
 from shared.database import update_task_in_postgres
@@ -19,10 +16,7 @@ logger = logging.getLogger(__name__)
 # Redis client for status storage
 redis_client = redis.Redis.from_url(
     REDIS_URL,
-    decode_responses=True,
-    ssl_cert_reqs=ssl.CERT_NONE,
-    ssl_check_hostname=False,
-    ssl_ca_certs=None
+    decode_responses=True
 )
 
 def format_srt_time(seconds: float) -> str:

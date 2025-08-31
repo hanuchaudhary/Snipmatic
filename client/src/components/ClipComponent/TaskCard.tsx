@@ -143,12 +143,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
             {task.clipURL && (
               <WrapButton
                 className="font-jost"
-                onClick={() => {
-                  downloadFile(
-                    task.clipURL!,
-                    `${task.title?.slice(0, 10)}.mp4`
-                  );
-                }}
+                href={task.clipURL}
+                // onClick={() => {
+                //   downloadFile(
+                //     task.clipURL!,
+                //     `${task.title?.slice(0, 10)}.mp4`
+                //   );
+                // }}
               >
                 {/* <Globe className="animate-spin h-5 w-5" /> */}
                 Download

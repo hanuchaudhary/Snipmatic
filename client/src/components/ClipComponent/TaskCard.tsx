@@ -150,7 +150,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                   );
                 }}
               >
-                <Globe className="animate-spin h-5 w-5" />
+                {/* <Globe className="animate-spin h-5 w-5" /> */}
                 Download
               </WrapButton>
             )}

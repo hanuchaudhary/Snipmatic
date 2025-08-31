@@ -17,7 +17,19 @@ celery_app = Celery(
 
 # Celery configuration
 celery_app.conf.update(
-    # Task routing - Use simple task names that work across containers
+    broker_use_ssl={
+        'ssl_cert_reqs': 'none',  # Disable certificate verification
+        'ssl_ca_certs': None,
+        'ssl_certfile': None,
+        'ssl_keyfile': None
+    },
+    result_backend_transport_options={
+        'ssl_cert_reqs': 'none',  # Same for result backend
+        'ssl_ca_certs': None,
+        'ssl_certfile': None,
+        'ssl_keyfile': None
+    },
+
     task_routes={
         'download_task': {'queue': 'download'},
         'transcribe_task': {'queue': 'transcribe'},

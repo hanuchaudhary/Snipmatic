@@ -5,6 +5,7 @@ from typing import Optional
 from datetime import datetime
 import sys
 import os
+import ssl
 import ffmpeg
 from shared.models import TaskStatus
 from shared.celery_config import REDIS_URL
@@ -16,7 +17,8 @@ EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
 logger = logging.getLogger(__name__)
 
 # Redis client for status storage
-redis_client = redis.Redis.from_url(REDIS_URL)
+redis_client = redis.from_url(REDIS_URL,
+        ssl_cert_reqs=ssl.CERT_NONE)
 
 def format_srt_time(seconds: float) -> str:
     """Convert seconds to SRT time format (HH:MM:SS,mmm)"""

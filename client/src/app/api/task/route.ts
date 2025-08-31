@@ -60,7 +60,6 @@ export async function GET() {
     );
   }
 }
-
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -114,38 +113,60 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      
-      const user = await tx.user.findUnique({
-        where: { id: session.user.id },
-        select: { credits: true },
+    let task: any = null;
+    const creditsRequired = creditCheck.creditsRequired || 0;
+
+    try {
+      task = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: session.user.id },
+          select: { credits: true },
+        });
+
+        if (!user || user.credits < creditsRequired) {
+          throw new Error("Insufficient credits");
+        }
+
+        const newTask = await tx.task.create({
+          data: {
+            userId: session.user.id,
+            youtubeUrl: url,
+            title: title || "Untitled Clip",
+            status: "QUEUED",
+            progress: 0,
+            thumbnailUrl: thumbnail || "",
+            statusMessage: "Task initialized",
+            clipType,
+            duration: duration || 0,
+            multipleClips: multipleClips || false,
+            subtitle: subtitles || false,
+          },
+        });
+
+        await tx.user.update({
+          where: { id: session.user.id },
+          data: { credits: { decrement: creditsRequired } },
+        });
+
+        await tx.creditUsage.create({
+          data: {
+            userId: session.user.id,
+            taskId: newTask.taskId,
+            creditsUsed: creditsRequired,
+            actionType: `${clipType}_CLIP${multipleClips ? "_MULTIPLE" : ""}${
+              subtitles ? "_SUBTITLE" : ""
+            }`,
+            description: `Credits used for ${clipType} clip${
+              multipleClips ? " (multiple)" : ""
+            }${subtitles ? " with subtitles" : ""}`,
+          },
+        });
+
+        return newTask;
       });
 
-      const creditsRequired = creditCheck.creditsRequired || 0;
-
-      if (!user || user.credits < creditsRequired) {
-        throw new Error("Insufficient credits");
-      }
-
-      const task = await tx.task.create({
-        data: {
-          userId: session.user.id,
-          youtubeUrl: url,
-          title: title || "Untitled Clip",
-          status: "QUEUED",
-          progress: 0,
-          thumbnailUrl: thumbnail || "",
-          statusMessage: "Task initialized",
-          clipType,
-          duration: duration || 0,
-          multipleClips: multipleClips || false,
-          subtitle: subtitles || false,
-        },
-      });
-
-      const response = await axios.post(
-        `${MAIN_SERVER_URL}/clip`,
-        {
+      await Promise.all([
+        axios.post(`${MAIN_SERVER_URL}/clip`, {
           url,
           startTime,
           endTime,
@@ -156,80 +177,41 @@ export async function POST(request: NextRequest) {
           user_id: session.user.id,
           duration,
           task_id: task.taskId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+        }),
+        axios.post(`${EMAIL_SERVER_URL}/set_task`, {
+          email: session.user.email,
+          task_id: task.taskId,
+        }),
+      ]);
 
-      if (response.status !== 200) {
-        console.error("Error from main server:", response.data);
-        throw new Error("Failed to create clip on main server");
+      return NextResponse.json(
+        { success: true, message: "Task created successfully", task },
+        { status: 201 }
+      );
+    } catch (apiError) {
+      console.error("Error in task creation or API calls:", apiError);
+      if (task?.taskId) {
+        try {
+          await prisma.$transaction([
+            prisma.creditUsage.deleteMany({ where: { taskId: task.taskId } }),
+            prisma.task.delete({ where: { taskId: task.taskId } }),
+            prisma.user.update({
+              where: { id: session.user.id },
+              data: { credits: { increment: creditsRequired } },
+            }),
+          ]);
+        } catch (rollbackError) {
+          console.error("Rollback failed:", rollbackError);
+        }
       }
 
-      await tx.user.update({
-        where: { id: session.user.id },
-        data: {
-          credits: {
-            decrement: creditsRequired,
-          },
-        },
-      });
-
-      await tx.creditUsage.create({
-        data: {
-          userId: session.user.id,
-          taskId: task.taskId,
-          creditsUsed: creditsRequired,
-          actionType: `${clipType}_CLIP${multipleClips ? "_MULTIPLE" : ""}${
-            subtitles ? "_SUBTITLE" : ""
-          }`,
-          description: `Credits used for ${clipType} clip${
-            multipleClips ? " (multiple)" : ""
-          }${subtitles ? " with subtitles" : ""}`,
-        },
-      });
-
-      await axios.post(`${EMAIL_SERVER_URL}/set_task`, {
-        email: session.user.email,
-        task_id: task.taskId,
-      });
-
-      return task;
-    });
-
-    console.log(
-      `Task created with ID: ${result.taskId} for user: ${
-        session.user.id
-      }, credits deducted: ${creditCheck.creditsRequired || 0}`
-    );
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Task created successfully",
-        task: {
-          taskId: result.taskId,
-          status: result.status,
-          progress: result.progress,
-          statusMessage: result.statusMessage,
-          thumbnailUrl: result.thumbnailUrl,
-        },
-      },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("Error creating task:", error);
-
-    if (error instanceof Error && error.message === "Insufficient credits") {
       return NextResponse.json(
-        { error: "Insufficient credits to create this task" },
-        { status: 403 }
+        { error: "Failed to create task" },
+        { status: 500 }
       );
     }
-
+  } catch (error) {
+    console.error("Error creating task:", error);
     return NextResponse.json(
       { error: "Failed to create task" },
       { status: 500 }

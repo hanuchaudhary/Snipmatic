@@ -11,6 +11,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
 import { Footer } from "@/components/Landing/Footer";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const vt323 = VT323({
   variable: "--font-vt323",
@@ -88,6 +90,8 @@ export default function RootLayout({
                 },
               }}
             />
+            <SpeedInsights />
+            <Analytics />
           </ThemeProvider>
         </SessionProvider>
       </body>

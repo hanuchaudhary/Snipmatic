@@ -17,8 +17,13 @@ EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
 logger = logging.getLogger(__name__)
 
 # Redis client for status storage
-redis_client = redis.from_url(REDIS_URL,
-        ssl_cert_reqs=ssl.CERT_NONE)
+redis_client = redis.Redis.from_url(
+    REDIS_URL,
+    decode_responses=True,
+    ssl_cert_reqs=ssl.CERT_NONE,
+    ssl_check_hostname=False,
+    ssl_ca_certs=None
+)
 
 def format_srt_time(seconds: float) -> str:
     """Convert seconds to SRT time format (HH:MM:SS,mmm)"""

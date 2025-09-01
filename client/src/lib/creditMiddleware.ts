@@ -1,11 +1,11 @@
 import { prisma } from "./prisma";
 
 export const CREDIT_PACKAGES = [
-  { credits: 80, price: 5 },
-  { credits: 160, price: 9 },
-  { credits: 320, price: 17 },
-  { credits: 800, price: 40 },
-  { credits: 1600, price: 75 },
+  { credits: 100, price: 5 },
+  { credits: 200, price: 9 },
+  { credits: 420, price: 17 },
+  { credits: 1250, price: 40 },
+  { credits: 2000, price: 75 },
 ];
 
 interface CreditCosts {

@@ -64,36 +64,29 @@ export const VideoCard: React.FC<VideoCardProps> = ({
 
   return (
     <div
-      className={`dark:bg-border/10 bg-border/80 max-w-5xl border rounded-[44px] backdrop-blur-sm p-3 ${className}`}
+      className={`dark:bg-border/10 bg-border/80 max-w-5xl border md:rounded-[44px] p-1 rounded-[20px] backdrop-blur-sm md:p-3 ${className}`}
     >
-      <div className="relative rounded-4xl border border-border/40 bg-card flex items-center justify-center overflow-hidden">
-        <BlurVignette
-          radius="14px"
-          inset="20px"
-          transitionLength="120px"
-          blur="15px"
-        >
-          {imageUrl && (
-            <img
-              src={imageUrl}
-              alt="Preview"
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-                showVideo ? "opacity-0 pointer-events-none" : "opacity-100"
-              }`}
-            />
-          )}
-          {videoUrl && (
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              muted
-              playsInline
-              className={`w-full h-full object-cover transition-opacity duration-300 ${
-                showVideo ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}
-            />
-          )}
-        </BlurVignette>
+      <div className="relative md:rounded-4xl rounded-2xl border border-border/40 bg-card flex items-center justify-center overflow-hidden">
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt="Preview"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+              showVideo ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          />
+        )}
+        {videoUrl && (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            muted
+            playsInline
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              showVideo ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+          />
+        )}
         {!showVideo && videoUrl && imageUrl && (
           <button
             onClick={handlePlayButtonClick}

@@ -23,12 +23,12 @@ const WrapButton: React.FC<WrapButtonProps> = ({
         <Link href={href}>
           <div
             className={cn(
-              "group cursor-pointer border group dark:border-[#3B3A3A] dark:bg-[#151515] gap-2 flex items-center p-[4px] rounded-full pr-1.5",
+              "group cursor-pointer border group dark:border-[#3B3A3A] dark:bg-[#151515] bg-white gap-2 flex items-center p-[4px] rounded-full pr-1.5",
               className
             )}
           >
-            <div className="border dark:border-[#3B3A3A] bg-[#ff3f17] py-1 rounded-full flex items-center justify-center text-white">
-              <p className="font-medium tracking-tight mr-3 ml-2 flex items-center gap-2 justify-center ">
+            <div className="border dark:border-[#3B3A3A] bg-[#ff3f17]/80 dark:bg-[#ff3f17] py-1 rounded-full flex items-center justify-center text-neutral-950">
+              <p className="font-medium tracking-wide mr-3 ml-2 flex items-center gap-2 justify-center font-instrumental">
                 {children}
               </p>
             </div>
@@ -47,9 +47,9 @@ const WrapButton: React.FC<WrapButtonProps> = ({
             className
           )}
         >
-          <div className="border border-[#3B3A3A] bg-[#fe7500]  h-[43px] rounded-full flex items-center justify-center text-white">
+          <div className="border border-[#3B3A3A] bg-[#fe7500] h-[43px] rounded-full flex items-center justify-center">
             <Globe className="mx-2 animate-spin " />
-            <p className="font-medium tracking-tight mr-3">
+            <p className="mr-3">
               {children ? children : "Get Started"}
             </p>
           </div>

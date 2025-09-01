@@ -54,22 +54,7 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-2">
             <ThemeSwitcher />
-            {session ? (
-              <Signout />
-            ) : (
-              <div className="flex items-center gap-2">
-                <Button
-                  size={"sm"}
-                  variant="outline"
-                  onClick={() => router.push("/signin")}
-                >
-                  Sign In
-                </Button>
-                <Button size={"sm"} onClick={() => router.push("/signup")}>
-                  Sign Up
-                </Button>
-              </div>
-            )}
+            <Signout closeMobileMenu={closeMobileMenu} />
           </div>
 
           <div className="md:hidden">

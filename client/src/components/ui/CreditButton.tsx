@@ -42,14 +42,14 @@ export function CreditButton() {
         onHoverEnd={() => setIsHovered(false)}
         className={cn(
           "font-instrumental cursor-pointer rounded-xl",
-          "transition-colors duration-300 backdrop-blur-sm ease-in-out h-8 w-30 flex items-center justify-center relative group",
-          "bg-orange-400/10 border-2 border-dashed border-orange-400/60 text-orange-400",
+          "transition-colors duration-300 backdrop-blur-sm md:px-0 md:py-0 px-2 py-1 ease-in-out md:h-8 md:w-30 flex items-center justify-center relative group",
+          "bg-orange-400/10 md:border-2 border border-double border-orange-400/60 text-orange-400",
           "hover:bg-orange-400/10 hover:border-orange-400 hover:text-orange-400"
         )}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        <div className="relative z-10 flex items-center gap-2 font-semibold tracking-wider text-xs font-mono">
+        <div className="relative z-10 flex items-center gap-2 font-semibold tracking-wider text-[10px] font-mono">
           <AnimatePresence mode="wait">
             {hasCredits ? (
               isHovered ? (

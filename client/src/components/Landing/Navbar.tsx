@@ -2,16 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Logo } from "../Logo";
 import { ThemeSwitcher } from "../ThemeToggle";
 import { CreditButton } from "../ui/CreditButton";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { Button } from "../ui/button";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { Signout } from "./Signout";
 
 export function Navbar() {
   const router = useRouter();
@@ -32,11 +30,14 @@ export function Navbar() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="fixed w-full left-1/2 -translate-x-1/2 my-4 top-0 z-50 max-w-7xl mx-auto"
+        className="fixed w-full left-1/2 -translate-x-1/2 md:my-4 top-0 z-50 max-w-7xl mx-auto md:backdrop-blur-none backdrop-blur-sm"
       >
         <div className="md:px-8 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link className="flex items-center justify-center" href={"/"}>
+            <Link
+              className="flex items-center justify-center"
+              href={session?.user.id ? "/clip" : "/"}
+            >
               <img
                 src="/icon.png"
                 className="h-12 md:h-16"
@@ -46,23 +47,28 @@ export function Navbar() {
                 Snipmatic
               </span>
             </Link>
+            <div className="md:block hidden">
               <CreditButton />
+            </div>
           </div>
 
           <div className="hidden md:flex items-center gap-2">
             <ThemeSwitcher />
-            {session && (
-              <Button
-                size={"sm"}
-                variant="outline"
-                onClick={() =>
-                  signOut({
-                    redirectTo: "/",
-                  })
-                }
-              >
-                Sign Out
-              </Button>
+            {session ? (
+              <Signout />
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button
+                  size={"sm"}
+                  variant="outline"
+                  onClick={() => router.push("/signin")}
+                >
+                  Sign In
+                </Button>
+                <Button size={"sm"} onClick={() => router.push("/signup")}>
+                  Sign Up
+                </Button>
+              </div>
             )}
           </div>
 
@@ -101,11 +107,9 @@ export function Navbar() {
         </div>
       </motion.header>
 
-      {/* Mobile Sidebar */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -115,7 +119,6 @@ export function Navbar() {
               onClick={closeMobileMenu}
             />
 
-            {/* Sidebar */}
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -125,10 +128,9 @@ export function Navbar() {
                 stiffness: 300,
                 damping: 30,
               }}
-              className="fixed top-0 right-0 h-full w-80 max-w-[80vw] bg-background border-l shadow-xl z-50 md:hidden"
+              className="fixed top-0 right-0 w-[76vw] rounded-l-3xl h-full bg-background border-l shadow-xl z-50 md:hidden"
             >
               <div className="flex flex-col h-full">
-                {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b">
                   <Link
                     className="flex items-center gap-2"
@@ -150,53 +152,13 @@ export function Navbar() {
 
                 <nav className="flex-1 p-6">
                   <div className="space-y-4">
-                    <motion.div whileTap={{ scale: 0.95 }} className="w-full">
-                      <Button variant="default" asChild className="w-full">
-                        <Link href="/credits" onClick={closeMobileMenu}>
-                          Buy Credits
-                        </Link>
-                      </Button>
-                    </motion.div>
-
-                    <div className="border-t my-4" />
-
+                    <CreditButton />
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Theme</span>
                       <ThemeSwitcher />
                     </div>
-
-                    <motion.div
-                      whileTap={{ scale: 0.95 }}
-                      className="flex items-center justify-between cursor-pointer p-3 hover:bg-accent rounded-lg transition-colors"
-                      onClick={async () => {
-                        await axios.post("/api/task/010101");
-                        closeMobileMenu();
-                      }}
-                    >
-                      <span className="text-sm font-medium">Quick Action</span>
-                      <Logo />
-                    </motion.div>
                   </div>
                 </nav>
-
-                {/* Footer */}
-                {session && (
-                  <div className="p-6 border-t">
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      size={"sm"}
-                      onClick={() => {
-                        signOut({
-                          redirectTo: "/",
-                        });
-                        closeMobileMenu();
-                      }}
-                    >
-                      Sign Out
-                    </Button>
-                  </div>
-                )}
+                {session && <Signout closeMobileMenu={closeMobileMenu} />}
               </div>
             </motion.div>
           </>

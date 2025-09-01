@@ -15,7 +15,7 @@ model User {
   email         String          @unique
   emailVerified DateTime?
   image         String?
-  credits       Int             @default(20)
+  credits       Int             @default(30)
   accounts      Account[]
   sessions      Session[]
   tasks         Task[]

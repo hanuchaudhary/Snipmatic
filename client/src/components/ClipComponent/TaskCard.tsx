@@ -127,7 +127,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
         </div>
       </DrawerTrigger>
 
-      <DrawerContent className="max-w-4xl mx-auto p-2 border overflow-hidden font-jost">
+      <DrawerContent className="max-w-4xl mx-auto p-2 border overflow-hidden font-jost mb-2">
         <div className="p-6 max-h-[80vh] rounded-4xl mask-b-from-[90%] border bg-secondary dark:bg-secondary/50 overflow-y-auto space-y-6 hide-scrollbar">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -137,12 +137,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 <span>•</span>
                 <span>{task.clipType}</span>
                 <span>•</span>
-                {/* <span>{task.quality}</span> */}
+                <span>{"1080p"}</span>
               </div>
             </div>
             {task.clipURL && (
               <WrapButton
-                className="font-jost"
+              className=""
                 href={task.clipURL}
                 // onClick={() => {
                 //   downloadFile(

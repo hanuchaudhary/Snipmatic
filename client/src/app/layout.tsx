@@ -51,6 +51,27 @@ export const metadata: Metadata = {
     },
   ],
   creator: "Kush Chaudhary",
+  openGraph:{
+    creators: ["Kush Chaudhary", "Kushagra Singhal"],
+    title: "Snipmatic – Instantly Create Viral Shorts from YouTube Videos",
+    description: "Snipmatic is an AI-powered tool that turns YouTube videos into viral social media clips.",
+    authors: ["Kush Chaudhary", "Kushagra Singhal"],
+    countryName: "India",
+  },
+  twitter:{
+    title: "Snipmatic – Instantly Create Viral Shorts from YouTube Videos",
+    description: "Snipmatic is an AI-powered tool that turns YouTube videos into viral social media clips.",
+    images: [
+      {
+        url: "https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-09-02 00-44-55.png",
+        alt: "Image 1",
+      },
+      {
+        url: "https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-08-17 21-39-13.png",
+        alt: "Image 2",
+      },
+    ],
+  }
 };
 
 const instrumentSerif = Instrument_Serif({

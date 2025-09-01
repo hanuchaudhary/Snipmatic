@@ -7,10 +7,11 @@ import { useRef } from "react";
 import { Navbar } from "./Navbar";
 import { GradientText } from "../ui/GradientText";
 import { VideoCard } from "../ui";
+import { useTheme } from "next-themes";
 
 export function HeroSection() {
   const buttonRef = useRef<HTMLButtonElement>(null);
-
+  const { theme } = useTheme();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -128,7 +129,11 @@ export function HeroSection() {
         transition={{ duration: 0.8, delay: 1.2 }}
       >
         <VideoCard
-          imageUrl="https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-08-17 21-39-13.png"
+          imageUrl={
+            theme === "dark"
+              ? "https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-08-17 21-39-13.png"
+              : "https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-09-02 00-44-55.png"
+          }
           videoUrl="https://d10d2f3sgu39wn.cloudfront.net/snipmatic-demo-1754599920218.mp4"
           className="w-full"
         />

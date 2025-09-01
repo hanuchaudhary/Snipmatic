@@ -24,7 +24,6 @@ export function Dashboard() {
       const data = (response.data.tasks as Task[]) || [];
       setTasks(data);
       
-      // Check if there are processing tasks and start polling if needed
       const processingTasks = data.filter(
         (task) => !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())
       );

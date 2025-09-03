@@ -2,7 +2,7 @@
 
 An AI-powered platform that converts YouTube videos into viral short clips using intelligent content analysis.
 
-## Live Demo
+################################################################### Live Demo
 
 Visit [Snipmatic](https://snipmatic.vercel.app) to see the application in action.
 

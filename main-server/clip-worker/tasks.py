@@ -322,7 +322,7 @@ def clip_task(self, task_id, video_path, viral_moments, subtitle_segments, aspec
         if multiple_clips:
             # Process all viral moments with ThreadPoolExecutor
             with ThreadPoolExecutor(max_workers=3) as executor:
-                logger.info(f"[CLIP_WORKER] Task {task_id}: Starting ThreadPoolExecutor with 5 workers")
+                logger.info(f"[CLIP_WORKER] Task {task_id}: Starting ThreadPoolExecutor with 3 workers")
                 futures = [
                     executor.submit(
                         create_clip, 

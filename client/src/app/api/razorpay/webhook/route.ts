@@ -14,39 +14,35 @@ export async function POST(request: Request) {
       .digest("hex");
 
     if (signature !== generatedSignature) {
+      console.error("Invalid Razorpay signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     const payload = JSON.parse(body);
-    const payment = payload.payload.payment.entity;
-    const notes = payment.notes || {};
+    const event = payload.event;
 
-    if (!notes.userEmail || !notes.userId) {
-      console.error("Missing user information in payment notes");
-      return NextResponse.json(
-        { error: "Missing user information" },
-        { status: 400 }
-      );
-    }
+    const payment = payload?.payload?.payment?.entity;
+    const notes = payment?.notes || {};
 
-    const userEmail = notes.userEmail;
-    const userId = notes.userId;
-    const credits = parseInt(notes.credits) || 0;
-    const priceInDollars = parseFloat(notes.price) || 0;
+    switch (event) {
+      case "payment.captured": {
+        if (!notes.userEmail || !notes.userId) {
+          console.error("Missing user information in payment notes");
+          return NextResponse.json({ received: true });
+        }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+        const userId = notes.userId;
+        const credits = parseInt(notes.credits) || 0;
+        const priceInDollars = parseFloat(notes.price) || 0;
 
-    if (!user) {
-      console.error(`User not found: ${userId}`);
-      return NextResponse.json({ error: "User not found" }, { status: 400 });
-    }
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+          console.error(`User not found: ${userId}`);
+          return NextResponse.json({ received: true });
+        }
 
-    switch (payload.event) {
-      case "payment.captured":
         if (credits > 0) {
-          const result = await prisma.$transaction(async (txn) => {
+          await prisma.$transaction(async (txn) => {
             await txn.user.update({
               where: { id: userId },
               data: { credits: { increment: credits } },
@@ -54,9 +50,9 @@ export async function POST(request: Request) {
 
             await txn.creditPackage.create({
               data: {
-                userId: userId,
+                userId,
                 packageType: `CUSTOM_${credits}`,
-                credits: credits,
+                credits,
                 amount: Math.round(priceInDollars * 100),
                 currency: payment.currency.toUpperCase(),
                 status: "COMPLETED",
@@ -68,69 +64,60 @@ export async function POST(request: Request) {
 
             await txn.transaction.create({
               data: {
-                userId: userId,
+                userId,
                 amount: priceInDollars,
                 status: "COMPLETED",
                 currency: payment.currency.toUpperCase(),
                 description: `Credit package purchase - ${credits.toLocaleString()} credits`,
               },
             });
-
-            return { success: true };
           });
 
-          console.log("Payment captured - Transaction result:", result);
-          return NextResponse.json({ received: true });
+          console.log("Payment captured and credits added:", {
+            userId,
+            credits,
+          });
         }
+
         break;
+      }
 
-      case "payment.failed":
+      case "payment.failed": {
         console.error("Payment failed:", {
-          paymentId: payment.id,
-          userId: userId,
-          userEmail: userEmail,
-          amount: priceInDollars,
-          credits: credits,
-          reason: payment.error_description || "Unknown error",
+          paymentId: payment?.id,
+          userId: notes.userId,
+          userEmail: notes.userEmail,
+          amount: notes.price,
+          credits: notes.credits,
+          reason: payment?.error_description || "Unknown error",
         });
 
-        await prisma.transaction.create({
-          data: {
-            userId: userId,
-            amount: priceInDollars,
-            status: "FAILED",
-            currency: payment.currency.toUpperCase(),
-            description: `Credit package purchase failed - ${credits.toLocaleString()} credits`,
-          },
-        });
+        if (notes.userId) {
+          await prisma.transaction.create({
+            data: {
+              userId: notes.userId,
+              amount: parseFloat(notes.price) || 0,
+              status: "FAILED",
+              currency: payment?.currency?.toUpperCase() || "INR",
+              description: `Credit package purchase failed - ${
+                notes.credits || 0
+              } credits`,
+            },
+          });
+        }
 
-        await prisma.creditPackage.create({
-          data: {
-            userId: userId,
-            packageType: `CUSTOM_${credits}`,
-            credits: 0,
-            amount: Math.round(priceInDollars * 100),
-            currency: payment.currency.toUpperCase(),
-            status: "FAILED",
-            paymentMethod: payment.method || "card",
-            paymentId: payment.id,
-            description: `Failed credit package purchase - ${credits.toLocaleString()} credits`,
-          },
-        });
+        break;
+      }
 
-        return NextResponse.json({ received: true });
-
-      default:
-        console.log("Unhandled webhook event:", payload.event);
-        return NextResponse.json({ received: true });
+      default: {
+        console.log("Unhandled webhook event:", event);
+        break;
+      }
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Razorpay webhook processing error:", error);
-    return NextResponse.json(
-      { error: "Webhook processing failed" },
-      { status: 400 }
-    );
+    return NextResponse.json({ received: true });
   }
 }

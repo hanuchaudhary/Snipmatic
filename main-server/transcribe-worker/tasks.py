@@ -171,6 +171,9 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
             - Short videos (<10 minutes): Extract 1–2 clips, ideally 15–45 seconds.
             - Medium videos (10–30 minutes): Extract 3-4 clips, ideally 30–60 seconds.
             - Long videos (>30 minutes): Extract 5-7 clips, prioritizing quality over quantity, ideally 30–60 seconds.
+            Remember, shorter clips (15–30 seconds) often perform better on TikTok, while slightly longer clips (30–60 seconds) can work well on YouTube Shorts and Instagram Reels.
+            
+            Important: These time ranges are soft guidelines, not strict rules. If a compelling moment requires additional seconds to maintain its impact and quality, prioritize the clip's effectiveness over adhering to these ranges. Quality of content should always take precedence, though try to stay within reasonable proximity of the recommended lengths. For instance, an 80-second clip might be acceptable if cutting it would significantly diminish its viral potential.
         - **Hook Strength**: The clip should have a strong opening (first 3–5 seconds) to stop scrollers.
         - **Emotional Impact**: Prioritize moments that evoke strong emotions (laughter, awe, empathy, shock).
         - **Pacing and Energy**: Look for moments with high energy, rapid dialogue, or a dynamic shift in tone.
@@ -282,11 +285,11 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
     except Exception as e:
         raise Exception(f"AI analysis failed: {str(e)}")
 
-@celery_app.task(
-    name='transcribe_task', 
-    bind=True,
-    rate_limit='2/m'  # Max 2 transcriptions per minute per worker
-)
+# @celery_app.task(
+#     name='transcribe_task', 
+#     bind=True,
+#     rate_limit='2/m'  # Max 2 transcriptions per minute per worker
+# )
 
 def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id, subtitles=False):
     """Transcription task - queues clip task after completion"""

@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
+import { Currency, calculatePackagePrice } from "@/lib/constants";
 
-export type Currency = "INR" | "USD";
+// Re-export Currency type for backward compatibility
+export type { Currency } from "@/lib/constants";
 
 interface CurrencyDialogProps {
   isOpen: boolean;
@@ -26,32 +28,8 @@ export function CurrencyDialog({
     setMounted(true);
   }, []);
 
-  const USD_TO_INR_RATE = 85;
-
-  const CREDIT_PACKAGES = [
-    { credits: 80, price: 5 },
-    { credits: 160, price: 9 },
-    { credits: 320, price: 17 },
-    { credits: 800, price: 40 },
-    { credits: 1600, price: 75 },
-  ];
-
   const calculatePrice = (currency: Currency): number => {
-    const packageData = CREDIT_PACKAGES.find((pkg) => credits <= pkg.credits);
-    let priceInUSD: number;
-
-    if (packageData) {
-      priceInUSD = packageData.price;
-    } else {
-      const basePricePerCredit = 0.055;
-      priceInUSD = Math.round(credits * basePricePerCredit * 100) / 100;
-    }
-
-    if (currency === "INR") {
-      return Math.round(priceInUSD * USD_TO_INR_RATE);
-    }
-
-    return priceInUSD;
+    return calculatePackagePrice(credits, currency);
   };
 
   const currencies = [

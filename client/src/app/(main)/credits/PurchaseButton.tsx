@@ -7,6 +7,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { CurrencyDialog, Currency } from "@/components/ui/currency-dialog";
+import { CreditPackage } from "@/lib/constants";
 
 declare global {
   interface Window {
@@ -14,14 +15,7 @@ declare global {
   }
 }
 
-export interface CreditPackage {
-  id: string;
-  name: string;
-  credits: number;
-  price: number;
-  description: string;
-  popular?: boolean;
-}
+export type { CreditPackage } from "@/lib/constants";
 
 interface PurchaseButtonProps {
   package: CreditPackage;
@@ -197,7 +191,7 @@ export function PurchaseButton({
       >
         {isProcessing ? "Processing..." : children || "Purchase Credits"}
       </button>
-      
+
       <CurrencyDialog
         isOpen={showCurrencyDialog}
         onClose={() => setShowCurrencyDialog(false)}

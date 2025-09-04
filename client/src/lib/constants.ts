@@ -1,5 +1,4 @@
 export const CREDIT_PACKAGES = [
-  { credits: 100, price: 0.2 },
   { credits: 100, price: 5 },
   { credits: 200, price: 9 },
   { credits: 420, price: 17 },

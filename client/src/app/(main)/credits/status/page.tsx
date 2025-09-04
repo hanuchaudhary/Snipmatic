@@ -10,11 +10,11 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
+import { useSnipStore } from "@/lib/snipStore";
 
 function CreditPurchaseStatusContent() {
   const { data: session } = useSession();
-  const [credits, setCredits] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const store = useSnipStore();
   const params = useSearchParams();
   const isPaymentSuccessful = params.get("status") === "succeeded";
   const paymentId = params.get("payment_id");
@@ -22,12 +22,7 @@ function CreditPurchaseStatusContent() {
   useEffect(() => {
     if (isPaymentSuccessful && paymentId) {
       const end = Date.now() + 3 * 1000;
-      const colors = [
-        "#ffb347", // orange shade
-        "#ffa500", // orange shade
-        "#ff8c00", // orange shade
-        "#ff7043", // orange shade
-      ];
+      const colors = ["#ffb347", "#ffa500", "#ff8c00", "#ff7043"];
 
       const frame = () => {
         if (Date.now() > end) return;
@@ -56,19 +51,7 @@ function CreditPurchaseStatusContent() {
   }, [isPaymentSuccessful, paymentId]);
 
   useEffect(() => {
-    const fetchCredits = async () => {
-      if (session?.user?.id) {
-        try {
-          const response = await axios.get("/api/credits");
-          setCredits(response.data.credits);
-        } catch (error) {
-          console.error("Failed to fetch credits:", error);
-        }
-      }
-      setLoading(false);
-    };
-
-    fetchCredits();
+    store.fetchCredits();
   }, [session]);
 
   return (
@@ -117,7 +100,7 @@ function CreditPurchaseStatusContent() {
                   Current Balance
                 </div>
                 <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  {loading ? "..." : credits?.toLocaleString() || "0"} credits
+                  {store.credits?.toLocaleString()} credits
                 </div>
               </div>
             </motion.div>
@@ -176,9 +159,7 @@ function StatusLoading() {
         <Card className="border shadow-xl">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl mb-2">Loading...</CardTitle>
-            <p className="text-muted-foreground">
-              Checking payment status
-            </p>
+            <p className="text-muted-foreground">Checking payment status</p>
           </CardHeader>
           <CardContent className="space-y-6 border-border/10">
             <div className="flex items-center justify-center p-4">

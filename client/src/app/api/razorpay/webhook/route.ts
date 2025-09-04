@@ -25,6 +25,17 @@ export async function POST(request: Request) {
     const notes = payment?.notes || {};
 
     switch (event) {
+      case "payment.authorized": {
+        console.log("Payment authorized:", {
+          paymentId: payment?.id,
+          amount: payment?.amount,
+          currency: payment?.currency,
+          userId: notes.userId,
+          userEmail: notes.userEmail,
+        });
+        break;
+      }
+      
       case "payment.captured": {
         if (!notes.userEmail || !notes.userId) {
           console.error("Missing user information in payment notes");

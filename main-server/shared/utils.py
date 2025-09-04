@@ -156,5 +156,35 @@ def send_email_notification(task_id: str):
     except Exception as e:
         logger.error(f"[CLIP_WORKER] Task : Failed to send email notification: {str(e)}")
 
+def check_user_exists(user_id: str) -> bool:
+    """
+    Check if a user with the given ID exists in PostgreSQL database
+    """
+    from shared.database import get_db_connection
+    
+    if not user_id:
+        logger.warning("Provided user_id is empty")
+        return False
+    
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as c:
+            c.execute("SELECT EXISTS(SELECT 1 FROM users WHERE id = %s)", (user_id,))
+            exists = c.fetchone()[0]
+            
+            if exists:
+                logger.debug(f"User {user_id} exists in database")
+            else:
+                logger.info(f"User {user_id} not found in database")
+                
+            return exists
+            
+    except Exception as e:
+        logger.error(f"Error checking if user {user_id} exists: {str(e)}")
+        return False
+    finally:
+        if 'conn' in locals() and conn is not None:
+            conn.close()
+
 
 

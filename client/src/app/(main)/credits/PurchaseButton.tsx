@@ -108,10 +108,10 @@ export function PurchaseButton({
               toast.success(
                 "Payment successful! Credits have been added to your account."
               );
-              router.push("/credits/status?status=succeeded");
+              router.push(`/credits/status?status=succeeded&payment_id=${response.razorpay_payment_id}`);
               resolve(true);
             } else {
-              router.push("/credits/status?status=failed");
+              router.push(`/credits/status?status=failed&payment_id=${response.razorpay_payment_id}`);
               toast.error(
                 "Payment verification failed. Please contact support."
               );

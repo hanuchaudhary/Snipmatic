@@ -79,7 +79,7 @@ services:
       replicas: 2
       resources:
         limits:
-          memory: 3G
+          memory: 2G
           cpus: '1'
         reservations:
           memory: 512M

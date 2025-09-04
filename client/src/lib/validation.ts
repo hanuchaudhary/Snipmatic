@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PRICING_CONFIG } from "./constants";
 
 export const formSchema = z.object({
   url: z
@@ -15,6 +16,6 @@ export const formSchema = z.object({
 
 
 export const creditPackageSchema = z.object({
-  credits: z.number().min(50, "Minimum 50 credits required"),
+  credits: z.number().min(PRICING_CONFIG.MIN_CREDITS, `Minimum ${PRICING_CONFIG.MIN_CREDITS} credits required`),
   currency: z.enum(["INR", "USD"]).optional().default("INR"),
 });

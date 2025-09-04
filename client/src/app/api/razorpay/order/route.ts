@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { z } from "zod";
 import Razorpay from "razorpay";
 import { creditPackageSchema } from "@/lib/validation";
-import { CREDIT_PACKAGES } from "@/lib/creditMiddleware";
+import { CREDIT_PACKAGES, calculatePackagePrice, Currency } from "@/lib/constants";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID!,
@@ -16,21 +16,7 @@ export interface CreditPackageOption {
 }
 
 const calculatePrice = (credits: number, currency: string = "INR"): number => {
-  const packageData = CREDIT_PACKAGES.find((pkg) => credits <= pkg.credits);
-  let priceInUSD: number;
-
-  if (packageData) {
-    priceInUSD = packageData.price;
-  } else {
-    const basePricePerCredit = 0.055;
-    priceInUSD = Math.round(credits * basePricePerCredit * 100) / 100;
-  }
-
-  if (currency === "INR") {
-    return Math.round(priceInUSD * 85);
-  }
-
-  return priceInUSD;
+  return calculatePackagePrice(credits, currency as Currency);
 };
 
 export async function GET() {

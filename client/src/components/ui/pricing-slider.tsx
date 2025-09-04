@@ -6,56 +6,7 @@ import {
   CreditPackage,
   PurchaseButton,
 } from "@/app/(main)/credits/PurchaseButton";
-import { CREDIT_PACKAGES } from "@/lib/creditMiddleware";
-
-export const CREDIT_VALUES = [100, 200, 420, 1250, 2000];
-
-const getPriceForCredits = (
-  credits: number
-): {
-  price: number | null;
-  label: string;
-  aiClips: number;
-  manualClips: number;
-  isComingSoon?: boolean;
-} => {
-  if (credits >= 100000)
-    return {
-      price: null,
-      label: `${credits.toLocaleString()} credits`,
-      aiClips: Math.floor(credits / 10),
-      manualClips: Math.floor(credits / 5),
-    };
-
-  const packageData = CREDIT_PACKAGES.find((pkg) => credits <= pkg.credits);
-  if (packageData) {
-    if (packageData.price > 17) {
-      return {
-        price: null,
-        label: `${credits.toLocaleString()} credits`,
-        aiClips: Math.floor(credits / 10),
-        manualClips: Math.floor(credits / 5),
-        isComingSoon: true,
-      };
-    }
-
-    return {
-      price: packageData.price,
-      label: `${credits.toLocaleString()} credits`,
-      aiClips: Math.floor(credits / 10),
-      manualClips: Math.floor(credits / 5),
-    };
-  }
-
-  const basePricePerCredit = 0.055;
-  const price = Math.round(credits * basePricePerCredit);
-  return {
-    price,
-    label: `${credits.toLocaleString()} credits`,
-    aiClips: Math.floor(credits / 10),
-    manualClips: Math.floor(credits / 5),
-  };
-};
+import { CREDIT_VALUES, getPriceForCredits } from "@/lib/constants";
 
 export const CreditPricingSlider: React.FC = () => {
   const [sliderIndex, setSliderIndex] = useState(2);

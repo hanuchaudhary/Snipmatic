@@ -267,10 +267,7 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
             vcodec='libx264',
             acodec='aac',
             crf=23,
-            preset='medium',
-            **{
-                'threads': 2
-            }
+            preset='medium'
         )
         logger.debug(f"Compiled command: {' '.join(ffmpeg.compile(out))}")
         ffmpeg.run(out, overwrite_output=True, capture_stdout=True, capture_stderr=True)

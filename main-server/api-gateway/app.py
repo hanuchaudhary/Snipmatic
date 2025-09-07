@@ -63,8 +63,8 @@ async def create_video_clip(request: ClipRequest):
     """Create video clip - dispatches to appropriate Celery queue"""
     task_id = request.task_id
     try:
-        if not check_user_exists(request.user_id):
-            raise HTTPException(status_code=400, detail="Invalid user_id: User does not exist")
+        # if not check_user_exists(request.user_id):
+        #     raise HTTPException(status_code=400, detail="Invalid user_id: User does not exist")
         # Update initial status
         update_task_status(request.user_id, task_id, TaskStatus.QUEUED, 0, "Task queued for processing")
         

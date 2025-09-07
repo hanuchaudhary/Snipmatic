@@ -71,7 +71,7 @@ export function ProfileDropdown({ closeMobileMenu }: ProfileDropdownProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors"
+            className="flex items-center gap-2 p-2 rounded-full hover:bg-accent transition-colors"
             aria-label="Profile menu"
           >
             <div className="flex items-center gap-2 font-mono">

@@ -95,8 +95,7 @@ export function HeroSection() {
           className="md:text-lg text-sm font-jost md:px-0 px-4 text-neutral-300 my-8 text-center mx-auto max-w-2xl"
           variants={itemVariants}
         >
-          Snip viral-ready shorts from any YouTube video — fast, effortless, and
-          powered by Snipmatic AI.
+          Get famous with Snipmatic — transform any YouTube video into viral-ready shorts with AI-powered precision.
         </motion.p>
 
         <motion.div

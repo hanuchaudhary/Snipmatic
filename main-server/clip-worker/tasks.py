@@ -231,8 +231,9 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
         input_stream = ffmpeg.input(video_path, ss=start_time, t=duration)
       
         if aspect_ratio == "vertical":
-            video = input_stream['v'].filter('scale', 1080, 1920, force_original_aspect_ratio='decrease') \
-                                    .filter('pad', 1080, 1920, '(ow-iw)/2', '(oh-ih)/2', color='black')
+            # video = input_stream['v'].filter('scale', 1080, 1920, force_original_aspect_ratio='decrease') \
+            #                         .filter('pad', 1080, 1920, '(ow-iw)/2', '(oh-ih)/2', color='black')
+            video = input_stream['v'].filter('scale', 1080, 1920, force_original_aspect_ratio='increase').filter('crop', 1080, 1920)
         elif aspect_ratio == "square":
             video = input_stream['v'].filter('scale', 1080, 1080, force_original_aspect_ratio='decrease') \
                                     .filter('pad', 1080, 1080, '(ow-iw)/2', '(oh-ih)/2', color='black')

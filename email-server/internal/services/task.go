@@ -123,3 +123,14 @@ func (s *TaskService) GetActiveTaskCount() int {
 	}
 	return count
 }
+
+// CleanupCompletedTask removes a task from the service
+func (s *TaskService) CleanupCompletedTask(taskID string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	// Delete the task from the in-memory store
+	delete(s.activeTasks, taskID)
+	log.Printf("Task %s cleaned up from memory", taskID)
+	return nil
+}

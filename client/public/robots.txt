@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://snipmatic.online/sitemap.xml
+
+# Disallow access to API routes
+Disallow: /api/
+
+# Disallow access to private files
+Disallow: /_next/
+Disallow: /admin/
+
+# Allow important pages
+Allow: /
+Allow: /signin
+Allow: /signup
+Allow: /clip
+Allow: /credits
+
+# Crawl-delay
+Crawl-delay: 1

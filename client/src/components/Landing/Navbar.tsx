@@ -2,14 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ThemeSwitcher } from "../ThemeToggle";
+import { ThemeToggle } from "../ThemeToggle";
 import { CreditButton } from "../ui/CreditButton";
 import { useSession } from "next-auth/react";
 import { Button } from "../ui/button";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Signout } from "./Signout";
+import { ProfileDropdown } from "./ProfileDropdown";
 
 export function Navbar() {
   const router = useRouter();
@@ -53,8 +53,8 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-2">
-            <ThemeSwitcher />
-            <Signout closeMobileMenu={closeMobileMenu} />
+            <ThemeToggle />
+            <ProfileDropdown closeMobileMenu={closeMobileMenu} />
           </div>
 
           <div className="md:hidden">
@@ -116,7 +116,7 @@ export function Navbar() {
               className="fixed top-0 right-0 w-[76vw] rounded-l-3xl h-full bg-background border-l shadow-xl z-50 md:hidden"
             >
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between p-6 border-b">
+                <div className="flex items-center justify-between p-4 border-b">
                   <Link
                     className="flex items-center gap-2"
                     href="/"
@@ -135,15 +135,20 @@ export function Navbar() {
                   </button>
                 </div>
 
-                <nav className="flex-1 p-6">
-                  <div className="space-y-4">
+                <nav className="flex-1 p-4">
+                  <div className="inline-block">
+                    <span className="text-sm pb-1 font-jost">
+                      Credit Balance:
+                    </span>
                     <CreditButton />
-                    <div className="flex items-center justify-between">
-                      <ThemeSwitcher />
-                    </div>
                   </div>
                 </nav>
-                {session && <Signout closeMobileMenu={closeMobileMenu} />}
+                <div className="p-4 flex items-center justify-between border-t border-border">
+                  {session && (
+                    <ProfileDropdown closeMobileMenu={closeMobileMenu} />
+                  )}
+                  <ThemeToggle />
+                </div>
               </div>
             </motion.div>
           </>

@@ -1,56 +1,51 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { Moon, Sun } from "lucide-react";
-import { motion } from "motion/react";
+import React from "react";
+import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-// import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
-const themes = [
-  { key: "light", icon: Sun, label: "Light theme" },
-  { key: "dark", icon: Moon, label: "Dark theme" },
-];
+interface AnimatedThemeToggleProps {
+  className?: string;
+}
 
-export const ThemeSwitcher = () => {
+export const ThemeToggle = ({ className = "" }: AnimatedThemeToggleProps) => {
   const { theme, setTheme } = useTheme();
-  // const [mounted, setMounted] = useState(false);
+  const isDark = theme === "dark";
 
-  // useEffect(() => setMounted(true), []);
-
-  // if (!mounted) return null;
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
 
   return (
-    <div
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+    <button
+      type="button"
       className={cn(
-        "cursor-pointer relative z-40 flex h-8 rounded-full bg-background p-1 ring-1 ring-border"
+        "rounded-full scale-90 cursor-pointer transition-all duration-300 active:scale-95 p-2",
+        isDark ? "bg-black text-white" : "bg-white text-black border border-neutral-200",
+        className
       )}
+      onClick={toggleTheme}
+      aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
     >
-      {themes.map(({ key, icon: Icon, label }) => {
-        const isActive = theme === key;
-        return (
-          <button
-            type="button"
-            key={key}
-            className="relative h-6 w-6 rounded-full cursor-pointer"
-            aria-label={label}
-          >
-            {isActive && (
-              <motion.span
-                layoutId="activeTheme"
-                className="absolute inset-0 rounded-full bg-secondary"
-                transition={{ type: "spring", duration: 0.5 }}
-              />
-            )}
-            <Icon
-              className={cn(
-                "relative m-auto h-4 w-4",
-                isActive ? "text-foreground" : "text-muted-foreground"
-              )}
-            />
-          </button>
-        );
-      })}
-    </div>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+        fill="currentColor"
+        viewBox="0 0 32 32"
+        className="w-5 h-5"
+      >
+        <clipPath id="theme-toggle-clip">
+          <motion.path
+            animate={{ y: isDark ? 5 : 0, x: isDark ? -20 : 0 }}
+            transition={{ ease: "easeInOut", duration: 0.35 }}
+            d="M0-5h55v37h-55zm32 12a1 1 0 0025 0 1 1 0 00-25 0"
+          />
+        </clipPath>
+        <g clipPath="url(#theme-toggle-clip)">
+          <circle cx="16" cy="16" r="15" />
+        </g>
+      </svg>
+    </button>
   );
 };

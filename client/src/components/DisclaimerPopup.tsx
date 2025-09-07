@@ -14,65 +14,67 @@ const DISCLAIMER_STORAGE_KEY = "snipmatic-disclaimer-shown";
 
 export function DisclaimerPopup() {
   const [open, setOpen] = useState(false);
-  const { data } = useSession();
+  const { data, status } = useSession();
 
   useEffect(() => {
-    const hasSeenDisclaimer = localStorage.getItem(DISCLAIMER_STORAGE_KEY);
-    if (!hasSeenDisclaimer) {
-      setOpen(true);
+    if (status === "authenticated" && data?.user) {
+      const hasSeenDisclaimer = localStorage.getItem(DISCLAIMER_STORAGE_KEY);
+      if (!hasSeenDisclaimer) {
+        setOpen(true);
+      }
     }
-  }, []);
+  }, [status, data]);
 
   const handleClose = () => {
     setOpen(false);
     localStorage.setItem(DISCLAIMER_STORAGE_KEY, "true");
   };
 
+  if (status !== "authenticated" || !data?.user) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent
         showCloseButton={false}
-        className="sm:max-w-[800px] font-mono p-2 rounded-[40px] overflow-hidden"
+        className="sm:max-w-[800px] font-mono md:p-2 p-1 md:rounded-[40px] rounded-[28px] overflow-hidden"
       >
-        <div className="border p-2 rounded-4xl">
-          <DialogHeader className="px-6 pt-8 pb-4">
-            <DialogTitle className="text-xl">
+        <div className="border md:p-2 md:rounded-4xl rounded-3xl">
+          <DialogHeader className="md:px-6 px-2 pt-8 pb-4">
+            <DialogTitle className="md:text-xl text-center">
               Welcome{" "}
               <span className="text-orange-400 font-instrumental tracking-wider">
                 {data?.user.name
                   ? data.user.name
                   : data?.user.email?.split("@")[0]}{" "}
               </span>
-              to Snipmatic V1!
+              to Snipmatic Version 0.9!
             </DialogTitle>
           </DialogHeader>
 
-          <div className="px-6 pb-6">
+          <div className="md:px-6 px-3 pb-6">
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-orange-700 dark:text-orange-300 mb-1">
+                <h3 className="font-semibold text-center text-orange-700 dark:text-orange-300 mb-1">
                   Beta Version Notice
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="md:text-sm text-xs text-muted-foreground">
                   This is the beta version of Snipmatic. Some features are still
                   being refined and you may encounter occasional bugs.
                 </p>
               </div>
 
               <div>
-                <h3 className="font-semibold">
-                  -- Subtitle Availability
-                </h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-semibold">-- Subtitle Availability</h3>
+                <p className="md:text-sm text-xs text-muted-foreground">
                   Subtitles are currently only available for AI-generated clips.
                   Manual clips do not include subtitles yet.
                 </p>
               </div>
               <div>
-                <h3 className="font-semibold">
-                  -- Credit Costs
-                </h3>
-                <div className="space-y-1 text-sm text-muted-foreground">
+                <h3 className="font-semibold">-- Credit Costs</h3>
+                <div className="space-y-1 md:text-sm text-xs text-muted-foreground">
                   <div className="flex justify-between">
                     <span>• AI Clips:</span>
                     <span className="font-medium">10 credits</span>
@@ -93,13 +95,13 @@ export function DisclaimerPopup() {
               </div>
 
               <div>
-                <h3 className="font-semibold">
-                  -- Free Credits
-                </h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-semibold">-- Free Credits</h3>
+                <p className="md:text-sm text-xs text-muted-foreground">
                   You've already received{" "}
-                  <span className="font-bold text-orange-400">20 free credits</span> to get
-                  started! Use them to explore all the features.
+                  <span className="font-bold text-orange-400">
+                    20 free credits
+                  </span>{" "}
+                  to get started! Use them to explore all the features.
                 </p>
               </div>
             </div>

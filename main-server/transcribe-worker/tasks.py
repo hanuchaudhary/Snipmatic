@@ -285,11 +285,11 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
     except Exception as e:
         raise Exception(f"AI analysis failed: {str(e)}")
 
-# @celery_app.task(
-#     name='transcribe_task', 
-#     bind=True,
-#     rate_limit='2/m'  # Max 2 transcriptions per minute per worker
-# )
+@celery_app.task(
+    name='transcribe_task', 
+    bind=True,
+    rate_limit='2/m'  # Max 2 transcriptions per minute per worker
+)
 
 def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id, subtitles=False):
     """Transcription task - queues clip task after completion"""

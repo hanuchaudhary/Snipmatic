@@ -1,7 +1,6 @@
 "use client";
 
 import { CreditPricingSlider } from "@/components/ui/pricing-slider";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,

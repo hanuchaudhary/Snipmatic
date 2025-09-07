@@ -79,10 +79,10 @@ services:
       replicas: 2
       resources:
         limits:
-          memory: 3G
+          memory: 3.5G
           cpus: '1.5'
         reservations:
           memory: 512M
           cpus: '0.25'
-    memswap_limit: 5G
+    memswap_limit: 10G
     restart: unless-stopped

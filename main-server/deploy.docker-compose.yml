@@ -51,11 +51,11 @@ services:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro
     deploy:
-      replicas: 1
+      replicas: 2
       resources:
         limits:
-          memory: 4G
-          cpus: '2.0'
+          memory: 5G
+          cpus: '2.5'
         reservations:
           memory: 1G
           cpus: '0.5'
@@ -79,10 +79,10 @@ services:
       replicas: 2
       resources:
         limits:
-          memory: 2G
-          cpus: '1'
+          memory: 2.5G
+          cpus: '1.5'
         reservations:
           memory: 512M
           cpus: '0.25'
-    memswap_limit: 3G
+    memswap_limit: 5G
     restart: unless-stopped

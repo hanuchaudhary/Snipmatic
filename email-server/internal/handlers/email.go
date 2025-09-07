@@ -65,6 +65,12 @@ func (h *EmailHandler) SendEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Clean up the task after sending email
+	if err := h.taskService.CleanupCompletedTask(req.TaskID); err != nil {
+		log.Printf("Warning: Failed to clean up task %s: %v", req.TaskID, err)
+		// Continue anyway - not critical
+	}
+
 	// Return success response
 	response := models.EmailResponse{
 		Success: true,

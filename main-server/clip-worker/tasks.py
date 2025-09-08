@@ -140,12 +140,12 @@ def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, 
             audio = input_stream['a']
             
             # Output with both video (with subtitles) and audio
-            out = ffmpeg.output(video_with_subtitles, audio, output_video, vcodec='libx264', acodec='aac', crf=23)
+            out = ffmpeg.output(video_with_subtitles, audio, output_video, vcodec='libx264', acodec='aac', crf=23, threads=2)
         else:
             # No audio stream, just video with subtitles
             logger.warning("No audio stream found in input video!")
             video_with_subtitles = input_stream.filter('subtitles', srt_file, force_style=subtitle_style)
-            out = ffmpeg.output(video_with_subtitles, output_video, vcodec='libx264', crf=23)
+            out = ffmpeg.output(video_with_subtitles, output_video, vcodec='libx264', crf=23, threads=2)
         
         # Run the command
         ffmpeg.run(out, overwrite_output=True, capture_stdout=True, capture_stderr=True)
@@ -477,7 +477,7 @@ if __name__ == "__main__":
             'worker', 
             '-Q', 'clip',
             '--loglevel=info', 
-            '--concurrency=3', 
+            '--concurrency=2', 
             '--prefetch-multiplier=1',
             '-n', 'clip_worker@%h'
         ])

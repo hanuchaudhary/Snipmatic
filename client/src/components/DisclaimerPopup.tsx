@@ -12,22 +12,33 @@ import { useSession } from "next-auth/react";
 
 const DISCLAIMER_STORAGE_KEY = "snipmatic-disclaimer-shown";
 
-export function DisclaimerPopup() {
-  const [open, setOpen] = useState(false);
+interface DisclaimerPopupProps {
+  externalOpen?: boolean;
+  onExternalClose?: () => void;
+}
+
+export function DisclaimerPopup({ externalOpen, onExternalClose }: DisclaimerPopupProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const { data, status } = useSession();
 
+  const isOpen = externalOpen || internalOpen;
+
   useEffect(() => {
-    if (status === "authenticated" && data?.user) {
+    if (status === "authenticated" && data?.user && !externalOpen) {
       const hasSeenDisclaimer = localStorage.getItem(DISCLAIMER_STORAGE_KEY);
       if (!hasSeenDisclaimer) {
-        setOpen(true);
+        setInternalOpen(true);
       }
     }
-  }, [status, data]);
+  }, [status, data, externalOpen]);
 
   const handleClose = () => {
-    setOpen(false);
-    localStorage.setItem(DISCLAIMER_STORAGE_KEY, "true");
+    if (externalOpen && onExternalClose) {
+      onExternalClose();
+    } else {
+      setInternalOpen(false);
+      localStorage.setItem(DISCLAIMER_STORAGE_KEY, "true");
+    }
   };
 
   if (status !== "authenticated" || !data?.user) {
@@ -35,7 +46,7 @@ export function DisclaimerPopup() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+    <Dialog open={isOpen} onOpenChange={(isDialogOpen) => !isDialogOpen && handleClose()}>
       <DialogContent
         showCloseButton={false}
         className="sm:max-w-[800px] font-mono md:p-2 p-1 md:rounded-[40px] rounded-[28px] overflow-hidden"

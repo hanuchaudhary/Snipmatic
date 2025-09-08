@@ -22,6 +22,14 @@ export default auth(async function middleware(req: NextRequest) {
     return Response.redirect(newUrl);
   }
 
+  if (publicRoutes.includes(req.nextUrl.pathname)) {
+    const newUrl = new URL(
+      session ? "/clip" : "/signin",
+      req.nextUrl.origin
+    );
+    return Response.redirect(newUrl);
+  }
+
   if (
     session &&
     (req.nextUrl.pathname === "/signin" || req.nextUrl.pathname === "/register")

@@ -170,7 +170,7 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
         - **Length**: 
             - Short videos (<10 minutes): Extract 1–2 clips, ideally 15–45 seconds.
             - Medium videos (10–30 minutes): Extract 3-4 clips, ideally 30–60 seconds.
-            - Long videos (>30 minutes): Extract 5-7 clips, prioritizing quality over quantity, ideally 30–60 seconds.
+            - Long videos (>30 minutes): Extract 4-5 clips, prioritizing quality over quantity, ideally 30–60 seconds.
             Remember, shorter clips (15–30 seconds) often perform better on TikTok, while slightly longer clips (30–60 seconds) can work well on YouTube Shorts and Instagram Reels.
             
             Important: These time ranges are soft guidelines, not strict rules. If a compelling moment requires additional seconds to maintain its impact and quality, prioritize the clip's effectiveness over adhering to these ranges. Quality of content should always take precedence, though try to stay within reasonable proximity of the recommended lengths. For instance, an 80-second clip might be acceptable if cutting it would significantly diminish its viral potential.

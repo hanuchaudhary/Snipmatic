@@ -6,15 +6,17 @@ import { ThemeToggle } from "../ThemeToggle";
 import { CreditButton } from "../ui/CreditButton";
 import { useSession } from "next-auth/react";
 import { Button } from "../ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Info, InfoIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ProfileDropdown } from "./ProfileDropdown";
+import { DisclaimerPopup } from "../DisclaimerPopup";
 
 export function Navbar() {
   const router = useRouter();
   const { data: session } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -22,6 +24,14 @@ export function Navbar() {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const openDisclaimer = () => {
+    setShowDisclaimer(true);
+  };
+
+  const closeDisclaimer = () => {
+    setShowDisclaimer(false);
   };
 
   return (
@@ -53,6 +63,17 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-2">
+            {session?.user && (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={openDisclaimer}
+                className="p-2 hover:bg-accent rounded-lg transition-colors"
+                aria-label="Show disclaimer"
+                title="Show disclaimer"
+              >
+                <InfoIcon size={20} className="text-foreground" />
+              </motion.button>
+            )}
             <ThemeToggle />
             <ProfileDropdown closeMobileMenu={closeMobileMenu} />
           </div>
@@ -136,11 +157,28 @@ export function Navbar() {
                 </div>
 
                 <nav className="flex-1 p-4">
-                  <div className="inline-block">
-                    <span className="text-sm pb-1 font-jost">
-                      Credit Balance:
-                    </span>
-                    <CreditButton />
+                  <div className="space-y-4">
+                    <div className="inline-block">
+                      <span className="text-sm pb-1 font-jost">
+                        Credit Balance:
+                      </span>
+                      <CreditButton />
+                    </div>
+                    {session?.user && (
+                      <div>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            openDisclaimer();
+                            closeMobileMenu();
+                          }}
+                          className="w-full justify-start gap-2"
+                        >
+                          <Info size={16} />
+                          Show Disclaimer
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </nav>
                 <div className="p-4 flex items-center justify-between border-t border-border">
@@ -154,6 +192,11 @@ export function Navbar() {
           </>
         )}
       </AnimatePresence>
+
+      <DisclaimerPopup
+        externalOpen={showDisclaimer}
+        onExternalClose={closeDisclaimer}
+      />
     </>
   );
 }

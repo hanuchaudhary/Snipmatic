@@ -131,7 +131,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
         <div className="p-6 max-h-[80vh] rounded-4xl mask-b-from-[90%] border bg-secondary dark:bg-secondary/50 overflow-y-auto space-y-6 hide-scrollbar">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h2 className="text-xl font-semibold mb-2">{task.title}</h2>
+              <h2 className="text-xl font-semibold mb-2 max-w-[95%]">{task.title}</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Badge variant="secondary">{task.status}</Badge>
                 <span>•</span>
@@ -142,7 +142,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
             </div>
             {task.clipURL && (
               <WrapButton
-              className=""
+                className=""
                 href={task.clipURL}
                 // onClick={() => {
                 //   downloadFile(
@@ -158,25 +158,25 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-muted/50 p-3 rounded-lg">
+            <div className="dark:bg-muted/50 bg-white p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Created</p>
               <p className="text-sm font-medium">
                 {formatTimestamp(task.createdAt as string)}
               </p>
             </div>
             {task.completedAt && (
-              <div className="bg-muted/50 p-3 rounded-lg">
+              <div className="dark:bg-muted/50 bg-white p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Completed</p>
                 <p className="text-sm font-medium">
                   {formatTimestamp(task.completedAt as string)}
                 </p>
               </div>
             )}
-            <div className="bg-muted/50 p-3 rounded-lg">
+            <div className="dark:bg-muted/50 bg-white p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Aspect Ratio</p>
               <p className="text-sm font-medium">{"original"}</p>
             </div>
-            <div className="bg-muted/50 p-3 rounded-lg">
+            <div className="dark:bg-muted/50 bg-white p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Duration</p>
               <p className="text-sm font-medium">
                 {formatDuration(task.duration as number)}

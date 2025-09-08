@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
 import { useSnipStore } from "@/lib/snipStore";
-import { EMAIL_SERVER_URL } from "@/config/config";
 import { calculateCreditsRequired } from "@/lib/creditMiddleware";
 
 type FormValues = z.infer<typeof formSchema>;
@@ -128,6 +127,7 @@ export function CreateClipPage() {
           setIsProcessing(false);
           return;
         }
+
         if (watchMultiple) {
           setValue("multipleClips", false);
         }
@@ -147,6 +147,14 @@ export function CreateClipPage() {
           return;
         }
       } else if (watchClipType === "AI") {
+        if (store.videoInfo.duration > 60 * 40) {
+          toast.error(
+            "AI clips are only available for videos under 60 minutes. Please select the MANUAL option."
+          );
+          setIsProcessing(false);
+          return;
+        }
+
         if (
           !watchUrl ||
           !watchUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)/)

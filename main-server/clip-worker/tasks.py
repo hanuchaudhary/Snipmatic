@@ -118,7 +118,7 @@ def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, 
             "PrimaryColour=&Hffffff&,"  # White text
             "SecondaryColour=&H000000&,"  # Black secondary
             "OutlineColour=&H000000&,"   # Black outline
-            "BackColour=&H80000000&,"    # Semi-transparent background
+            # "BackColour=&H80000000&,"    # Semi-transparent background
             "Bold=1,"
             "Italic=0,"
             "Underline=0,"
@@ -231,8 +231,8 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
         input_stream = ffmpeg.input(video_path, ss=start_time, t=duration)
       
         if aspect_ratio == "vertical":
-            video = input_stream['v'].filter('scale', 1080, 1920, force_original_aspect_ratio='decrease') \
-                                    .filter('pad', 1080, 1920, '(ow-iw)/2', '(oh-ih)/2', color='black')
+            video = input_stream['v'].filter('scale', 1080, 1920, force_original_aspect_ratio='increase').filter('crop', 1080, 1920)
+
         elif aspect_ratio == "square":
             video = input_stream['v'].filter('scale', 1080, 1080, force_original_aspect_ratio='decrease') \
                                     .filter('pad', 1080, 1080, '(ow-iw)/2', '(oh-ih)/2', color='black')

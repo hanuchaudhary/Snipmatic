@@ -6,11 +6,12 @@ import { ThemeToggle } from "../ThemeToggle";
 import { CreditButton } from "../ui/CreditButton";
 import { useSession } from "next-auth/react";
 import { Button } from "../ui/button";
-import { Menu, X, Info, InfoIcon } from "lucide-react";
+import { Menu, X, Info} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ProfileDropdown } from "./ProfileDropdown";
 import { DisclaimerPopup } from "../DisclaimerPopup";
+import { IconInfoCircleFilled } from "@tabler/icons-react";
 
 export function Navbar() {
   const router = useRouter();
@@ -71,7 +72,7 @@ export function Navbar() {
                 aria-label="Show disclaimer"
                 title="Show disclaimer"
               >
-                <InfoIcon size={20} className="text-foreground" />
+                <IconInfoCircleFilled size={20} className="text-foreground" />
               </motion.button>
             )}
             <ThemeToggle />

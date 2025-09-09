@@ -110,10 +110,41 @@ export function DisclaimerPopup({ externalOpen, onExternalClose }: DisclaimerPop
                 <p className="md:text-sm text-xs text-muted-foreground">
                   You've already received{" "}
                   <span className="font-bold text-orange-400">
-                    20 free credits
+                    30 free credits
                   </span>{" "}
                   to get started! Use them to explore all the features.
                 </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold">-- Need Help?</h3>
+                <p className="md:text-sm text-xs text-muted-foreground">
+                  Found a bug or need assistance? Feel free to reach out to us on Twitter:
+                </p>
+                <div className="space-y-1 md:text-sm text-xs mt-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-muted-foreground">•</span>
+                    <a 
+                      href="https://x.com/kuahxD" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-600 transition-colors"
+                    >
+                      @kuahxD
+                    </a>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-muted-foreground">•</span>
+                    <a 
+                      href="https://x.com/KushChaudharyOg" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-600 transition-colors"
+                    >
+                      @KushChaudharyOg
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
 

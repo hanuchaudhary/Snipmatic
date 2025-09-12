@@ -32,9 +32,9 @@ services:
         limits:
           memory: 1G
         reservations:
-          memory: 512M
+          memory: 100M
     cpu_quota: 100000     
-    memswap_limit: 2G
+    memswap_limit: 4G
     restart: unless-stopped
 
   # Transcribe Workers
@@ -51,7 +51,7 @@ services:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro
     deploy:
-      replicas: 2
+      replicas: 1
       resources:
         limits:
           memory: 5G
@@ -80,9 +80,9 @@ services:
       resources:
         limits:
           memory: 3.5G
-          cpus: '1.5'
+          cpus: '2.5'
         reservations:
-          memory: 512M
-          cpus: '0.25'
+          memory: 1G
+          cpus: '0.5'
     memswap_limit: 10G
     restart: unless-stopped

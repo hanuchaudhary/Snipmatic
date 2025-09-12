@@ -113,22 +113,34 @@ def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, 
         
         # styles
         subtitle_style = (
-            "FontName=Arial Black,"
-            "FontSize=3"
-            "PrimaryColour=&Hffffff&,"  # White text
-            "SecondaryColour=&H000000&,"  # Black secondary
-            "OutlineColour=&H000000&,"   # Black outline
-            # "BackColour=&H80000000&,"    # Semi-transparent background
-            "Bold=1,"
-            "Italic=0,"
-            "Underline=0,"
-            "BorderStyle=3,"  # Box background
-            "Outline=2,"      # Outline thickness
-            "Shadow=0,"
-            "Alignment=2,"    # Bottom center
-            f"MarginL=40,"
-            f"MarginR=40,"
-            f"MarginV=40"  # Distance from bottom
+            # Font settings
+            "FontName=Roboto Bold,"  # Modern, readable font (fallback to Arial if Roboto not available)
+            "FontSize=24,"           # Larger font size for better readability
+            
+            # Color settings
+            "PrimaryColour=&HFFFFFF&,"      # White text
+            "SecondaryColour=&H000000&,"    # Black secondary
+            "OutlineColour=&H000000&,"      # Black outline
+            "BackColour=&H80000000&,"       # Semi-transparent background (50% opacity)
+            
+            # Text styling
+            "Bold=1,"                # Bold text
+            "Italic=0,"              # No italic
+            "Underline=0,"           # No underline
+            "BorderStyle=4,"         # Box style with shadow (more modern look)
+            "Outline=1.5,"           # Thinner outline for cleaner appearance
+            "Shadow=0.5,"            # Slight shadow for depth
+            
+            # Positioning
+            "Alignment=2,"           # Bottom center alignment
+            "MarginL=60,"            # Left margin
+            "MarginR=60,"            # Right margin
+            "MarginV=60,"            # Vertical margin (from bottom)
+            
+            # Additional styling for better readability
+            "Spacing=0.5,"           # Letter spacing
+            "LineSpacing=8,"         # Space between lines
+            "Blur=0.2"               # Slight blur on the outline/shadow for smoother look
         )
         
         # Create input stream
@@ -136,16 +148,16 @@ def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, 
         
         if len(audio_streams) > 0:
             # Apply subtitle filter to video stream only and keep audio
-            video_with_subtitles = input_stream['v'].filter('subtitles', srt_file, force_style=subtitle_style)
+            video_with_subtitles = input_stream['v'].filter('subtitles', srt_file, force_style=subtitle_style, threads=3)
             audio = input_stream['a']
             
             # Output with both video (with subtitles) and audio
-            out = ffmpeg.output(video_with_subtitles, audio, output_video, vcodec='libx264', acodec='aac', crf=23, threads=2)
+            out = ffmpeg.output(video_with_subtitles, audio, output_video, vcodec='libx264', acodec='aac', crf=28, threads=3, preset='faster')
         else:
             # No audio stream, just video with subtitles
             logger.warning("No audio stream found in input video!")
             video_with_subtitles = input_stream.filter('subtitles', srt_file, force_style=subtitle_style)
-            out = ffmpeg.output(video_with_subtitles, output_video, vcodec='libx264', crf=23, threads=2)
+            out = ffmpeg.output(video_with_subtitles, output_video, vcodec='libx264', crf=28, threads=3, preset='faster')
         
         # Run the command
         ffmpeg.run(out, overwrite_output=True, capture_stdout=True, capture_stderr=True)
@@ -228,79 +240,93 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
 
     try:
         duration = end_time - start_time
-        input_stream = ffmpeg.input(video_path, ss=start_time, t=duration)
-      
-        if aspect_ratio == "vertical":
-            video = input_stream['v'].filter('scale', 1080, 1920, force_original_aspect_ratio='increase').filter('crop', 1080, 1920)
-
-        elif aspect_ratio == "square":
-            video = input_stream['v'].filter('scale', 1080, 1080, force_original_aspect_ratio='decrease') \
-                                    .filter('pad', 1080, 1080, '(ow-iw)/2', '(oh-ih)/2', color='black')
-        else:
-            video = input_stream['v']
-
-        # Explicitly reference the audio stream
-        audio = input_stream['a']
-      
-        if duration > 2:
-            video = video.filter('fade', type='in', start_time=0, duration=0.5) \
-                         .filter('fade', type='out', start_time=duration - 1, duration=0.5)
-            audio = audio.filter('afade', type='in', start_time=0, duration=0.5) \
-                         .filter('afade', type='out', start_time=duration - 1, duration=0.5)
-        else:
-            logger.info("Duration too short for fade effects. Skipping fade.")
-
-        # Create temporary output for the clip (without subtitles)
-        temp_output = None
-        final_output = output_path
-
-        if enable_subtitles and subtitle_segments:
-            # Create temporary file for clip without subtitles
-            temp_output = os.path.join(CLIP_STORAGE_PATH, f"temp_clip_{clip_id}.mp4")
-            final_output = temp_output
+        
+        # Streamcopy for original video
+        use_stream_copy = (aspect_ratio == "original" and 
+                          not enable_subtitles)  
+        
+        if use_stream_copy:
+            logger.info("Using stream copy for clip creation (no filters)")
+            input_args = {
+                'ss': start_time,
+                't': duration
+            }
+            output_args = {
+                    'c' : 'copy',
+                    'vsync': '0',
+                    'avoid_negative_ts': 'make_zero',
+                    'movflags': '+faststart'
+            }
             
-        logger.info("Setting up FFmpeg output stream")
-        out = ffmpeg.output(
-            video,
-            audio,
-            final_output,
-            vcodec='libx264',
-            acodec='aac',
-            crf=23,
-            preset='medium',
-            threads=3,
-            maxrate='1M',
-            bufsize='2M',
-            movflags='+faststart'
-        )
-        logger.debug(f"Compiled command: {' '.join(ffmpeg.compile(out))}")
-        ffmpeg.run(out, overwrite_output=True, capture_stdout=True, capture_stderr=True)
-
-        if not os.path.exists(final_output):
+            ffmpeg.input(video_path, **input_args).output(output_path, **output_args).run(
+                overwrite_output=True, capture_stdout=True, capture_stderr=True)
+            
+        else:
+            input_stream = ffmpeg.input(video_path, ss=start_time, t=duration)
+            
+            if aspect_ratio == "vertical":
+                video = input_stream['v'].filter('scale', 1080, 1920, force_original_aspect_ratio='increase',threads=3).filter('crop', 1080, 1920)
+            else:
+                video = input_stream['v'].filter('scale', 1080, 1080, force_original_aspect_ratio='decrease',threads=3) \
+                                        .filter('pad', 1080, 1080, '(ow-iw)/2', '(oh-ih)/2', color='black')
+            # else:  # original
+            #     video = input_stream['v']
+            
+            # Explicitly reference the audio stream
+            audio = input_stream['a']
+            
+            # Apply fade effects for longer clips
+            if duration > 2:
+                video = video.filter('fade', type='in', start_time=0, duration=0.5) \
+                             .filter('fade', type='out', start_time=duration - 1, duration=0.5)
+                audio = audio.filter('afade', type='in', start_time=0, duration=0.5) \
+                             .filter('afade', type='out', start_time=duration - 1, duration=0.5)
+            
+            # Process for subtitles if needed
+            temp_output = None
+            final_output = output_path
+            
+            if enable_subtitles and subtitle_segments:
+                temp_output = os.path.join(CLIP_STORAGE_PATH, f"temp_clip_{clip_id}.mp4")
+                final_output = temp_output
+                
+            # Output with encoding
+            out = ffmpeg.output(
+                video,
+                audio,
+                final_output,
+                vcodec='libx264',
+                acodec='aac',
+                crf=27,
+                preset='faster',
+                threads=3
+            )
+            ffmpeg.run(out, overwrite_output=True, capture_stdout=True, capture_stderr=True)
+            
+            # Handle subtitles if needed
+            if enable_subtitles and subtitle_segments and temp_output:
+                logger.info(f"Adding subtitles to clip {clip_id}")
+                
+                # SRT file
+                srt_filename = f"subtitles_{clip_id}.srt"
+                srt_path = os.path.join(CLIP_STORAGE_PATH, srt_filename)
+                
+                generate_subtitle_file(subtitle_segments, start_time, end_time, srt_path)
+                
+                # Burn subtitles into the final video
+                burn_subtitles_to_video(temp_output, srt_path, output_path)
+                
+                # Clean up temporary files
+                if os.path.exists(temp_output):
+                    os.remove(temp_output)
+                if os.path.exists(srt_path):
+                    os.remove(srt_path)
+        
+        # Verify the output exists
+        if not os.path.exists(output_path):
             raise Exception("Clip creation failed - output file missing")
-
-        # if subtitles === true
-        if enable_subtitles and subtitle_segments and temp_output:
-            logger.info(f"Adding subtitles to clip {clip_id}")
-            
-            # SRT file
-            srt_filename = f"subtitles_{clip_id}.srt"
-            srt_path = os.path.join(CLIP_STORAGE_PATH, srt_filename)
-            
-            generate_subtitle_file(subtitle_segments, start_time, end_time, srt_path)
-            
-            # Burn subtitles into the final video
-            burn_subtitles_to_video(temp_output, srt_path, output_path)
-            
-            # Clean up temporary files
-            if os.path.exists(temp_output):
-                os.remove(temp_output)
-            if os.path.exists(srt_path):
-                os.remove(srt_path)
-
         size = os.path.getsize(output_path)
         logger.info(f"Clip created successfully: {output_path} (size: {size} bytes)")
-        logger.info("========== Finished create_clip ==========")
         return output_path
 
     except ffmpeg.Error as e:

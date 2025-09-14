@@ -96,8 +96,38 @@ def generate_subtitle_file(subtitle_segments: list, clip_start: float, clip_end:
     
     return output_path
 
+def get_subtitle_style(aspect_ratio: str) -> str:
+    if aspect_ratio == "vertical":
+        font_size = 34
+        outline = 2
+        margin_v = 80
+    elif aspect_ratio == "square":
+        font_size = 28
+        outline = 2
+        margin_v = 60
+    else: 
+        font_size = 24
+        outline = 2
+        margin_v = 40
 
-def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, video_width: int = 1080, video_height: int = 1920):
+    subtitle_style = (
+        f"FontName=Roboto Bold,"
+        f"FontSize={font_size},"
+        f"PrimaryColour=&HFFFFFF&,"
+        f"OutlineColour=&H000000&,"  
+        f"BorderStyle=1,"
+        f"Outline={outline},"
+        f"Shadow=0,"
+        f"ScaleX=100,ScaleY=100,"    
+        f"Alignment=2,"              
+        f"MarginL=60,"
+        f"MarginR=60,"
+        f"MarginV={margin_v}"
+    )
+    return subtitle_style
+
+
+def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, aspect_ratio: str = "original") -> str:
     """Burn subtitles into video using FFmpeg"""
     
     try:
@@ -111,28 +141,27 @@ def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, 
         
         logger.info(f"Input video has {len(video_streams)} video streams and {len(audio_streams)} audio streams")
         
-        subtitle_style = (
-            "FontName=Arial,"
-            "FontSize=20,"
-            "PrimaryColour=&HFFFFFF&," 
-            "OutlineColour=&H000000&,"
-            "Bold=0,"
-            "Italic=0,"
-            "Underline=0,"
-            "BorderStyle=1,"
-            "Outline=2,"
-            "Shadow=0,"
-            "Alignment=2,"
-            "MarginL=60,"
-            "MarginR=60,"
-            "MarginV=30"
-        )
+        # subtitle_style = (
+        #     "FontName=Roboto,"
+        #     "FontSize=14,"
+        #     "PrimaryColour=&HFFFFFF&," 
+        #     "OutlineColour=&H000000&,"
+        #     "Bold=0,"
+        #     "Italic=0,"
+        #     "Underline=0,"
+        #     "BorderStyle=1,"
+        #     "Outline=2,"
+        #     "Shadow=0,"
+        #     "Alignment=2,"
+        #     "MarginL=60,"
+        #     "MarginR=60,"
+        #     "MarginV=30"
+        # )
 
-        # Create input stream
         input_stream = ffmpeg.input(input_video)
+        subtitle_style = get_subtitle_style(aspect_ratio)
         
         if len(audio_streams) > 0:
-            # Apply subtitle filter to video stream only and keep audio
             video_with_subtitles = input_stream['v'].filter('subtitles', srt_file, force_style=subtitle_style, threads=3)
             audio = input_stream['a']
             
@@ -299,8 +328,8 @@ def create_clip(video_path: str, start_time: float, end_time: float, aspect_rati
                 generate_subtitle_file(subtitle_segments, start_time, end_time, srt_path)
                 
                 # Burn subtitles into the final video
-                burn_subtitles_to_video(temp_output, srt_path, output_path)
-                
+                burn_subtitles_to_video(temp_output, srt_path, output_path, aspect_ratio=aspect_ratio)
+
                 # Clean up temporary files
                 if os.path.exists(temp_output):
                     os.remove(temp_output)

@@ -111,38 +111,23 @@ def burn_subtitles_to_video(input_video: str, srt_file: str, output_video: str, 
         
         logger.info(f"Input video has {len(video_streams)} video streams and {len(audio_streams)} audio streams")
         
-        # styles
         subtitle_style = (
-            # Font settings
-            "FontName=Roboto Bold,"  # Modern, readable font (fallback to Arial if Roboto not available)
-            "FontSize=24,"           # Larger font size for better readability
-            
-            # Color settings
-            "PrimaryColour=&HFFFFFF&,"      # White text
-            "SecondaryColour=&H000000&,"    # Black secondary
-            "OutlineColour=&H000000&,"      # Black outline
-            "BackColour=&H80000000&,"       # Semi-transparent background (50% opacity)
-            
-            # Text styling
-            "Bold=1,"                # Bold text
-            "Italic=0,"              # No italic
-            "Underline=0,"           # No underline
-            "BorderStyle=4,"         # Box style with shadow (more modern look)
-            "Outline=1.5,"           # Thinner outline for cleaner appearance
-            "Shadow=0.5,"            # Slight shadow for depth
-            
-            # Positioning
-            "Alignment=2,"           # Bottom center alignment
-            "MarginL=60,"            # Left margin
-            "MarginR=60,"            # Right margin
-            "MarginV=60,"            # Vertical margin (from bottom)
-            
-            # Additional styling for better readability
-            "Spacing=0.5,"           # Letter spacing
-            "LineSpacing=8,"         # Space between lines
-            "Blur=0.2"               # Slight blur on the outline/shadow for smoother look
+            "FontName=Arial,"
+            "FontSize=20,"
+            "PrimaryColour=&HFFFFFF&," 
+            "OutlineColour=&H000000&,"
+            "Bold=0,"
+            "Italic=0,"
+            "Underline=0,"
+            "BorderStyle=1,"
+            "Outline=2,"
+            "Shadow=0,"
+            "Alignment=2,"
+            "MarginL=60,"
+            "MarginR=60,"
+            "MarginV=30"
         )
-        
+
         # Create input stream
         input_stream = ffmpeg.input(input_video)
         

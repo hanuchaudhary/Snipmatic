@@ -15,8 +15,8 @@ from shared.utils import update_task_status, cleanup_files
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Thread pool for download operations - increased for batch processing
-download_executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="download-thread")
+# hread pool to implement timeout for a thread
+download_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="download-thread")
 
 # Cleanup function to shutdown the thread pool
 def cleanup_thread_pool():
@@ -95,9 +95,9 @@ def download_video(url: str, timeout_minutes: int = 0, video_duration: int = 0) 
     
     # Get cookies file path from environment or use default
     cookies_file_path = os.getenv("COOKIES_FILE_PATH", "/app/cookies.txt")
-    
+
     ydl_opts = {
-        'format': 'bestvideo+bestaudio/best',
+        'format': 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]',
         'outtmpl': output_path,
         'quiet': True,
         "no_warnings": True

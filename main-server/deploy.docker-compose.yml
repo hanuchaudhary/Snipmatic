@@ -1,4 +1,17 @@
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
   # API Gateway - FastAPI application
   api-gateway:
     build:
@@ -86,3 +99,6 @@ services:
           cpus: '0.5'
     memswap_limit: 10G
     restart: unless-stopped
+volumes:
+  redis_data:
+    driver: local

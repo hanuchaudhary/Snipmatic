@@ -7,7 +7,7 @@ from kombu import Queue
 # Redis/Message Broker Configuration
 # Environment variables will be loaded by Docker Compose
 REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/')
-REDIS_URL1 = os.getenv('REDIS_URL1', 'redis://localhost:6380/')
+REDIS_URL1 = os.getenv('REDIS_URL1', 'redis://localhost:6379/')
 # Celery application instance
 celery_app = Celery(
     'clipper_workers',
@@ -17,12 +17,6 @@ celery_app = Celery(
 
 # Celery configuration
 celery_app.conf.update(
-    broker_use_ssl={
-        'ssl_cert_reqs': 'none',  # Disable certificate verification
-        'ssl_ca_certs': None,
-        'ssl_certfile': None,
-        'ssl_keyfile': None
-    },
     result_backend_transport_options={
         'ssl_cert_reqs': 'none',  # Same for result backend
         'ssl_ca_certs': None,

@@ -12,20 +12,16 @@ from shared.celery_config import celery_app, AUDIO_STORAGE_PATH, GEMINI_API_KEY
 from shared.models import TaskStatus, ViralMoment
 from shared.utils import update_task_status, cleanup_files
 
-# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Initialize AI models (loaded once per worker)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 compute_type = "float16" if torch.cuda.is_available() else "int8"
 model = WhisperModel("base", device=device, compute_type=compute_type)
 bached_model = BatchedInferencePipeline(model)
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
-# gets audio file for segmented transcription 
 def extract_audio(video_path: str) -> str:
-    """Extract audio from video file"""
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
         
@@ -35,12 +31,10 @@ def extract_audio(video_path: str) -> str:
     logger.info(f"Extracting audio from {video_path} to {audio_path}")
     
     try:
-        # Verify video file is readable first
         probe = ffmpeg.probe(video_path)
         if not any(stream['codec_type'] == 'audio' for stream in probe['streams']):
             raise Exception("No audio stream found in video file")
             
-        # Create output directory if it doesn't exist
         os.makedirs(AUDIO_STORAGE_PATH, exist_ok=True)
         
         stream = (
@@ -51,18 +45,16 @@ def extract_audio(video_path: str) -> str:
                 acodec='pcm_s16le',
                 ac=1, 
                 ar='16000',
-                loglevel='warning'  # Capture FFmpeg logs
+                loglevel='warning'
             )
             .overwrite_output()
         )
         
-        # Run FFmpeg with detailed error output
         out, err = stream.run(capture_stdout=True, capture_stderr=True)
         
         if not os.path.exists(audio_path):
             raise Exception("Audio extraction failed - output file not created")
             
-        # Verify the output file size
         if os.path.getsize(audio_path) == 0:
             raise Exception("Audio extraction failed - output file is empty")
             
@@ -77,7 +69,6 @@ def extract_audio(video_path: str) -> str:
         
     except Exception as e:
         logger.error(f"Audio extraction failed: {str(e)}")
-        # Clean up partial output file if it exists
         if os.path.exists(audio_path):
             try:
                 os.remove(audio_path)
@@ -86,7 +77,6 @@ def extract_audio(video_path: str) -> str:
         raise
 
 def transcribe_audio_whisperx(audio_path: str, generate_subtitles: bool = False) -> tuple[list, list]:
-    """Transcribe audio using faster-whisper"""
     logger.info(f"Starting faster-whisper transcription for: {audio_path}, generate_subtitles: {generate_subtitles}")
     
     try:
@@ -107,7 +97,6 @@ def transcribe_audio_whisperx(audio_path: str, generate_subtitles: bool = False)
                 'text': segment.text
             })
 
-            # if subtitles === true
             if generate_subtitles:
                 if hasattr(segment, 'words') and segment.words:
                     for word in segment.words:
@@ -117,7 +106,6 @@ def transcribe_audio_whisperx(audio_path: str, generate_subtitles: bool = False)
                             'text': word.word.strip()
                         })
                 else:
-                    # Fallback
                     words = segment.text.split()
                     word_duration = (segment.end - segment.start) / max(len(words), 1)
                     for i, word in enumerate(words):
@@ -135,10 +123,8 @@ def transcribe_audio_whisperx(audio_path: str, generate_subtitles: bool = False)
         raise Exception(f"Transcription failed: {str(e)}")
 
 def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
-    """Use Gemini AI to find viral moments from transcript"""
     logger.info("Starting viral moment analysis with Gemini AI")
     
-    # Prepare transcript text
     transcript_text = "\n".join([f"[{seg['start']:.1f}s - {seg['end']:.1f}s]: {seg['text']}" for seg in segments])
     
     prompt = f"""
@@ -259,7 +245,6 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
         if not response_text:
             raise Exception("Empty response from Gemini API")
         
-        # Find JSON in the response
         start_idx = response_text.find('[')
         end_idx = response_text.rfind(']') + 1
         
@@ -269,7 +254,6 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
         json_text = response_text[start_idx:end_idx]
         moments_data = json.loads(json_text)
         
-        # Convert to ViralMoment objects
         viral_moments = []
         for moment in moments_data:
             viral_moment = ViralMoment(
@@ -288,11 +272,10 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
 @celery_app.task(
     name='transcribe_task', 
     bind=True,
-    rate_limit='2/m'  # Max 2 transcriptions per minute per worker
+    rate_limit='2/m'
 )
 
 def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id, subtitles=False):
-    """Transcription task - queues clip task after completion"""
     audio_path = None
     
     try:
@@ -303,7 +286,6 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
 
         
 
-        # Get both segments and subtitle data if subtitles enabled
         if subtitles:
             segments, subtitle_segments = transcribe_audio_whisperx(audio_path, generate_subtitles=True)
         else:
@@ -313,15 +295,11 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
         logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Finding viral moments using AI")
         viral_moments = find_viral_moments(segments, video_info)
         update_task_status(user_id, task_id, TaskStatus.ANALYZING, 80, "Finding viral moments")
-        # Serialize viral moments
         viral_moments_serialized = []
         for m in viral_moments:
             if hasattr(m, 'model_dump'):
                 viral_moments_serialized.append(m.model_dump())
-            # elif hasattr(m, 'dict'):
-            #     viral_moments_serialized.append(m.dict())
             else:
-                # Fallback to manual serialization
                 viral_moments_serialized.append({
                     'start_time': m.start_time,
                     'end_time': m.end_time,
@@ -330,7 +308,6 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
                     'confidence_score': m.confidence_score
                 })
 
-        # Queue to clip queue with subtitle data
         celery_app.send_task(
             'clip_task',
             args=[task_id, video_path, viral_moments_serialized, subtitle_segments, aspect_ratio, multiple_clips, user_id, subtitles],
@@ -348,13 +325,11 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
             cleanup_files(audio_path)
         raise
     finally:
-        # Cleanup audio file immediately
         if audio_path and os.path.exists(audio_path):
             logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Cleaning up audio file: {audio_path}")
             cleanup_files(audio_path)
 
 if __name__ == "__main__":
-    # Run as Celery worker - GPU bound, limit to 1-2 per GPU
     try:
         logger.info("Starting Transcribe Worker...")
         celery_app.worker_main([

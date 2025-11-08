@@ -1,10 +1,10 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import authConfig from "./auth.config";
 import NextAuth from "next-auth";
 
 const { auth } = NextAuth(authConfig);
 
-export default auth(async function middleware(req: NextRequest) {
+export default auth(async function middleware(req) {
   const publicRoutes = [
     "/",
     "/signin",
@@ -14,19 +14,17 @@ export default auth(async function middleware(req: NextRequest) {
   ];
   const isPublicRoute = publicRoutes.includes(req.nextUrl.pathname);
 
-  const session = await auth();
-
-  if (!session && !isPublicRoute) {
+  if (!req.auth && !isPublicRoute) {
     const newUrl = new URL("/signin", req.nextUrl.origin);
-    return Response.redirect(newUrl);
+    return NextResponse.redirect(newUrl);
   }
 
   if (
-    session &&
+    req.auth &&
     (req.nextUrl.pathname === "/signin" || req.nextUrl.pathname === "/register")
   ) {
     const newUrl = new URL("/clip", req.nextUrl.origin);
-    return Response.redirect(newUrl);
+    return NextResponse.redirect(newUrl);
   }
 
   return;

@@ -13,14 +13,12 @@ EMAIL_API_KEY = os.getenv("EMAIL_API_KEY")
 
 logger = logging.getLogger(__name__)
 
-# Redis client for status storage
 redis_client = redis.Redis.from_url(
     REDIS_URL,
     decode_responses=True
 )
 
 def format_srt_time(seconds: float) -> str:
-    """Convert seconds to SRT time format (HH:MM:SS,mmm)"""
     hours = int(seconds // 3600)
     minutes = int((seconds % 3600) // 60)
     secs = int(seconds % 60)
@@ -30,9 +28,7 @@ def format_srt_time(seconds: float) -> str:
 
 def update_task_status(user_id: Optional[str], task_id: str, status: TaskStatus, progress: int = 0, 
                       message: str = "", result: Optional[dict] = None):
-    """Update task status in Redis and PostgreSQL"""
     try:
-        # Get existing status or create new one
         existing_data = redis_client.get(f"task_status:{task_id}")
         
         if existing_data:
@@ -57,20 +53,15 @@ def update_task_status(user_id: Optional[str], task_id: str, status: TaskStatus,
                 'updated_at': datetime.utcnow().isoformat()
             }
         
-        # # Publish to Redis channel for real-time updates
-        # redis_client.publish(f"status:{task_id}", json.dumps(task_data, default=str))
-
-        # Store with 24 hour TTL in Redis
         redis_client.setex(
             f"task_status:{task_id}",
-            86400,  # 24 hours
+            86400,
             json.dumps(task_data, default=str)
         )
         
-        # Update PostgreSQL database as well
         postgres_success = update_task_in_postgres(
             task_id=task_id,
-            status=status.value,  # Convert enum to string
+            status=status.value,
             progress=progress,
             message=message,
             result=result,
@@ -86,7 +77,6 @@ def update_task_status(user_id: Optional[str], task_id: str, status: TaskStatus,
         logger.error(f"Failed to update status for task {task_id}: {e}")
 
 def get_task_status(task_id: str) -> Optional[dict]:
-    """Get task status from Redis"""
     try:
         data = redis_client.get(f"task_status:{task_id}")
         if data:
@@ -97,7 +87,6 @@ def get_task_status(task_id: str) -> Optional[dict]:
         return None
 
 def cleanup_files(*file_paths):
-    """Clean up temporary files"""
     import os
     for file_path in file_paths:
         try:
@@ -108,7 +97,6 @@ def cleanup_files(*file_paths):
             logger.warning(f"Failed to cleanup {file_path}: {e}")
 
 def time_to_seconds(time_str: str) -> float:
-    """Convert HH:MM:SS format to seconds"""
     try:
         parts = time_str.split(':')
         if len(parts) == 3:
@@ -126,7 +114,6 @@ def time_to_seconds(time_str: str) -> float:
         return 0.0
 
 def send_email_notification(task_id: str):
-    """Send email notification when clips are generated"""
     if not EMAIL_SERVER_URL:
         logger.warning("Email server URL not configured, skipping email notification")
         return
@@ -157,9 +144,6 @@ def send_email_notification(task_id: str):
         logger.error(f"[CLIP_WORKER] Task : Failed to send email notification: {str(e)}")
 
 def check_user_exists(user_id: str) -> bool:
-    """
-    Check if a user with the given ID exists in PostgreSQL database
-    """
     from shared.database import get_db_connection
     
     if not user_id:
@@ -185,6 +169,8 @@ def check_user_exists(user_id: str) -> bool:
     finally:
         if 'conn' in locals() and conn is not None:
             conn.close()
+
+
 
 
 

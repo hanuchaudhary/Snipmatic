@@ -27,7 +27,7 @@ class ClipRequest(BaseModel):
     subtitles: bool = False
     clipType: str = "AI"
     multipleClips: bool = False
-    duration: int = 0  # Duration in seconds, used for timeout calculation
+    duration: int = 0
 
 class ViralMoment(BaseModel):
     start_time: float
@@ -44,10 +44,10 @@ class ClipResponse(BaseModel):
     viral_moments: Optional[List[ViralMoment]] = None
 
 class TaskResult(BaseModel):
-    """Result structure for completed tasks"""
     viral_moments: Optional[List[ViralMoment]] = None
     clip_paths: Optional[List[str]] = None
     s3_urls: Optional[List[str]] = None
-    s3_url: Optional[str] = None  # For single clip cases
+    s3_url: Optional[str] = None
     zip_path: Optional[str] = None
     zip_s3_url: Optional[str] = None
+

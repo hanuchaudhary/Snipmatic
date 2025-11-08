@@ -10,7 +10,6 @@ from shared.models import ClipRequest, ClipResponse, TaskStatus
 from shared.utils import update_task_status, get_task_status, check_user_exists
 from shared.celery_config import celery_app
 
-# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,6 @@ async def root():
 
 @app.get("/video-info")
 async def get_video_info(url: str):
-    """Get video information - placeholder for future implementation"""
     ydl_opts = {
         "no_warnings": True,
         "cookiefile": ""
@@ -60,12 +58,8 @@ async def get_video_info(url: str):
 
 @app.post("/clip", response_model=ClipResponse)
 async def create_video_clip(request: ClipRequest):
-    """Create video clip - dispatches to appropriate Celery queue"""
     task_id = request.task_id
     try:
-        # if not check_user_exists(request.user_id):
-        #     raise HTTPException(status_code=400, detail="Invalid user_id: User does not exist")
-        # Update initial status
         update_task_status(request.user_id, task_id, TaskStatus.QUEUED, 0, "Task queued for processing")
         
         if request.clipType == "AI":
@@ -77,9 +71,8 @@ async def create_video_clip(request: ClipRequest):
                 routing_key='download'
             )
             
-        else:  # MANUAL
+        else:
             logger.info(f"[API] Task {task_id}: Manual clip params - start_time={request.startTime}, end_time={request.endTime}")
-            # Queue manual workflow starting with download task
             logger.info(f"[API] Queuing download task for manual workflow - task {task_id}")
             celery_app.send_task(
                 'download_task',
@@ -102,7 +95,6 @@ async def create_video_clip(request: ClipRequest):
 
 @app.get("/status/{task_id}")
 async def get_task_status_endpoint(task_id: str):
-    """Check status of a processing task"""
     task_status = get_task_status(task_id)
     if not task_status:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -111,15 +103,11 @@ async def get_task_status_endpoint(task_id: str):
 
 @app.get("/queues/info")
 async def get_queue_info():
-    """Get information about Celery queues"""
     try:
-        # Get queue statistics using Celery inspect
         inspect = celery_app.control.inspect()
         
-        # Get active tasks per queue
         active_tasks = inspect.active()
         
-        # Get queue lengths (requires additional Redis queries)
         import redis
         from shared.celery_config import REDIS_URL
         redis_client = redis.from_url(REDIS_URL)
@@ -145,11 +133,9 @@ async def get_queue_info():
 
 @app.get("/workers/status")
 async def get_workers_status():
-    """Get status of all Celery workers"""
     try:
         inspect = celery_app.control.inspect()
         
-        # Get worker statistics
         stats = inspect.stats()
         active = inspect.active()
         registered = inspect.registered()
@@ -169,7 +155,6 @@ async def get_workers_status():
 
 @app.post("/admin/clear-queue/{queue_name}")
 async def clear_queue(queue_name: str):
-    """Admin endpoint to clear a specific queue"""
     if queue_name not in ['download', 'transcribe', 'clip']:
         raise HTTPException(status_code=400, detail="Invalid queue name")
     
@@ -178,7 +163,6 @@ async def clear_queue(queue_name: str):
         from shared.celery_config import REDIS_URL
         redis_client = redis.from_url(REDIS_URL)
         
-        # Clear the queue
         cleared_count = redis_client.delete(queue_name)
         
         logger.warning(f"[ADMIN] Cleared queue '{queue_name}' - removed {cleared_count} tasks")

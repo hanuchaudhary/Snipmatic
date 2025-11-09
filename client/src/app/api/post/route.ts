@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
             retries: 2
         })
 
-        return NextResponse.json({ results: post }, { status: 200 });
+        return NextResponse.json({ results: post }, { status: 201 });
     } catch (error) {
         console.error("CreatePost Error:", error);
         return NextResponse.json(

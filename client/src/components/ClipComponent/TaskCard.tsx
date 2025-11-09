@@ -158,6 +158,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
             )}
             {task.clipURL && (
               <button onClick={async () =>{
+
+                const isZipt = task.clipURL?.endsWith(".zip");
+                if (isZipt){
+                  toast.error("Posting zip files is not supported yet!");
+                  return;
+                }
+
                 try {
                   const res= await axios.post("/api/post",{
                     title: task.title,
@@ -165,7 +172,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                     mediaKey:"clips" + task.clipURL?.split("clips")[1]
                   })
                   if (res.status == 201){
-                    toast.success("posted")
+                    toast.success("Posted on X successfully")
                   }
                 } catch (error) {
                   toast.error("Failed to post on X")

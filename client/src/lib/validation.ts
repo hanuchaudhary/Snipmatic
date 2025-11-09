@@ -12,6 +12,7 @@ export const formSchema = z.object({
   subtitles: z.boolean(),
   clipType: z.enum(["AI", "MANUAL"]).optional(),
   multipleClips: z.boolean().optional(),
+  aiPrompt: z.string().optional(),
 });
 
 

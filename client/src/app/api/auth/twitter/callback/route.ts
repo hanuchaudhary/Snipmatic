@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     const data = response.data
     const cookieOptions = `HttpOnly; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax`
     const cookie = `sessionToken=${data.sessionToken}; ${cookieOptions}`
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard`, {
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/clip`, {
       headers: {
         "Set-Cookie": cookie,
       },

@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
       duration,
       title,
       thumbnail,
+      aiPrompt
     } = body;
 
     if (!url) {
@@ -177,6 +178,7 @@ export async function POST(request: NextRequest) {
           user_id: session.user.id,
           duration,
           task_id: task.taskId,
+          user_prompt: aiPrompt || "",
         }),
         axios.post(`${EMAIL_SERVER_URL}/set_task`, {
           email: session.user.email,

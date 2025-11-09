@@ -16,15 +16,18 @@ import { toast } from "sonner";
 import { ClipTypeSwitch } from "./ClipType";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  IconAirBalloonFilled,
   IconArrowUpRight,
   IconCircleXFilled,
   IconLoader2,
+  IconRainbow,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { formSchema } from "@/lib/validation";
 import { useSnipStore } from "@/lib/snipStore";
 import { calculateCreditsRequired } from "@/lib/creditMiddleware";
+import { AIPromptCard } from "./AIPromptCard";
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -48,6 +51,7 @@ export function CreateClipPage() {
       subtitles: false,
       clipType: "MANUAL",
       multipleClips: false,
+      aiPrompt: "",
     },
     resolver: zodResolver(formSchema),
   });
@@ -196,6 +200,7 @@ export function CreateClipPage() {
         duration: store.videoInfo.duration,
         title: store.videoInfo.title,
         thumbnail: store.videoInfo.thumbnail,
+        aiPrompt: data.aiPrompt || "",
       });
 
       if (!response.data.success) {
@@ -220,6 +225,7 @@ export function CreateClipPage() {
         subtitles: false,
         clipType: "MANUAL",
         multipleClips: false,
+        aiPrompt: "",
       });
       setIsProcessing(false);
 
@@ -638,7 +644,11 @@ export function CreateClipPage() {
                   />
                 </div>
 
-                <div className="w-full flex items-center justify-end mt-4">
+                <div className="w-full flex items-center justify-end mt-4 gap-2">
+                  <AIPromptCard
+                    onPromptSubmit={(prompt) => setValue("aiPrompt", prompt)}
+                    disabled={isProcessing || !watchUrl || watchClipType !== "AI"}
+                  />
                   <Button
                     size={"sm"}
                     type="submit"

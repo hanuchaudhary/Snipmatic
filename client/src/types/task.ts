@@ -17,7 +17,7 @@ export interface Task {
   createdAt: string | Date;
   updatedAt: string | Date;
   completedAt?: string | Date | null;
-  
+
   // Result format for compatibility with existing UI
   result?: {
     viral_moments?: any[];
@@ -27,9 +27,9 @@ export interface Task {
   };
 }
 
-export type JobStatus = 
+export type JobStatus =
   | "QUEUED"
-  | "DOWNLOADING" 
+  | "DOWNLOADING"
   | "DOWNLOADED"
   | "EXTRACTING_AUDIO"
   | "TRANSCRIBING"
@@ -37,3 +37,16 @@ export type JobStatus =
   | "CREATING_CLIPS"
   | "COMPLETED"
   | "FAILED";
+
+  
+export type POST_STATUS = "PENDING" | "FAILED" | "SUCCESS"
+export interface IPost {
+  id: string;
+  userId: string
+  text: string
+  url?: string
+  mediaKey: string
+  status: POST_STATUS
+  createdAt: string
+  updatedAt: string
+}

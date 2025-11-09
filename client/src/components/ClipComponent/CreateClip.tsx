@@ -10,6 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { SlidingNumber } from "@/components/ui/sliding-number";
 import { toast } from "sonner";
 import { ClipTypeSwitch } from "./ClipType";
 import { AnimatePresence, motion } from "framer-motion";
@@ -40,8 +42,8 @@ export function CreateClipPage() {
   } = useForm<FormValues>({
     defaultValues: {
       url: "",
-      startTime: "00:00:00",
-      endTime: "00:00:00",
+      startTime: "0",
+      endTime: "0",
       aspectRatio: "original",
       subtitles: false,
       clipType: "MANUAL",
@@ -75,6 +77,13 @@ export function CreateClipPage() {
     }
   }, [watchUrl]);
 
+  React.useEffect(() => {
+    if (store.videoInfo.duration > 0) {
+      setValue("startTime", "0");
+      setValue("endTime", String(store.videoInfo.duration));
+    }
+  }, [store.videoInfo.duration, setValue]);
+
   const onSubmit = async (data: FormValues) => {
     if (!session?.user?.id) {
       toast.error("Please sign in to create clips");
@@ -103,24 +112,25 @@ export function CreateClipPage() {
       }
 
       if (watchClipType === "MANUAL") {
-        if (
-          watch("startTime") === "00:00:00" &&
-          watch("endTime") === "00:00:00"
-        ) {
-          toast.error("Please enter a valid start and end time");
+        const startTime = watch("startTime");
+        const endTime = watch("endTime");
+
+        const parseTime = (time: string): number => {
+          if (time.includes(':')) {
+            const [hours, minutes, seconds] = time.split(":").map(Number);
+            return hours * 3600 + minutes * 60 + seconds;
+          }
+          return Number(time);
+        };
+
+        const startSeconds = parseTime(startTime);
+        const endSeconds = parseTime(endTime);
+
+        if (endSeconds === 0) {
+          toast.error("Please select a valid time range");
           setIsProcessing(false);
           return;
         }
-
-        function timeToSeconds(timeStr: string): number {
-          const [hours, minutes, seconds] = timeStr.split(":").map(Number);
-          return hours * 3600 + minutes * 60 + seconds;
-        }
-
-        const startTime = watch("startTime");
-        const endTime = watch("endTime");
-        const startSeconds = timeToSeconds(startTime);
-        const endSeconds = timeToSeconds(endTime);
 
         if (startSeconds >= endSeconds) {
           toast.error("Start time must be before end time");
@@ -165,10 +175,20 @@ export function CreateClipPage() {
         }
       }
 
+      // Convert seconds to HH:MM:SS format for API
+      const formatTimeForAPI = (time: string): string => {
+        if (time.includes(':')) return time; // Already in correct format
+        const totalSeconds = Number(time);
+        const hrs = Math.floor(totalSeconds / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
+        return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      };
+
       const response = await axios.post("/api/task", {
         url: data.url,
-        startTime: data.startTime,
-        endTime: data.endTime,
+        startTime: formatTimeForAPI(data.startTime),
+        endTime: formatTimeForAPI(data.endTime),
         aspectRatio: data.aspectRatio,
         subtitles: data.subtitles,
         clipType: data.clipType,
@@ -192,7 +212,15 @@ export function CreateClipPage() {
         title: "",
         thumbnail: "",
       });
-      reset();
+      reset({
+        url: "",
+        startTime: "0",
+        endTime: "0",
+        aspectRatio: "original",
+        subtitles: false,
+        clipType: "MANUAL",
+        multipleClips: false,
+      });
       setIsProcessing(false);
 
       toast.dismiss();
@@ -212,8 +240,7 @@ export function CreateClipPage() {
       }
 
       toast.error(
-        `An error occurred: ${
-          error.response?.data?.error || error.message || "Unknown error"
+        `An error occurred: ${error.response?.data?.error || error.message || "Unknown error"
         }`
       );
     }
@@ -350,40 +377,183 @@ export function CreateClipPage() {
                     </motion.div>
                   )}
                   {watchClipType === "MANUAL" && (
-                    <motion.div className="space-y-2">
-                      <div className="flex items-center gap-4">
+                    <motion.div className="space-y-4">
+                      <div className="space-y-3">
+                        <Label>Select Time Range</Label>
                         <Controller
                           control={control}
                           name="startTime"
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              placeholder="Start - 00:00:00"
-                              className="flex-1 font-mono"
-                            />
-                          )}
-                        />
-                        <span className="text-muted-foreground">-</span>
-                        <Controller
-                          control={control}
-                          name="endTime"
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              placeholder="End - 00:00:00"
-                              className="flex-1 font-mono"
+                          render={({ field: startField }) => (
+                            <Controller
+                              control={control}
+                              name="endTime"
+                              render={({ field: endField }) => {
+                                const parseTime = (time: string): number => {
+                                  if (time.includes(':')) {
+                                    const [hours, minutes, seconds] = time.split(":").map(Number);
+                                    return hours * 3600 + minutes * 60 + seconds;
+                                  }
+                                  return Number(time) || 0;
+                                };
+
+                                const formatTime = (seconds: number): string => {
+                                  const hrs = Math.floor(seconds / 3600);
+                                  const mins = Math.floor((seconds % 3600) / 60);
+                                  const secs = seconds % 60;
+                                  return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                                };
+
+                                const startSeconds = parseTime(startField.value);
+                                const endSeconds = parseTime(endField.value);
+                                const maxDuration = store.videoInfo.duration || 3600;
+
+                                // Calculate time components for animation
+                                const getTimeComponents = (seconds: number) => {
+                                  const hrs = Math.floor(seconds / 3600);
+                                  const mins = Math.floor((seconds % 3600) / 60);
+                                  const secs = seconds % 60;
+                                  return { hrs, mins, secs };
+                                };
+
+                                const startTime = getTimeComponents(startSeconds);
+                                const endTime = getTimeComponents(endSeconds);
+                                const clipDuration = getTimeComponents(endSeconds - startSeconds);
+
+                                // Show hours only if video is 1 hour or longer
+                                const showHours = maxDuration >= 3600;
+
+                                return (
+                                  <div className="space-y-3">
+                                    <Slider
+                                      min={0}
+                                      max={maxDuration}
+                                      step={1}
+                                      value={[startSeconds, endSeconds]}
+                                      onValueChange={(values) => {
+                                        startField.onChange(String(values[0]));
+                                        endField.onChange(String(values[1]));
+                                      }}
+                                      className="w-full"
+                                      disabled={!store.videoInfo.duration}
+                                    />
+                                    <div className="flex items-center justify-between text-sm">
+                                      <div className="flex flex-col">
+
+                                        <div className="font-mono text-xs flex items-center">
+                                          {showHours && (
+                                            <>
+                                              <SlidingNumber
+                                                from={0}
+                                                to={startTime.hrs}
+                                                duration={0.3}
+                                                digitHeight={20}
+                                                className=""
+                                                startOnView={false}
+                                              />
+                                              <span>:</span>
+                                            </>
+                                          )}
+                                          <SlidingNumber
+                                            from={0}
+                                            to={startTime.mins}
+                                            duration={0.3}
+                                            digitHeight={20}
+                                            className=""
+                                            startOnView={false}
+                                          />
+                                          <span>:</span>
+                                          <SlidingNumber
+                                            from={0}
+                                            to={startTime.secs}
+                                            duration={0.3}
+                                            digitHeight={20}
+                                            className=""
+                                            startOnView={false}
+                                          />
+                                        </div>
+                                        <span className="text-muted-foreground text-xs">Start Time</span>
+                                      </div>
+                                      <div className="flex flex-col items-center px-2">
+                                        <div className="font-mono text-sm flex items-center gap-0.5 text-orange-400 font-medium">
+                                          {showHours && (
+                                            <>
+                                              <SlidingNumber
+                                                from={0}
+                                                to={clipDuration.hrs}
+                                                duration={0.3}
+                                                digitHeight={20}
+                                                className=""
+                                                startOnView={false}
+                                              />
+                                              <span>:</span>
+                                            </>
+                                          )}
+                                          <SlidingNumber
+                                            from={0}
+                                            to={clipDuration.mins}
+                                            duration={0.3}
+                                            digitHeight={20}
+                                            className=""
+                                            startOnView={false}
+                                          />
+                                          <span>:</span>
+                                          <SlidingNumber
+                                            from={0}
+                                            to={clipDuration.secs}
+                                            duration={0.3}
+                                            digitHeight={20}
+                                            className=""
+                                            startOnView={false}
+                                          />
+                                        </div>
+
+                                        <span className="text-muted-foreground text-xs">Duration</span>
+                                      </div>
+                                      <div className="flex flex-col items-end">
+
+                                        <div className="font-mono text-xs flex items-center">
+                                          {showHours && (
+                                            <>
+                                              <SlidingNumber
+                                                from={0}
+                                                to={endTime.hrs}
+                                                duration={0.3}
+                                                digitHeight={20}
+                                                className=""
+                                                startOnView={false}
+                                              />
+                                              <span>:</span>
+                                            </>
+                                          )}
+                                          <SlidingNumber
+                                            from={0}
+                                            to={endTime.mins}
+                                            duration={0.3}
+                                            digitHeight={20}
+                                            className=""
+                                            startOnView={false}
+                                          />
+                                          <span>:</span>
+                                          <SlidingNumber
+                                            from={0}
+                                            to={endTime.secs}
+                                            duration={0.3}
+                                            digitHeight={20}
+                                            className=""
+                                            startOnView={false}
+                                          />
+                                        </div>
+                                        <span className="text-muted-foreground text-xs">End Time</span>
+                                      </div>
+                                    </div>
+
+                                  </div>
+                                );
+                              }}
                             />
                           )}
                         />
                       </div>
-                      {watch("startTime") && watch("endTime") && (
-                        <p className="text-sm text-muted-foreground">
-                          Duration:{" "}
-                          {watch("startTime") && watch("endTime")
-                            ? `${watch("startTime")}s - ${watch("endTime")}s`
-                            : "00:00:00 - 00:00:00"}
-                        </p>
-                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>

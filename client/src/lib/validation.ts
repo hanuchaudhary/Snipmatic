@@ -6,8 +6,8 @@ export const formSchema = z.object({
     .string()
     .url("Please enter a valid video URL")
     .min(1, "URL is required"),
-  startTime: z.string().regex(/^\d{2}:\d{2}:\d{2}$/, "Invalid time format"),
-  endTime: z.string().regex(/^\d{2}:\d{2}:\d{2}$/, "Invalid time format"),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
   aspectRatio: z.enum(["original", "vertical", "square"]),
   subtitles: z.boolean(),
   clipType: z.enum(["AI", "MANUAL"]).optional(),

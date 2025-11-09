@@ -2,13 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { Download, Play, Clock, Globe } from "lucide-react";
 import { Task } from "@/types/task";
 import {
   cn,
-  downloadFile,
   formatDuration,
   formatTimestamp,
   getYouTubeThumbnail,
@@ -19,6 +16,9 @@ import MinimalCard, {
   MinimalCardImage,
   MinimalCardTitle,
 } from "../ui/minimal-card";
+import { IconBrandXFilled } from "@tabler/icons-react";
+import { toast } from "sonner";
+import axios from "axios";
 
 interface TaskCardProps {
   task: Task;
@@ -140,7 +140,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 <span>{"1080p"}</span>
               </div>
             </div>
-            {task.clipURL && (
+           <div className="flex items-center justify-center gap-4">
+             {task.clipURL && (
               <WrapButton
                 className=""
                 href={task.clipURL}
@@ -155,6 +156,26 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 Download
               </WrapButton>
             )}
+            {task.clipURL && (
+              <button onClick={async () =>{
+                try {
+                  const res= await axios.post("/api/post",{
+                    title: task.title,
+                    url: task.clipURL,
+                    mediaKey:"clips" + task.clipURL?.split("clips")[1]
+                  })
+                  if (res.status == 201){
+                    toast.success("posted")
+                  }
+                } catch (error) {
+                  toast.error("Failed to post on X")
+                }
+              }} className="flex items-center justify-center gap-2 border-2 px-4 py-2 rounded-full font-instrumental tracking-wider hover:scale-105 transition-transform cursor-pointer">
+                <IconBrandXFilled className="size-4"/>
+                Post
+              </button>
+            )}
+           </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

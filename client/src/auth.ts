@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Resend from "next-auth/providers/resend";
+import Twitter from "next-auth/providers/twitter";
 import { DefaultSession } from "next-auth";
 import authConfig from "./auth.config";
 import { prisma } from "@/lib/prisma";
@@ -47,6 +48,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           response_type: "code",
         },
       },
+    }),
+    Twitter({
+      clientId: process.env.AUTH_TWITTER_ID as string,
+      clientSecret: process.env.AUTH_TWITTER_SECRET as string,
     }),
   ],
   callbacks: {

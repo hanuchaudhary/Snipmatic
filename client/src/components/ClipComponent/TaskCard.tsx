@@ -32,6 +32,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
   );
 
   const [progress, setProgress] = useState(task.progress || 0);
+  const [posting ,setPosting] = useState(false)
   const [displayProgress, setDisplayProgress] = useState(task.progress || 0);
 
   useEffect(() => {
@@ -157,8 +158,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
               </WrapButton>
             )}
             {task.clipURL && (
-              <button onClick={async () =>{
-
+              <button
+              disabled={posting} onClick={async () =>{
+                setPosting(true)
                 const isZipt = task.clipURL?.endsWith(".zip");
                 if (isZipt){
                   toast.error("Posting zip files is not supported yet!");
@@ -177,9 +179,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 } catch (error) {
                   toast.error("Failed to post on X")
                 }
+                finally{
+                  setPosting(false)
+                }
               }} className="flex items-center justify-center gap-2 border-2 px-4 py-2 rounded-full font-instrumental tracking-wider hover:scale-105 transition-transform cursor-pointer">
                 <IconBrandXFilled className="size-4"/>
-                Post
+                {posting ? "Posting..." : "Post"}
               </button>
             )}
            </div>

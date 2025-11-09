@@ -6,7 +6,7 @@ import { ThemeToggle } from "../ThemeToggle";
 import { CreditButton } from "../ui/CreditButton";
 import { useSession } from "next-auth/react";
 import { Button } from "../ui/button";
-import { Menu, X, Info } from "lucide-react";
+import { Menu, X, Info, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ProfileDropdown } from "./ProfileDropdown";
@@ -66,15 +66,28 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-2">
             {session?.user && (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={openDisclaimer}
-                className="p-2 hover:bg-accent rounded-lg transition-colors"
-                aria-label="Show disclaimer"
-                title="Show disclaimer"
-              >
-                <IconInfoCircleFilled size={20} className="text-foreground" />
-              </motion.button>
+              <>
+                <Link href="/leaderboard">
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    className="p-2 hover:bg-accent rounded-lg transition-colors flex items-center gap-2"
+                    aria-label="View leaderboard"
+                    title="View leaderboard"
+                  >
+                    <Trophy size={20} className="text-yellow-500" />
+                    <span className="font-jost text-sm">Leaderboard</span>
+                  </motion.button>
+                </Link>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={openDisclaimer}
+                  className="p-2 hover:bg-accent rounded-lg transition-colors"
+                  aria-label="Show disclaimer"
+                  title="Show disclaimer"
+                >
+                  <IconInfoCircleFilled size={20} className="text-foreground" />
+                </motion.button>
+              </>
             )}
             <ThemeToggle />
             <TwitterConnectButton/>
@@ -168,19 +181,32 @@ export function Navbar() {
                       <CreditButton />
                     </div>
                     {session?.user && (
-                      <div>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            openDisclaimer();
-                            closeMobileMenu();
-                          }}
-                          className="w-full justify-start gap-2"
-                        >
-                          <Info size={16} />
-                          Show Disclaimer
-                        </Button>
-                      </div>
+                      <>
+                        <div>
+                          <Link href="/leaderboard" onClick={closeMobileMenu}>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start gap-2"
+                            >
+                              <Trophy size={16} className="text-yellow-500" />
+                              Leaderboard
+                            </Button>
+                          </Link>
+                        </div>
+                        <div>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              openDisclaimer();
+                              closeMobileMenu();
+                            }}
+                            className="w-full justify-start gap-2"
+                          >
+                            <Info size={16} />
+                            Show Disclaimer
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </div>
                 </nav>

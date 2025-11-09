@@ -5,7 +5,7 @@ import React from "react";
 
 export function Footer() {
   const pathname = usePathname();
-  if (pathname === "/clip" || pathname === "/credits" || pathname === "/signin")
+  if (pathname === "/clip" || pathname === "/credits" || pathname === "/signin" || pathname === "/leaderboard")
     return null;
 
   return (

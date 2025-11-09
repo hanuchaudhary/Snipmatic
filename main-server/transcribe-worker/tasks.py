@@ -149,119 +149,124 @@ def find_viral_moments(segments: list, video_info: dict, user_prompt: str = None
         if sanitized_prompt:
             logger.info(f"Using sanitized user preferences: {sanitized_prompt}")
             user_preferences = f"""
-        **CRITICAL USER INSTRUCTIONS** (These are mandatory requirements from the user):
-        🎯 USER REQUIREMENT: {sanitized_prompt}
-        
-        ⚠️ You MUST prioritize clips that align with this specific user instruction. This is not optional - this is the primary directive for clip selection. This will be the preceding instructions then only the rest of the instructions should be considered making a mix of general viral moment principles and the user's specific desires.
-            """
+**CRITICAL USER INSTRUCTIONS** (These are mandatory requirements from the user):
+🎯 USER REQUIREMENT: {sanitized_prompt}
+
+⚠️ You MUST prioritize clips that align with this specific user instruction. This is not optional - this is the primary directive for clip selection. This will be the preceding instructions then only the rest of the instructions should be considered making a mix of general viral moment principles and the user's specific desires.
+"""
             print(f"User Preferences added to prompt: {sanitized_prompt}")
     
+    # Build prompt with optional user preferences section
+    video_info_section = f"""## Video Information:
+- Title: {video_info.get('title', 'Unknown')}
+- Duration: {video_info.get('duration', 'Unknown')} seconds
+- Video Type: {video_info.get('type', 'Unknown')} (e.g., vlog, interview, tutorial, storytelling, comedy, reaction, etc.)
+- Target Audience: {video_info.get('target_audience', 'Unknown')} (e.g., Gen Z, Millennials, general audience)"""
+    
+    if user_preferences:
+        video_info_section += f"\n{user_preferences}"
+    
     prompt = f"""
-        You are an expert viral content analyst with deep knowledge of social media trends, audience engagement, and short-form video platforms like TikTok, YouTube Shorts, and Instagram Reels. Your task is to analyze a YouTube video transcript and extract moments that are highly engaging and optimized for short-form content (15–60 seconds) to maximize virality.
+You are an expert viral content analyst with deep knowledge of social media trends, audience engagement, and short-form video platforms like TikTok, YouTube Shorts, and Instagram Reels. Your task is to analyze a YouTube video transcript and extract moments that are highly engaging and optimized for short-form content (15–60 seconds) to maximize virality.
 
-        ## Goal:
-        Identify moments from the transcript that:
-        - Are emotionally engaging (e.g., funny, shocking, inspiring, heartwarming, relatable, or controversial)
-        - Contain strong hooks, quotable lines, or memorable soundbites that grab attention within the first 3–5 seconds
-        - Can stand alone as compelling, self-contained clips (no external context needed)
-        - Are likely to drive high engagement (shares, comments, likes, or saves) based on platform trends
-        - Align with the platform's audience (e.g., TikTok's Gen Z trends, Instagram's aesthetic-driven content, YouTube Shorts' broad appeal)
+## Goal:
+Identify moments from the transcript that:
+- Are emotionally engaging (e.g., funny, shocking, inspiring, heartwarming, relatable, or controversial)
+- Contain strong hooks, quotable lines, or memorable soundbites that grab attention within the first 3–5 seconds
+- Can stand alone as compelling, self-contained clips (no external context needed)
+- Are likely to drive high engagement (shares, comments, likes, or saves) based on platform trends
+- Align with the platform's audience (e.g., TikTok's Gen Z trends, Instagram's aesthetic-driven content, YouTube Shorts' broad appeal)
 
-        ## Video Information:
-        - Title: {video_info.get('title', 'Unknown')}
-        - Duration: {video_info.get('duration', 'Unknown')} seconds
-        - Video Type: {video_info.get('type', 'Unknown')} (e.g., vlog, interview, tutorial, storytelling, comedy, reaction, etc.)
-        - Target Audience: {video_info.get('target_audience', 'Unknown')} (e.g., Gen Z, Millennials, general audience)
-        {user_preferences}
+{video_info_section}
 
-        ## Guidelines:
+## Guidelines:
 
-        1. **Analyze the Transcript**:
-        - Read the full transcript to understand the narrative arc, tone, and key moments.
-        - Identify the video's emotional peaks, punchlines, or surprising revelations.
-        - Consider the video type (e.g., comedy, storytelling, educational) to tailor clip selection.
-        - If visual elements are implied (e.g., reactions, gestures, or on-screen actions), note their potential to enhance the clip's appeal.
+1. **Analyze the Transcript**:
+- Read the full transcript to understand the narrative arc, tone, and key moments.
+- Identify the video's emotional peaks, punchlines, or surprising revelations.
+- Consider the video type (e.g., comedy, storytelling, educational) to tailor clip selection.
+- If visual elements are implied (e.g., reactions, gestures, or on-screen actions), note their potential to enhance the clip's appeal.
 
-        2. **Clip Selection Criteria**:
-        - **Length**: 
-            - Short videos (<10 minutes): Extract 1–2 clips, ideally 15–45 seconds.
-            - Medium videos (10–30 minutes): Extract 3-4 clips, ideally 30–60 seconds.
-            - Long videos (>30 minutes): Extract 4-5 clips, prioritizing quality over quantity, ideally 30–60 seconds.
-            Remember, shorter clips (15–30 seconds) often perform better on TikTok, while slightly longer clips (30–60 seconds) can work well on YouTube Shorts and Instagram Reels.
-            
-            Important: These time ranges are soft guidelines, not strict rules. If a compelling moment requires additional seconds to maintain its impact and quality, prioritize the clip's effectiveness over adhering to these ranges. Quality of content should always take precedence, though try to stay within reasonable proximity of the recommended lengths. For instance, an 80-second clip might be acceptable if cutting it would significantly diminish its viral potential.
-        - **Hook Strength**: The clip should have a strong opening (first 3–5 seconds) to stop scrollers.
-        - **Emotional Impact**: Prioritize moments that evoke strong emotions (laughter, awe, empathy, shock).
-        - **Pacing and Energy**: Look for moments with high energy, rapid dialogue, or a dynamic shift in tone.
-        - **Platform Fit**: Ensure clips align with platform trends (e.g., TikTok favors humor/trends, Instagram favors polished/inspirational, YouTube Shorts favors broad appeal).
-        - **Standalone Value**: Clips should be understandable without additional context.
-        - **Visual Potential**: If the transcript implies visual elements (e.g., dramatic gestures, reactions), highlight their role in virality.
-        - **Cliffhanger Potential**: Identify moments that end on a point of high tension or an unanswered question to drive comments and engagement.
+2. **Clip Selection Criteria**:
+- **Length**: 
+    - Short videos (<10 minutes): Extract 1–2 clips, ideally 15–45 seconds.
+    - Medium videos (10–30 minutes): Extract 3-4 clips, ideally 30–60 seconds.
+    - Long videos (>30 minutes): Extract 4-5 clips, prioritizing quality over quantity, ideally 30–60 seconds.
+    Remember, shorter clips (15–30 seconds) often perform better on TikTok, while slightly longer clips (30–60 seconds) can work well on YouTube Shorts and Instagram Reels.
+    
+    Important: These time ranges are soft guidelines, not strict rules. If a compelling moment requires additional seconds to maintain its impact and quality, prioritize the clip's effectiveness over adhering to these ranges. Quality of content should always take precedence, though try to stay within reasonable proximity of the recommended lengths. For instance, an 80-second clip might be acceptable if cutting it would significantly diminish its viral potential.
+- **Hook Strength**: The clip should have a strong opening (first 3–5 seconds) to stop scrollers.
+- **Emotional Impact**: Prioritize moments that evoke strong emotions (laughter, awe, empathy, shock).
+- **Pacing and Energy**: Look for moments with high energy, rapid dialogue, or a dynamic shift in tone.
+- **Platform Fit**: Ensure clips align with platform trends (e.g., TikTok favors humor/trends, Instagram favors polished/inspirational, YouTube Shorts favors broad appeal).
+- **Standalone Value**: Clips should be understandable without additional context.
+- **Visual Potential**: If the transcript implies visual elements (e.g., dramatic gestures, reactions), highlight their role in virality.
+- **Cliffhanger Potential**: Identify moments that end on a point of high tension or an unanswered question to drive comments and engagement.
 
-        3. **Output Requirements**:
-        For each clip, provide:
-        - `title`: A short, catchy title for the clip (max 5 words).
-        - `start_time`: float (in seconds, precise to 0.1)
-        - `end_time`: float (in seconds, precise to 0.1)
-        - `content`: The exact transcript excerpt for the clip
-        - `reason`: A detailed explanation of why this moment is compelling and viral, including emotional impact, platform fit, and hook strength
-        - `confidence_score`: float (0.0–1.0) based on your certainty of virality
-        - `platform_fit`: A dictionary specifying suitability for TikTok, YouTube Shorts, and Instagram Reels (e.g., "{{"TikTok": 0.9, "YouTube Shorts": 0.8, "Instagram Reels": 0.7}}")
-        - `visual_notes`: Optional notes on implied visual elements (e.g., "Speaker's shocked expression could enhance impact")
-        - `suggested_caption`: A concise, platform-friendly caption to accompany the clip (max 15 words)
-        - `hashtags`: An array of 3-5 relevant hashtags (e.g., `["#viral", "#funny", "#storytime"]`)
+3. **Output Requirements**:
+For each clip, provide:
+- `title`: A short, catchy title for the clip (max 5 words).
+- `start_time`: float (in seconds, precise to 0.1)
+- `end_time`: float (in seconds, precise to 0.1)
+- `content`: The exact transcript excerpt for the clip
+- `reason`: A detailed explanation of why this moment is compelling and viral, including emotional impact, platform fit, and hook strength
+- `confidence_score`: float (0.0–1.0) based on your certainty of virality
+- `platform_fit`: A dictionary specifying suitability for TikTok, YouTube Shorts, and Instagram Reels (e.g., "{{"TikTok": 0.9, "YouTube Shorts": 0.8, "Instagram Reels": 0.7}}")
+- `visual_notes`: Optional notes on implied visual elements (e.g., "Speaker's shocked expression could enhance impact")
+- `suggested_caption`: A concise, platform-friendly caption to accompany the clip (max 15 words)
+- `hashtags`: An array of 3-5 relevant hashtags (e.g., `["#viral", "#funny", "#storytime"]`)
 
-        4. **Additional Considerations**:
-        - **The Golden Clip**: Always try to identify the single best clip—the "golden clip"—that has the highest potential to go viral. It should be your top recommendation.
-        - Avoid moments that require heavy editing to make sense (e.g., complex setups or callbacks).
-        - Prioritize diversity in emotional tone across clips (e.g., one funny, one heartfelt, one shocking).
-        - If the transcript includes timestamps, use them for precision; otherwise, estimate based on pacing.
-        - If the video type or audience is specified, tailor clips to resonate with that demographic.
-        - Avoid copyrighted material or sensitive content that could lead to platform removal.
+4. **Additional Considerations**:
+- **The Golden Clip**: Always try to identify the single best clip—the "golden clip"—that has the highest potential to go viral. It should be your top recommendation.
+- Avoid moments that require heavy editing to make sense (e.g., complex setups or callbacks).
+- Prioritize diversity in emotional tone across clips (e.g., one funny, one heartfelt, one shocking).
+- If the transcript includes timestamps, use them for precision; otherwise, estimate based on pacing.
+- If the video type or audience is specified, tailor clips to resonate with that demographic.
+- Avoid copyrighted material or sensitive content that could lead to platform removal.
 
-        ## Format:
-        Respond with a JSON array of clip objects:
-        [
-            {{
-                "start_time": 102.5,
-                "end_time": 141.0,
-                "content": "This moment blew my mind because...",
-                "reason": "A shocking reveal with a strong hook, perfect for TikTok's fast-paced audience.",
-                "confidence_score": 0.92,
-                "platform_fit": {{"TikTok": 0.95, "YouTube Shorts": 0.85, "Instagram Reels": 0.80}},
-                "visual_notes": "Speaker's dramatic pause and wide-eyed expression could amplify impact.",
-                "suggested_caption": "You won't believe what happened next! 😱 #ViralMoment"
-            }},
-            ...
-        ]
+## Format:
+Respond with a JSON array of clip objects:
+[
+    {{
+        "start_time": 102.5,
+        "end_time": 141.0,
+        "content": "This moment blew my mind because...",
+        "reason": "A shocking reveal with a strong hook, perfect for TikTok's fast-paced audience.",
+        "confidence_score": 0.92,
+        "platform_fit": {{"TikTok": 0.95, "YouTube Shorts": 0.85, "Instagram Reels": 0.80}},
+        "visual_notes": "Speaker's dramatic pause and wide-eyed expression could amplify impact.",
+        "suggested_caption": "You won't believe what happened next! 😱 #ViralMoment"
+    }},
+    ...
+]
 
-        ## Example Output:
-        [
-            {{
-                "start_time": 45.2,
-                "end_time": 75.0,
-                "content": "I never told anyone this before, but here's what happened...",
-                "reason": "A vulnerable, emotional confession that resonates universally, with a strong hook for Instagram Reels.",
-                "confidence_score": 0.89,
-                "platform_fit": {{"TikTok": 0.85, "YouTube Shorts": 0.90, "Instagram Reels": 0.95}},
-                "visual_notes": "Close-up of speaker's face could enhance emotional connection.",
-                "suggested_caption": "My secret revealed... 😢 #LifeStory"
-            }},
-            {{
-                "start_time": 300.0,
-                "end_time": 340.0,
-                "content": "And then I said to him, 'You're not even real!'",
-                "reason": "A humorous punchline with fast pacing, ideal for TikTok's comedy trends.",
-                "confidence_score": 0.83,
-                "platform_fit": {{"TikTok": 0.90, "YouTube Shorts": 0.80, "Instagram Reels": 0.75}},
-                "visual_notes": "Reaction shots of others laughing could boost engagement.",
-                "suggested_caption": "The ultimate comeback! 😂 #Funny"
-            }}
-        ]
+## Example Output:
+[
+    {{
+        "start_time": 45.2,
+        "end_time": 75.0,
+        "content": "I never told anyone this before, but here's what happened...",
+        "reason": "A vulnerable, emotional confession that resonates universally, with a strong hook for Instagram Reels.",
+        "confidence_score": 0.89,
+        "platform_fit": {{"TikTok": 0.85, "YouTube Shorts": 0.90, "Instagram Reels": 0.95}},
+        "visual_notes": "Close-up of speaker's face could enhance emotional connection.",
+        "suggested_caption": "My secret revealed... 😢 #LifeStory"
+    }},
+    {{
+        "start_time": 300.0,
+        "end_time": 340.0,
+        "content": "And then I said to him, 'You're not even real!'",
+        "reason": "A humorous punchline with fast pacing, ideal for TikTok's comedy trends.",
+        "confidence_score": 0.83,
+        "platform_fit": {{"TikTok": 0.90, "YouTube Shorts": 0.80, "Instagram Reels": 0.75}},
+        "visual_notes": "Reaction shots of others laughing could boost engagement.",
+        "suggested_caption": "The ultimate comeback! 😂 #Funny"
+    }}
+]
 
-        ## Transcript:
-        {transcript_text}
-    """
+## Transcript:
+{transcript_text}
+"""
 
     try:
         response = gemini_client.models.generate_content(

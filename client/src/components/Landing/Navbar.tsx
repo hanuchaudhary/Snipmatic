@@ -74,11 +74,10 @@ export function Navbar() {
                     aria-label="View leaderboard"
                     title="View leaderboard"
                   >
-                    <Trophy size={20} className="text-yellow-500" />
                     <span className="font-jost text-sm">Leaderboard</span>
                   </motion.button>
                 </Link>
-                <motion.button
+                {/* <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={openDisclaimer}
                   className="p-2 hover:bg-accent rounded-lg transition-colors"
@@ -86,11 +85,12 @@ export function Navbar() {
                   title="Show disclaimer"
                 >
                   <IconInfoCircleFilled size={20} className="text-foreground" />
-                </motion.button>
+                </motion.button> */}
               </>
             )}
-            <ThemeToggle />
+            
             <TwitterConnectButton/>
+            <ThemeToggle />
             <ProfileDropdown closeMobileMenu={closeMobileMenu} />
           </div>
 
@@ -188,10 +188,12 @@ export function Navbar() {
                               variant="outline"
                               className="w-full justify-start gap-2"
                             >
-                              <Trophy size={16} className="text-yellow-500" />
                               Leaderboard
                             </Button>
                           </Link>
+                        </div>
+                        <div>
+                          <TwitterConnectButton/>
                         </div>
                         <div>
                           <Button

@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { getYouTubeThumbnail } from "@/lib/utils";
-import { IconTrophy, IconMedal, IconLoader2 } from "@tabler/icons-react";
+import { getYouTubeThumbnail, cn } from "@/lib/utils";
+import { IconTrophy, IconMedal, IconLoader2, IconExternalLink } from "@tabler/icons-react";
 import axios from "axios";
 
 interface LeaderboardEntry {
@@ -18,17 +17,13 @@ interface LeaderboardEntry {
 const getRankIcon = (rank: number) => {
   switch (rank) {
     case 1:
-      return <IconTrophy className="h-8 w-8 text-yellow-500" />;
+      return <IconTrophy className="h-6 w-6 text-white" />;
     case 2:
-      return <IconMedal className="h-7 w-7 text-gray-400" />;
+      return <IconMedal className="h-6 w-6 text-white" />;
     case 3:
-      return <IconMedal className="h-6 w-6 text-amber-700" />;
+      return <IconMedal className="h-6 w-6 text-white" />;
     default:
-      return (
-        <div className="h-8 w-8 flex items-center justify-center font-bold text-muted-foreground">
-          {rank}
-        </div>
-      );
+      return null;
   }
 };
 
@@ -63,9 +58,8 @@ export default function LeaderboardPage() {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <IconTrophy className="h-12 w-12 text-yellow-500" />
-            <h1 className="text-4xl md:text-5xl font-bold font-instrumental">
+          <div className="flex items-center justify-center gap-3">
+            <h1 className="text-2xl md:text-4xl font-semibold font-instrumental">
               Top 5 <span className="text-orange-500">Viral</span> Videos
             </h1>
           </div>
@@ -88,113 +82,118 @@ export default function LeaderboardPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {leaderboard.map((entry, index) => (
               <motion.div
                 key={entry.youtubeUrl}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="group"
               >
-                <Card
-                  className={`overflow-hidden hover:shadow-xl transition-all duration-300 ${
-                    index === 0
-                      ? "border-yellow-500/50 shadow-lg shadow-yellow-500/20"
-                      : index === 1
-                      ? "border-gray-400/50 shadow-lg shadow-gray-400/20"
-                      : index === 2
-                      ? "border-amber-700/50 shadow-lg shadow-amber-700/20"
-                      : ""
-                  }`}
+                <div
+                  className={cn(
+                    "cursor-pointer w-full rounded-3xl overflow-hidden shadow-lg border bg-muted hover:shadow-2xl transition-all duration-300 relative",
+                  )}
                 >
-                  <CardContent className="p-0">
-                    <div className="flex items-center gap-4 p-4 md:p-6">
-                      {/* Rank */}
-                      <div className="flex-shrink-0">
-                        {getRankIcon(index + 1)}
-                      </div>
+                  <div className="absolute top-3 left-3 z-10">
+                    <div
+                      className={cn(
+                        "flex items-center justify-center rounded-full shadow-lg backdrop-blur-sm",
+                        index === 0 && "bg-yellow-500/90 p-2",
+                        index === 1 && "bg-gray-400/90 p-2",
+                        index === 2 && "bg-amber-700/90 p-2",
+                        index > 2 && "bg-black/60 p-2 px-3"
+                      )}
+                    >
+                      {index < 3 ? (
+                        getRankIcon(index + 1)
+                      ) : (
+                        <span className="text-white font-bold text-lg">
+                          #{index + 1}
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-                      {/* Thumbnail */}
-                      <a
-                        href={entry.youtubeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-shrink-0 relative group"
-                      >
-                        <div className="w-32 h-20 md:w-48 md:h-28 rounded-lg overflow-hidden">
-                          <img
-                            src={
-                              entry.thumbnailUrl ||
-                              getYouTubeThumbnail(entry.youtubeUrl) ||
-                              "/placeholder.jpg"
-                            }
-                            alt={entry.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                            onError={(e) => {
-                              if (
-                                e.currentTarget.src !==
-                                getYouTubeThumbnail(entry.youtubeUrl)
-                              ) {
-                                e.currentTarget.src = getYouTubeThumbnail(
-                                  entry.youtubeUrl
-                                );
-                              } else {
-                                e.currentTarget.src = "/placeholder.jpg";
-                              }
-                            }}
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
-                          </svg>
-                        </div>
-                      </a>
+                  {/* Count Badge */}
+                  <div className="absolute top-3 right-3 z-10">
+                    <div
+                      className={cn(
+                        "px-4 py-2 rounded-full font-bold font-jost shadow-lg backdrop-blur-sm",
+                        index === 0 && "bg-yellow-500/90 text-white",
+                        index === 1 && "bg-gray-400/90 text-white",
+                        index === 2 && "bg-amber-700/90 text-white",
+                        index > 2 && "bg-black/60 text-white"
+                      )}
+                    >
+                      {entry.count}
+                    </div>
+                  </div>
 
-                      {/* Video Info */}
-                      <div className="flex-1 min-w-0">
-                        <a
-                          href={entry.youtubeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group"
-                        >
-                          <h3 className="font-jost font-semibold text-base md:text-lg line-clamp-2 group-hover:text-orange-500 transition-colors">
-                            {entry.title}
-                          </h3>
-                        </a>
-                        <p className="text-sm text-muted-foreground mt-1 font-jost">
-                          Processed{" "}
-                          <span className="font-semibold text-orange-500">
-                            {entry.count}
-                          </span>{" "}
-                          {entry.count === 1 ? "time" : "times"}
-                        </p>
-                      </div>
-
-                      {/* Count Badge */}
-                      <div className="flex-shrink-0">
-                        <div
-                          className={`px-4 py-2 rounded-full font-bold font-jost ${
-                            index === 0
-                              ? "bg-yellow-500/20 text-yellow-500"
-                              : index === 1
-                              ? "bg-gray-400/20 text-gray-400"
-                              : index === 2
-                              ? "bg-amber-700/20 text-amber-700"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {entry.count}
+                  {/* Thumbnail */}
+                  <a
+                    href={entry.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <div className="relative w-full aspect-[16/9]">
+                      <img
+                        src={
+                          entry.thumbnailUrl ||
+                          getYouTubeThumbnail(entry.youtubeUrl) ||
+                          "/placeholder.jpg"
+                        }
+                        alt={entry.title}
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          if (
+                            e.currentTarget.src !==
+                            getYouTubeThumbnail(entry.youtubeUrl)
+                          ) {
+                            e.currentTarget.src = getYouTubeThumbnail(
+                              entry.youtubeUrl
+                            );
+                          } else {
+                            e.currentTarget.src = "/placeholder.jpg";
+                          }
+                        }}
+                      />
+                      {/* Overlay on Hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <div className="flex items-center gap-2 text-white">
+                          <IconExternalLink className="w-6 h-6" />
+                          <span className="font-jost font-semibold">
+                            Watch on YouTube
+                          </span>
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </a>
+
+                  {/* Card Content */}
+                  <div className="p-4">
+                    <a
+                      href={entry.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <h3 className="font-jost font-semibold text-base line-clamp-2 mb-2 group-hover:text-orange-500 transition-colors">
+                        {entry.title}
+                      </h3>
+                    </a>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span className="font-jost">
+                        Processed{" "}
+                        <span className="font-semibold text-orange-500">
+                          {entry.count}
+                        </span>{" "}
+                        {entry.count === 1 ? "time" : "times"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>

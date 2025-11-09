@@ -32,7 +32,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
   );
 
   const [progress, setProgress] = useState(task.progress || 0);
-  const [posting ,setPosting] = useState(false)
+  const [posting, setPosting] = useState(false)
   const [displayProgress, setDisplayProgress] = useState(task.progress || 0);
 
   useEffect(() => {
@@ -89,9 +89,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 "/placeholder.jpg"
               }
               alt={task.title}
-              className={`object-cover w-full h-full ${
-                isProcessing ? "opacity-20" : ""
-              }`}
+              className={`object-cover w-full h-full ${isProcessing ? "opacity-20" : ""
+                }`}
               onError={(e) => {
                 if (
                   task.youtubeUrl &&
@@ -141,53 +140,53 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 <span>{"1080p"}</span>
               </div>
             </div>
-           <div className="flex items-center justify-center gap-4">
-             {task.clipURL && (
-              <WrapButton
-                className=""
-                href={task.clipURL}
+            <div className="flex items-center justify-center md:flex-row flex-col md:gap-4 gap-2">
+              {task.clipURL && (
+                <WrapButton
+                  className=""
+                  href={task.clipURL}
                 // onClick={() => {
                 //   downloadFile(
                 //     task.clipURL!,
                 //     `${task.title?.slice(0, 10)}.mp4`
                 //   );
                 // }}
-              >
-                {/* <Globe className="animate-spin h-5 w-5" /> */}
-                Download
-              </WrapButton>
-            )}
-            {task.clipURL && (
-              <button
-              disabled={posting} onClick={async () =>{
-                setPosting(true)
-                const isZipt = task.clipURL?.endsWith(".zip");
-                if (isZipt){
-                  toast.error("Posting zip files is not supported yet!");
-                  return;
-                }
+                >
+                  {/* <Globe className="animate-spin h-5 w-5" /> */}
+                  Download
+                </WrapButton>
+              )}
+              {task.clipURL && (
+                <button
+                  disabled={posting} onClick={async () => {
+                    setPosting(true)
+                    const isZipt = task.clipURL?.endsWith(".zip");
+                    if (isZipt) {
+                      toast.error("Posting zip files is not supported yet!");
+                      return;
+                    }
 
-                try {
-                  const res= await axios.post("/api/post",{
-                    title: task.title,
-                    url: task.clipURL,
-                    mediaKey:"clips" + task.clipURL?.split("clips")[1]
-                  })
-                  if (res.status == 201){
-                    toast.success("Posted on X successfully")
-                  }
-                } catch (error) {
-                  toast.error("Failed to post on X")
-                }
-                finally{
-                  setPosting(false)
-                }
-              }} className="flex items-center justify-center gap-2 border-2 px-4 py-2 rounded-full font-instrumental tracking-wider hover:scale-105 transition-transform cursor-pointer">
-                <IconBrandXFilled className="size-4"/>
-                {posting ? "Posting..." : "Post"}
-              </button>
-            )}
-           </div>
+                    try {
+                      const res = await axios.post("/api/post", {
+                        title: task.title,
+                        url: task.clipURL,
+                        mediaKey: "clips" + task.clipURL?.split("clips")[1]
+                      })
+                      if (res.status == 201) {
+                        toast.success("Posted on X successfully")
+                      }
+                    } catch (error) {
+                      toast.error("Failed to post on X")
+                    }
+                    finally {
+                      setPosting(false)
+                    }
+                  }} className="flex items-center justify-center gap-2 border-2 px-4 py-2 rounded-full font-instrumental tracking-wider hover:scale-105 transition-transform cursor-pointer md:w-fit w-full">
+                  <IconBrandXFilled className="size-4" />
+                  {posting ? "Posting..." : "Post"}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -20,7 +20,7 @@ const WrapButton: React.FC<WrapButtonProps> = ({
   return (
     <div onClick={onClick} className="flex items-center justify-center">
       {href ? (
-        <Link href={href}>
+        <Link target="_blank" href={href}>
           <div
             className={cn(
               "group cursor-pointer border group dark:border-[#3B3A3A] dark:bg-[#151515] bg-white gap-2 flex items-center p-[4px] rounded-full pr-1.5",

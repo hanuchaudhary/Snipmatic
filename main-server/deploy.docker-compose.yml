@@ -64,7 +64,7 @@ services:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro
     deploy:
-      replicas: 1
+      replicas: 2
       resources:
         limits:
           memory: 5G

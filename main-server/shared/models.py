@@ -28,6 +28,7 @@ class ClipRequest(BaseModel):
     clipType: str = "AI"
     multipleClips: bool = False
     duration: int = 0
+    user_prompt: Optional[str] = None
 
 class ViralMoment(BaseModel):
     start_time: float

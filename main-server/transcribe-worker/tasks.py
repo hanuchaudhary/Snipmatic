@@ -122,10 +122,39 @@ def transcribe_audio_whisperx(audio_path: str, generate_subtitles: bool = False)
     except Exception as e:
         raise Exception(f"Transcription failed: {str(e)}")
 
-def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
+def find_viral_moments(segments: list, video_info: dict, user_prompt: str = None) -> list[ViralMoment]:
     logger.info("Starting viral moment analysis with Gemini AI")
     
     transcript_text = "\n".join([f"[{seg['start']:.1f}s - {seg['end']:.1f}s]: {seg['text']}" for seg in segments])
+    
+    user_preferences = ""
+    if user_prompt and user_prompt.strip():
+        sanitized_prompt = user_prompt.strip()
+        dangerous_patterns = [
+            "ignore previous", "ignore all", "disregard", "forget", "system", 
+            "admin", "root", "bypass", "override", "new instructions",
+            "you are now", "act as", "pretend", "roleplay"
+        ]
+        
+        sanitized_lower = sanitized_prompt.lower()
+        if any(pattern in sanitized_lower for pattern in dangerous_patterns):
+            logger.warning(f"Potentially malicious prompt detected and ignored: {user_prompt}")
+            sanitized_prompt = ""
+        
+        max_length = 300
+        if len(sanitized_prompt) > max_length:
+            sanitized_prompt = sanitized_prompt[:max_length]
+            logger.info(f"User prompt truncated to {max_length} characters")
+        
+        if sanitized_prompt:
+            logger.info(f"Using sanitized user preferences: {sanitized_prompt}")
+            user_preferences = f"""
+        **CRITICAL USER INSTRUCTIONS** (These are mandatory requirements from the user):
+        🎯 USER REQUIREMENT: {sanitized_prompt}
+        
+        ⚠️ You MUST prioritize clips that align with this specific user instruction. This is not optional - this is the primary directive for clip selection. This will be the preceding instructions then only the rest of the instructions should be considered making a mix of general viral moment principles and the user's specific desires.
+            """
+            print(f"User Preferences added to prompt: {sanitized_prompt}")
     
     prompt = f"""
         You are an expert viral content analyst with deep knowledge of social media trends, audience engagement, and short-form video platforms like TikTok, YouTube Shorts, and Instagram Reels. Your task is to analyze a YouTube video transcript and extract moments that are highly engaging and optimized for short-form content (15–60 seconds) to maximize virality.
@@ -143,6 +172,7 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
         - Duration: {video_info.get('duration', 'Unknown')} seconds
         - Video Type: {video_info.get('type', 'Unknown')} (e.g., vlog, interview, tutorial, storytelling, comedy, reaction, etc.)
         - Target Audience: {video_info.get('target_audience', 'Unknown')} (e.g., Gen Z, Millennials, general audience)
+        {user_preferences}
 
         ## Guidelines:
 
@@ -275,7 +305,7 @@ def find_viral_moments(segments: list, video_info: dict) -> list[ViralMoment]:
     rate_limit='2/m'
 )
 
-def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id, subtitles=False):
+def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multiple_clips, video_info, user_id, subtitles=False, user_prompt=None):
     audio_path = None
     
     try:
@@ -293,7 +323,7 @@ def transcribe_task(self, task_id, video_path, original_url, aspect_ratio, multi
             subtitle_segments = []
         update_task_status(user_id, task_id, TaskStatus.TRANSCRIBING, 60, "Transcribing audio")
         logger.info(f"[TRANSCRIBE_WORKER] Task {task_id}: Finding viral moments using AI")
-        viral_moments = find_viral_moments(segments, video_info)
+        viral_moments = find_viral_moments(segments, video_info, user_prompt)
         update_task_status(user_id, task_id, TaskStatus.ANALYZING, 80, "Finding viral moments")
         viral_moments_serialized = []
         for m in viral_moments:

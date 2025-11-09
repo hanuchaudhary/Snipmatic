@@ -110,7 +110,7 @@ def download_video(url: str, timeout_minutes: int = 0, video_duration: int = 0) 
         raise
 
 @celery_app.task(name='download_task', bind=True)
-def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None, subtitles=False, duration=0):
+def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips=None, clip_type="AI", start_time=None, end_time=None, subtitles=False, duration=0, user_prompt=None):
    
     video_path = None
     video_info = None
@@ -131,7 +131,7 @@ def download_task(self, task_id, url, user_id, aspect_ratio=None, multiple_clips
             try:
                 celery_app.send_task(
                     'transcribe_task',
-                    args=[task_id, video_path, url, aspect_ratio, multiple_clips, video_info, user_id, subtitles],
+                    args=[task_id, video_path, url, aspect_ratio, multiple_clips, video_info, user_id, subtitles, user_prompt],
                     queue='transcribe',
                     routing_key='transcribe'
                 )

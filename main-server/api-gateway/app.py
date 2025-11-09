@@ -6,6 +6,10 @@ import logging
 import sys
 import os
 
+import redis
+from shared.celery_config import REDIS_URL
+redis_client = redis.from_url(REDIS_URL)
+
 from shared.models import ClipRequest, ClipResponse, TaskStatus
 from shared.utils import update_task_status, get_task_status, check_user_exists
 from shared.celery_config import celery_app
@@ -66,7 +70,7 @@ async def create_video_clip(request: ClipRequest):
             logger.info(f"[API] Queuing download task for AI workflow - task {task_id}")
             celery_app.send_task(
                 'download_task',
-                args=[task_id, request.url, request.user_id, request.aspectRatio, request.multipleClips, request.clipType, None, None, request.subtitles, request.duration],
+                args=[task_id, request.url, request.user_id, request.aspectRatio, request.multipleClips, request.clipType, None, None, request.subtitles, request.duration, request.user_prompt],
                 queue='download',
                 routing_key='download'
             )
@@ -107,11 +111,6 @@ async def get_queue_info():
         inspect = celery_app.control.inspect()
         
         active_tasks = inspect.active()
-        
-        import redis
-        from shared.celery_config import REDIS_URL
-        redis_client = redis.from_url(REDIS_URL)
-        
         queue_info = {}
         for queue_name in ['download', 'transcribe', 'clip']:
             queue_length = redis_client.llen(queue_name)

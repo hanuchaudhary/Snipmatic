@@ -13,12 +13,12 @@ celery_app = Celery(
 )
 
 celery_app.conf.update(
-    # result_backend_transport_options={
-    #     'ssl_cert_reqs': 'none',
-    #     'ssl_ca_certs': None,
-    #     'ssl_certfile': None,
-    #     'ssl_keyfile': None
-    # },
+    result_backend_transport_options={
+        'ssl_cert_reqs': 'none',
+        'ssl_ca_certs': None,
+        'ssl_certfile': None,
+        'ssl_keyfile': None
+    },
 
     task_routes={
         'download_task': {'queue': 'download'},

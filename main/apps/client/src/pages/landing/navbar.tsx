@@ -1,95 +1,182 @@
 import { useState } from "react";
-import { Link, NavLink } from "react-router";
-import { MenuIcon, XIcon, } from "lucide-react";
-
-import { NAV_LINKS } from "./data";
-import { Logo } from "@/components/logo";
+import { Link } from "react-router";
+import { Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { ThemeSwitch } from "@/components/unlumen-ui/theme-switch";
-
+import { useSession } from "@/lib/auth/auth.client";
 
 export function Navbar() {
-  const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
-      <div className="border-b">
-        <div className="flex items-center justify-between bg-background px-4 py-4 max-w-6xl mx-auto border-x">
-          <Link to="/" className="flex items-center gap-2">
-            <Logo className="size-7" />
-            <span>
-              Clutch
-            </span>
-          </Link>
-
-          <nav className="hidden items-center gap-6 md:flex">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="text-xs font-medium tracking-wide text-muted-foreground transition-colors hover:text-primary"
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="hidden items-center gap-2 md:flex">
-            <ThemeSwitch />
+    <>
+      <motion.header
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="fixed w-full left-1/2 -translate-x-1/2 md:my-4 top-0 z-50 max-w-7xl mx-auto md:backdrop-blur-none backdrop-blur-sm"
+      >
+        <div className="md:px-8 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <Link
-              to="/login"
-              className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+              className="flex items-center justify-center"
+              to={session?.user ? "/dashboard" : "/"}
             >
-              Sign in
-            </Link>
-            <Link
-              to="/signup"
-              className="rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-background transition-all hover:bg-primary/90 active:scale-95"
-            >
-              Start free
+              <img
+                src="/logo.png"
+                className="h-12 md:h-16"
+                alt="Snipmatic Logo"
+              />
+              <span className="md:text-xl text-lg font-semibold font-[family-name:var(--font-jost)]">
+                Snipmatic
+              </span>
             </Link>
           </div>
 
-          <button
-            className="flex size-8 items-center justify-center rounded-md border border-muted-foreground/10 bg-muted-foreground/5 text-muted-foreground md:hidden"
-            onClick={() => setOpen(!open)}
-          >
-            {open ? <XIcon className="size-4" /> : <MenuIcon className="size-4" />}
-          </button>
-        </div>
-
-        {open && (
-          <div className="mt-2 rounded-xl border border-muted-foreground/10 bg-muted-foreground/60 p-4 backdrop-blur-xl">
-            <nav className="flex flex-col gap-1">
-              {NAV_LINKS.map((link) => (
-                <NavLink
-                  key={link.label}
-                  to={link.href}
-                  end
-                  onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted-foreground/5 hover:text-primary"
-                >
-                  {link.label}
-                </NavLink>
-              ))}
-              <div className="mt-2 flex flex-col gap-2 border-t border-white/10 pt-2">
+          <div className="hidden md:flex items-center gap-2">
+            <ThemeSwitch />
+            {session?.user ? (
+              <Link
+                to="/dashboard"
+                className="border px-4 py-2 rounded-xl font-semibold font-[family-name:var(--font-jost)] text-sm bg-neutral-900 dark:text-muted-foreground text-white hover:scale-105 transition-transform"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
                 <Link
                   to="/login"
-                  className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted-foreground/5 hover:text-primary"
-                  onClick={() => setOpen(false)}
+                  className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary font-[family-name:var(--font-jost)]"
                 >
                   Sign in
                 </Link>
                 <Link
                   to="/signup"
-                  className="rounded-md bg-primary px-3 py-2 text-center text-sm font-bold text-background transition-all hover:bg-primary/90 active:scale-95"
-                  onClick={() => setOpen(false)}
+                  className="rounded-md bg-primary px-3 py-1.5 text-sm font-bold text-background transition-all hover:bg-primary/90 active:scale-95 font-[family-name:var(--font-jost)]"
                 >
                   Start free
                 </Link>
-              </div>
-            </nav>
+              </>
+            )}
           </div>
+
+          <div className="md:hidden">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={toggleMobileMenu}
+              className="p-2 hover:bg-accent rounded-lg transition-colors"
+              aria-label="Toggle mobile menu"
+            >
+              <AnimatePresence mode="wait">
+                {isMobileMenuOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X size={24} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu size={24} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </div>
+        </div>
+      </motion.header>
+
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+              onClick={closeMobileMenu}
+            />
+
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed top-0 right-0 w-[76vw] rounded-l-3xl h-full bg-background border-l shadow-xl z-50 md:hidden"
+            >
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <Link
+                    className="flex items-center gap-2"
+                    to="/"
+                    onClick={closeMobileMenu}
+                  >
+                    <img src="/logo.png" className="h-8" alt="Snipmatic Logo" />
+                    <span className="text-lg font-semibold font-[family-name:var(--font-jost)]">
+                      Snipmatic
+                    </span>
+                  </Link>
+                  <button
+                    onClick={closeMobileMenu}
+                    className="p-2 hover:bg-accent rounded-lg transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <nav className="flex-1 p-4">
+                  <div className="space-y-2 mt-4">
+                    {session?.user ? (
+                      <Link
+                        to="/dashboard"
+                        onClick={closeMobileMenu}
+                        className="block rounded-md bg-primary px-3 py-2 text-sm font-bold text-background text-center"
+                      >
+                        Dashboard
+                      </Link>
+                    ) : (
+                      <>
+                        <Link
+                          to="/login"
+                          onClick={closeMobileMenu}
+                          className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-primary"
+                        >
+                          Sign in
+                        </Link>
+                        <Link
+                          to="/signup"
+                          onClick={closeMobileMenu}
+                          className="block rounded-md bg-primary px-3 py-2 text-center text-sm font-bold text-background"
+                        >
+                          Start free
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </nav>
+
+                <div className="p-4 flex items-center justify-between border-t border-border">
+                  <ThemeSwitch />
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
-      </div>
-    </header>
+      </AnimatePresence>
+    </>
   );
 }

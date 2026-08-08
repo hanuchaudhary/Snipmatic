@@ -11,6 +11,9 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    onExistingUserSignUp: async ({ user }) => {
+      console.log("Existing user sign-up attempt:", user.email);
+    },
     requireEmailVerification: true,
     minPasswordLength: 6,
     sendResetPassword: async ({ user, url }) => {

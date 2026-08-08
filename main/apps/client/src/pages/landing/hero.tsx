@@ -1,54 +1,141 @@
-import { Link, NavLink } from "react-router";
-import { ArrowRightIcon } from "lucide-react";
+import { Link } from "react-router";
+import { ArrowUpRight } from "lucide-react";
+import { motion, type Variants } from "motion/react";
+import { useRef } from "react";
+import { Navbar } from "./navbar";
+import { GradientText } from "@/components/ui/gradient-text";
+import { VideoCard } from "@/components/ui/video-card";
+import { useTheme } from "@/components/provider/theme-provider";
 
-import AnimatedGradientBackground from "@/components/animated-gradient-bg";
-import { STATS } from "./data";
+export function HeroSection() {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const { theme } = useTheme();
 
-export function Hero() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        delayChildren: 0.3,
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: {
+      y: 20,
+      opacity: 0,
+      filter: "blur(10px)",
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      filter: "blur(0px)",
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      },
+    },
+  };
+
+  const buttonVariants: Variants = {
+    hidden: {
+      y: 20,
+      opacity: 0,
+      filter: "blur(10px)",
+      scale: 0.9,
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      filter: "blur(0px)",
+      scale: 1,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        delay: 0.8,
+      },
+    },
+  };
+
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 pt-20 border-b">
-      <AnimatedGradientBackground />
-
-      <div className="relative z-10 mx-auto max-w-3xl text-center">
-        <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
-          Live multiplayer quiz platform
-        </span>
-        <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold text-center leading-none">
-          PROVE WHAT YOU KNOW.
-        </h1>
-
-        <p className="md:text-lg text-sm max-w-xs md:max-w-full text-muted-foreground my-8 text-center">
-        Create quizzes, challenge your friends, compete in real time. The knowledge arena where every question is a chance to shine.
-        </p>
-
-        <div
-          className="flex flex-col items-center justify-center gap-3 sm:flex-row"
+    <section className="relative flex flex-col justify-center">
+      <Navbar />
+      <motion.div
+        className="mx-auto z-10 min-h-[calc(100vh-15rem)] flex items-center flex-col justify-center relative md:pt-0 pt-40 md:w-4xl md:text-[5rem] text-4xl"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.h1
+          className="mt-20 mx-auto font-[family-name:var(--font-instrumental)] text-center leading-none"
+          variants={itemVariants}
         >
-          <Link
-            to="/signup"
-            className="group flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-background transition-all hover:bg-primary/90 active:scale-95"
+          Snip Your Way
+        </motion.h1>
+
+        <motion.h1
+          className="mx-auto font-[family-name:var(--font-instrumental)] text-center leading-none flex items-center justify-center md:gap-3 gap-1"
+          variants={itemVariants}
+        >
+          to Virality with
+          <GradientText
+            colors={["#ff4500", "#ff8c00", "#ffd700"]}
+            animationSpeed={5}
+            showBorder={false}
+            className="custom-class"
           >
-            Start for free
-            <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
+            Snipmatic
+          </GradientText>
+        </motion.h1>
+
+        <motion.p
+          className="md:text-lg text-sm font-[family-name:var(--font-jost)] md:px-0 px-4 text-neutral-400 my-8 text-center mx-auto max-w-2xl"
+          variants={itemVariants}
+        >
+          Get famous with Snipmatic — transform any YouTube video into viral-ready shorts with AI-powered precision.
+        </motion.p>
+
+        <motion.div
+          className="flex flex-wrap flex-col gap-2 md:text-base text-sm font-[family-name:var(--font-jost)] tracking-wider items-center justify-center"
+          variants={buttonVariants}
+        >
+          <Link to="/signup">
+            <motion.button
+              ref={buttonRef}
+              style={{
+                boxShadow: "rgba(255, 255, 255, 0.16) 0px 2px 6px -2px inset",
+              }}
+              className="border hover:scale-105 transition-transform px-7 py-3 rounded-xl font-semibold bg-neutral-900 dark:text-muted-foreground text-white cursor-pointer flex items-center gap-2"
+              whileHover={{
+                boxShadow: "rgba(255, 255, 255, 0.25) 0px 4px 12px -4px inset",
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Start Creating Now
+              <ArrowUpRight />
+            </motion.button>
           </Link>
-          <NavLink to="#how-it-works" 
-            className="rounded-xl border border-muted-foreground/10 bg-muted-foreground/5 px-6 py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-muted-foreground/10 hover:text-primary"
-          >
-            See how it works
-          </NavLink>
-        </div>
+        </motion.div>
+      </motion.div>
 
-        <div
-          className="mt-16 flex items-center justify-center gap-8"
-        >
-          {STATS.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-xl font-black tracking-tight text-white md:text-2xl">{stat.value}</div>
-              <div className="text-xs tracking-wide text-white/40 uppercase">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <motion.div
+        className="w-full mx-auto overflow-hidden px-4 sm:px-2 mt-12"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 1.2 }}
+      >
+        <VideoCard
+          imageUrl={
+            theme === "dark"
+              ? "https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-08-17 21-39-13.png"
+              : "https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-09-02 00-44-55.png"
+          }
+          videoUrl="https://d10d2f3sgu39wn.cloudfront.net/snipmatic-demo-1754599920218.mp4"
+          className="w-full"
+        />
+      </motion.div>
     </section>
   );
 }

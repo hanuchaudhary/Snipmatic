@@ -7,7 +7,9 @@
     "dev": "bun --watch run ./src/index.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "^26.2.0",
+    "prisma": "^7.9.1"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -15,9 +17,12 @@
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
     "@elysiajs/openapi": "^1.4.15",
-    "@snipmatic/utils": "workspace:*",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
     "@snipmatic/db": "workspace:*",
+    "@snipmatic/utils": "workspace:*",
     "better-auth": "^1.6.26",
+    "dotenv": "^17.4.2",
     "elysia": "^1.4.29",
     "resend": "^6.18.1",
     "zod": "^4.4.3"

@@ -1,0 +1,51 @@
+{
+  "name": "Snipmatic - AI YouTube to Shorts Generator",
+  "short_name": "Snipmatic",
+  "description": "Transform any YouTube video into viral shorts with AI-powered clipping tool",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#ff4500",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "video", "social"],
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Clip",
+      "short_name": "Clip",
+      "description": "Start creating a new video clip",
+      "url": "/clip",
+      "icons": [
+        {
+          "src": "/icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Sign In",
+      "short_name": "Login",
+      "description": "Sign in to your account",
+      "url": "/signin",
+      "icons": [
+        {
+          "src": "/icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

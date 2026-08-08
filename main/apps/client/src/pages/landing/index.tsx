@@ -1,23 +1,22 @@
-import { CtaBanner } from "./cta-banner";
-import { Features } from "./features";
 import { Footer } from "./footer";
-import { Hero } from "./hero";
-import { HowItWorks } from "./how-it-works";
-import { Navbar } from "./navbar";
-import { Pricing } from "./pricing";
+import { HeroSection } from "./hero";
+import GradualBlurMemo from "@/components/ui/gradual-blur";
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen max-w-6xl mx-auto">
-      <Navbar />
-      <div className="border-x">
-        <Hero />
-        <Features />
-        <HowItWorks />
-        <Pricing />
-        <CtaBanner />
-        <Footer />
-      </div>
+    <div className="relative z-20 max-w-7xl mx-auto flex flex-col justify-center min-h-screen">
+      <HeroSection />
+      <GradualBlurMemo
+        target="page"
+        position="bottom"
+        height="6rem"
+        strength={5}
+        divCount={5}
+        curve="bezier"
+        exponential={true}
+        opacity={1}
+      />
+      <Footer />
     </div>
   );
 }

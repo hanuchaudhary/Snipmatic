@@ -10,9 +10,12 @@ export const Provider = ({ children }: { children: React.ReactNode }) => {
         position="top-center"
         toastOptions={{
           style: {
-            borderRadius: "100%",
+            borderRadius: "200px",
+            fontFamily: "var(--font-geist)",
+            boxShadow: "inset 0 0 6px rgba(255,255,255,1)]",
           },
         }}
+        invert
       />
     </ThemeProvider>
   );

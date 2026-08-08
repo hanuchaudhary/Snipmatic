@@ -9,7 +9,7 @@ import { LoginPage } from "./auth/login"
 import ResetPassword from "./auth/reset"
 import { SignupPage } from "./auth/signup"
 import VerifyEmailPage from "./auth/verify-email"
-import { DashboardPage } from "./dashboard"
+import { Dashboard } from "./dashboard"
 import { Home } from "./home"
 
 function GuestRoute() {
@@ -40,7 +40,7 @@ export const Router = () => {
             </Route>
 
             <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

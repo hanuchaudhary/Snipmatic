@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
-import { useSession } from "@/lib/auth/auth.client";
 import { ThemeSwitch } from "@/components/theme-switch";
+import { useSession } from "@/lib/auth/auth.client";
 
 export function Navbar() {
   const { data: session } = useSession();
+  const pathname = useLocation().pathname;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -24,13 +25,18 @@ export function Navbar() {
       >
         <div className="md:px-8 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link
-              className="flex items-center justify-center"
-              to={session?.user ? "/dashboard" : "/"}
-            >
-              <img src="/logo.png" className="h-12" alt="Snipmatic Logo" />
-              <span className="md:text-xl text-lg font-jost">Snipmatic</span>
-            </Link>
+            {pathname === "/" ||
+              (!session?.user && (
+                <Link
+                  className="flex items-center justify-center"
+                  to={session?.user ? "/dashboard" : "/"}
+                >
+                  <img src="/logo.png" className="h-12" alt="Snipmatic Logo" />
+                  <span className="md:text-xl text-lg font-jost">
+                    Snipmatic
+                  </span>
+                </Link>
+              ))}
           </div>
 
           <div className="hidden md:flex items-center gap-2">

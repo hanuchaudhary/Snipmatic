@@ -1,8 +1,13 @@
 {
-  "name": "@snipmatic/constants",
+  "name": "@snipmatic/utils",
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    }
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },

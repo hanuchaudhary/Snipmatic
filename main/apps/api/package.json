@@ -3,10 +3,23 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun --watch run ./src/index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.4.2",
+    "@elysiajs/openapi": "^1.4.15",
+    "@snipmatic/utils": "workspace:*",
+    "@snipmatic/db": "workspace:*",
+    "better-auth": "^1.6.26",
+    "elysia": "^1.4.29",
+    "resend": "^6.18.1",
+    "zod": "^4.4.3"
   }
 }

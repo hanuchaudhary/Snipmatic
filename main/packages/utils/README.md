@@ -1,4 +1,4 @@
-# db
+# utils
 
 To install dependencies:
 

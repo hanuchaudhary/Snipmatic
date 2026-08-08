@@ -1,0 +1,49 @@
+import { Navigate, Outlet, Route, Routes } from "react-router"
+
+import { ProtectedRoute } from "@/components/protected-route"
+import { useSession } from "@/lib/auth/auth.client"
+import { SessionPageLoader } from "@/components/ui/session-page-loader"
+
+import ForgotPassword from "./auth/forgot"
+import { LoginPage } from "./auth/login"
+import ResetPassword from "./auth/reset"
+import { SignupPage } from "./auth/signup"
+import VerifyEmailPage from "./auth/verify-email"
+import { DashboardPage } from "./dashboard"
+import { Home } from "./home"
+
+function GuestRoute() {
+    const { data, isPending } = useSession()
+
+    if (isPending) {
+        return <SessionPageLoader message="Checking your session..." />
+    }
+
+    if (data?.user) {
+        return <Navigate to="/dashboard" replace />
+    }
+
+    return <Outlet />
+}
+
+export const Router = () => {
+    return (
+        <Routes>
+            <Route path="/" element={<Home />} />
+
+            <Route element={<GuestRoute />}>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
+            </Route>
+
+            <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+            </Route>
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    )
+}

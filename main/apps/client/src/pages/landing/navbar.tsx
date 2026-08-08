@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router";
+
 import { Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { ThemeSwitch } from "@/components/unlumen-ui/theme-switch";
+import { AnimatePresence, motion } from "motion/react";
+
 import { useSession } from "@/lib/auth/auth.client";
+import { ThemeSwitch } from "@/components/theme-switch";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -26,39 +28,24 @@ export function Navbar() {
               className="flex items-center justify-center"
               to={session?.user ? "/dashboard" : "/"}
             >
-              <img
-                src="/logo.png"
-                className="h-12 md:h-16"
-                alt="Snipmatic Logo"
-              />
-              <span className="md:text-xl text-lg font-semibold font-[family-name:var(--font-jost)]">
-                Snipmatic
-              </span>
+              <img src="/logo.png" className="h-12" alt="Snipmatic Logo" />
+              <span className="md:text-xl text-lg font-jost">Snipmatic</span>
             </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-2">
             <ThemeSwitch />
             {session?.user ? (
-              <Link
-                to="/dashboard"
-                className="border px-4 py-2 rounded-xl font-semibold font-[family-name:var(--font-jost)] text-sm bg-neutral-900 dark:text-muted-foreground text-white hover:scale-105 transition-transform"
-              >
+              <Link to="/dashboard" className="px-4 text-xs">
                 Dashboard
               </Link>
             ) : (
               <>
                 <Link
                   to="/login"
-                  className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary font-[family-name:var(--font-jost)]"
+                  className="rounded-md px-3 py-1.5 text-smtext-muted-foreground transition-colors hover:text-primary font-jost"
                 >
                   Sign in
-                </Link>
-                <Link
-                  to="/signup"
-                  className="rounded-md bg-primary px-3 py-1.5 text-sm font-bold text-background transition-all hover:bg-primary/90 active:scale-95 font-[family-name:var(--font-jost)]"
-                >
-                  Start free
                 </Link>
               </>
             )}
@@ -126,7 +113,7 @@ export function Navbar() {
                     onClick={closeMobileMenu}
                   >
                     <img src="/logo.png" className="h-8" alt="Snipmatic Logo" />
-                    <span className="text-lg font-semibold font-[family-name:var(--font-jost)]">
+                    <span className="text-lg font-semibold font-jost">
                       Snipmatic
                     </span>
                   </Link>
@@ -144,7 +131,7 @@ export function Navbar() {
                       <Link
                         to="/dashboard"
                         onClick={closeMobileMenu}
-                        className="block rounded-md bg-primary px-3 py-2 text-sm font-bold text-background text-center"
+                        className="block rounded-md bg-primary px-3 py-2 text-sm text-background text-center"
                       >
                         Dashboard
                       </Link>

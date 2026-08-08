@@ -7,6 +7,7 @@ import { AtSignIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,6 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { FullWidthDivider } from "@/components/full-width-divider";
 import {
   InputGroup,
   InputGroupAddon,
@@ -68,9 +68,9 @@ export default function ForgotPassword() {
       <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center border-x *:px-6">
         {!emailSent ? (
           <>
-            <div className="flex flex-col space-y-6">
-              <Link aria-label="Home" to="/" className="w-fit">
-                <Logo className="h-5" />
+            <div className="flex flex-col space-y-2">
+              <Link aria-label="Home" to="/" className="w-fit -ml-2">
+                <Logo />
               </Link>
               <div className="space-y-1">
                 <h1 className="font-heading text-2xl tracking-wide">
@@ -115,7 +115,7 @@ export default function ForgotPassword() {
 
                   <Button
                     className="w-full"
-                    size="sm"
+
                     type="submit"
                     disabled={isLoading}
                   >
@@ -165,7 +165,7 @@ export default function ForgotPassword() {
               >
                 Try another email
               </Button>
-              <Button className="w-full" size="sm">
+              <Button className="w-full">
                 <Link to="/login">Back to sign in</Link>
               </Button>
               <FullWidthDivider position="bottom" />

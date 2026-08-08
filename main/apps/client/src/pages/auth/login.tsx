@@ -7,6 +7,7 @@ import { AtSignIcon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,8 +18,6 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-
-import { FullWidthDivider } from "@/components/full-width-divider";
 import {
   InputGroup,
   InputGroupAddon,
@@ -79,7 +78,9 @@ export function LoginPage() {
               msg.toLowerCase().includes("provider") ||
               msg.toLowerCase().includes("social")
             ) {
-              toast.error("This account uses Google or GitHub sign-in. Use the buttons above.");
+              toast.error(
+                "This account uses Google or GitHub sign-in. Use the buttons above."
+              );
               return;
             }
             toast.error(msg || "Invalid credentials");
@@ -97,9 +98,9 @@ export function LoginPage() {
   return (
     <div className="relative w-full overflow-hidden font-geist px-4 md:h-screen">
       <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center border-x *:px-6">
-        <div className="flex flex-col space-y-6">
-          <Link aria-label="Home" to="/" className="w-fit">
-            <Logo className="h-5" />
+        <div className="flex flex-col space-y-2">
+          <Link aria-label="Home" to="/" className="w-fit -ml-2">
+            <Logo />
           </Link>
           <div className="space-y-1">
             <h1 className="font-heading text-2xl tracking-wide">
@@ -118,7 +119,9 @@ export function LoginPage() {
 
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
-            <span className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">or</span>
+            <span className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">
+              or
+            </span>
             <div className="h-px flex-1 bg-border" />
           </div>
 
@@ -180,7 +183,7 @@ export function LoginPage() {
 
               <Button
                 className="w-full"
-                size="sm"
+
                 type="submit"
                 disabled={isLoading}
               >

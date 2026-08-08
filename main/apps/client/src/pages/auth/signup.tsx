@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +18,6 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { FullWidthDivider } from "@/components/full-width-divider";
 import {
   InputGroup,
   InputGroupAddon,
@@ -64,7 +64,9 @@ export function SignupPage() {
           msg.toLowerCase().includes("already") ||
           msg.toLowerCase().includes("exists")
         ) {
-          toast.error("An account with this email already exists. Try signing in instead.");
+          toast.error(
+            "An account with this email already exists. Try signing in instead."
+          );
         } else {
           toast.error(msg || "Failed to create account");
         }
@@ -72,7 +74,9 @@ export function SignupPage() {
       }
 
       if (!result.data?.token) {
-        toast.info("Account already exists. Check your email for a verification link, or sign in.");
+        toast.info(
+          "Account already exists. Check your email for a verification link, or sign in."
+        );
         setVerificationEmail(data.email);
         return;
       }
@@ -88,9 +92,9 @@ export function SignupPage() {
   return (
     <div className="relative w-full overflow-hidden font-geist px-4 md:h-screen">
       <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center border-x *:px-6">
-        <div className="flex flex-col space-y-6">
-          <Link aria-label="Home" to="/" className="w-fit">
-            <Logo className="h-5" />
+        <div className="flex flex-col space-y-2">
+          <Link aria-label="Home" to="/" className="w-fit -ml-2">
+            <Logo />
           </Link>
           <div className="space-y-1">
             <h1 className="font-heading text-2xl tracking-wide">
@@ -122,15 +126,10 @@ export function SignupPage() {
                   <span className="text-foreground">{verificationEmail}</span>.
                 </p>
                 <div className="flex flex-col gap-2">
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => navigate("/login")}
-                  >
+                  <Button className="w-full" onClick={() => navigate("/login")}>
                     Go to login
                   </Button>
                   <Button
-                    size="sm"
                     variant="outline"
                     className="w-full"
                     onClick={() =>
@@ -158,7 +157,9 @@ export function SignupPage() {
 
                 <div className="flex items-center gap-3">
                   <div className="h-px flex-1 bg-border" />
-                  <span className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">or</span>
+                  <span className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">
+                    or
+                  </span>
                   <div className="h-px flex-1 bg-border" />
                 </div>
 
@@ -213,7 +214,7 @@ export function SignupPage() {
                     />
                     <Button
                       className="w-full"
-                      size="sm"
+
                       type="submit"
                       disabled={isLoading}
                     >

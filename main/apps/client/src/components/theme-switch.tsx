@@ -1,14 +1,14 @@
 import { cn } from "@/lib/utils";
 import { IconMoonFilled, IconSunFilled } from "@tabler/icons-react";
 import { motion } from "motion/react";
-import { useTheme } from "@/components/provider/theme-provider";
+import { useTheme } from "./provider/theme-provider";
 
 const themes = [
   { key: "light", icon: IconSunFilled, label: "Light theme" },
   { key: "dark", icon: IconMoonFilled, label: "Dark theme" },
 ];
 
-function ThemeSwitch() {
+export const ThemeSwitch = () => {
   const { theme, setTheme } = useTheme();
   return (
     <div
@@ -44,6 +44,4 @@ function ThemeSwitch() {
       })}
     </div>
   );
-}
-
-export { ThemeSwitch };
+};

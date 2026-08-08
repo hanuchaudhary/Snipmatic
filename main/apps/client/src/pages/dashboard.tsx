@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router";
+
 import { SparklesIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { signOut, useSession } from "@/lib/auth/auth.client";
 import { Button } from "@/components/ui/button";
+import { signOut, useSession } from "@/lib/auth/auth.client";
 
 export function DashboardPage() {
   const { data } = useSession();
@@ -31,7 +32,7 @@ export function DashboardPage() {
           Welcome back, {data?.user?.name ?? data?.user?.email}
         </p>
       </div>
-      <Button variant="outline" size="sm" onClick={handleSignOut}>
+      <Button variant="outline" onClick={handleSignOut}>
         Sign out
       </Button>
     </div>

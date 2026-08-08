@@ -8,6 +8,7 @@ import { LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +18,6 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { FullWidthDivider } from "@/components/full-width-divider";
 import {
   InputGroup,
   InputGroupAddon,
@@ -97,9 +97,9 @@ export default function ResetPassword() {
     return (
       <div className="relative w-full overflow-hidden px-4 md:h-screen">
         <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center border-x *:px-6">
-          <div className="flex flex-col space-y-6">
-            <Link aria-label="Home" to="/" className="w-fit">
-              <Logo className="h-5" />
+          <div className="flex flex-col space-y-2">
+            <Link aria-label="Home" to="/" className="w-fit -ml-2">
+              <Logo />
             </Link>
             <div className="space-y-1">
               <h1 className="font-semibold text-xl tracking-wide text-destructive">
@@ -113,11 +113,14 @@ export default function ResetPassword() {
 
           <div className="relative my-6 flex size-full flex-col gap-3 py-8">
             <FullWidthDivider position="top" />
-            <Button onClick={() => navigate("/forgot-password")} className="w-full" size="sm">
+            <Button
+              onClick={() => navigate("/forgot-password")}
+              className="w-full"
+            >
               <IconRefreshAlert data-icon="inline-start" />
               Request a new reset link
             </Button>
-            <Button variant="outline" className="w-full" size="sm">
+            <Button variant="outline" className="w-full">
               <Link to="/login">Back to sign in</Link>
             </Button>
             <FullWidthDivider position="bottom" />
@@ -125,11 +128,17 @@ export default function ResetPassword() {
 
           <p className="text-center text-muted-foreground text-sm">
             This site is protected by reCAPTCHA and the Google{" "}
-            <Link className="underline underline-offset-4 hover:text-primary" to="/privacy">
+            <Link
+              className="underline underline-offset-4 hover:text-primary"
+              to="/privacy"
+            >
               Privacy Policy
             </Link>{" "}
             and{" "}
-            <Link className="underline underline-offset-4 hover:text-primary" to="/terms">
+            <Link
+              className="underline underline-offset-4 hover:text-primary"
+              to="/terms"
+            >
               Terms of Service
             </Link>{" "}
             apply.
@@ -149,7 +158,9 @@ export default function ResetPassword() {
                 <Logo className="h-5" />
               </Link>
               <div className="space-y-1">
-                <h1 className="font-semibold text-xl tracking-wide">Reset password</h1>
+                <h1 className="font-semibold text-xl tracking-wide">
+                  Reset password
+                </h1>
                 <p className="text-base text-muted-foreground">
                   Enter your new password below.
                 </p>
@@ -160,7 +171,10 @@ export default function ResetPassword() {
               <FullWidthDivider position="top" />
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-3"
+                >
                   <FormField
                     control={form.control}
                     name="newPassword"
@@ -210,7 +224,7 @@ export default function ResetPassword() {
                   <Button
                     type="submit"
                     className="w-full"
-                    size="sm"
+
                     disabled={isLoading || !token}
                   >
                     {isLoading ? "Resetting..." : "Reset password"}
@@ -219,7 +233,10 @@ export default function ResetPassword() {
               </Form>
 
               <div className="text-center text-sm text-muted-foreground">
-                <Link to="/login" className="underline underline-offset-4 hover:text-primary">
+                <Link
+                  to="/login"
+                  className="underline underline-offset-4 hover:text-primary"
+                >
                   Back to sign in
                 </Link>
               </div>
@@ -246,7 +263,7 @@ export default function ResetPassword() {
 
             <div className="relative my-6 flex size-full flex-col gap-3 py-8">
               <FullWidthDivider position="top" />
-              <Button onClick={() => navigate("/login")} className="w-full" size="sm">
+              <Button onClick={() => navigate("/login")} className="w-full">
                 Go to sign in
               </Button>
               <FullWidthDivider position="bottom" />
@@ -256,11 +273,17 @@ export default function ResetPassword() {
 
         <p className="text-center text-muted-foreground text-sm">
           This site is protected by reCAPTCHA and the Google{" "}
-          <Link className="underline underline-offset-4 hover:text-primary" to="/privacy">
+          <Link
+            className="underline underline-offset-4 hover:text-primary"
+            to="/privacy"
+          >
             Privacy Policy
           </Link>{" "}
           and{" "}
-          <Link className="underline underline-offset-4 hover:text-primary" to="/terms">
+          <Link
+            className="underline underline-offset-4 hover:text-primary"
+            to="/terms"
+          >
             Terms of Service
           </Link>{" "}
           apply.

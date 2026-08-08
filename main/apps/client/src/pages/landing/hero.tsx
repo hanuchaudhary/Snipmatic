@@ -1,11 +1,14 @@
+import { useRef } from "react";
 import { Link } from "react-router";
+
 import { ArrowUpRight } from "lucide-react";
 import { motion, type Variants } from "motion/react";
-import { useRef } from "react";
-import { Navbar } from "./navbar";
+
+import { useTheme } from "@/components/provider/theme-provider";
 import { GradientText } from "@/components/ui/gradient-text";
 import { VideoCard } from "@/components/ui/video-card";
-import { useTheme } from "@/components/provider/theme-provider";
+
+import { Navbar } from "./navbar";
 
 export function HeroSection() {
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -91,14 +94,15 @@ export function HeroSection() {
         </motion.h1>
 
         <motion.p
-          className="md:text-lg text-sm font-[family-name:var(--font-jost)] md:px-0 px-4 text-neutral-400 my-8 text-center mx-auto max-w-2xl"
+          className="md:text-lg text-sm font-jost md:px-0 px-4 text-neutral-400 my-8 text-center mx-auto max-w-2xl"
           variants={itemVariants}
         >
-          Get famous with Snipmatic — transform any YouTube video into viral-ready shorts with AI-powered precision.
+          Get famous with Snipmatic — transform any YouTube video into
+          viral-ready shorts with AI-powered precision.
         </motion.p>
 
         <motion.div
-          className="flex flex-wrap flex-col gap-2 md:text-base text-sm font-[family-name:var(--font-jost)] tracking-wider items-center justify-center"
+          className="flex flex-wrap flex-col gap-2 md:text-base text-sm font-jost tracking-wider items-center justify-center"
           variants={buttonVariants}
         >
           <Link to="/signup">

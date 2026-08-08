@@ -4,9 +4,9 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { IconCircleCheckFilled, IconRefreshAlert } from "@tabler/icons-react";
 import { toast } from "sonner";
 
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { FullWidthDivider } from "@/components/full-width-divider";
 import { verifyEmail } from "@/lib/auth/auth.client";
 
 export default function VerifyEmailPage() {
@@ -52,8 +52,8 @@ export default function VerifyEmailPage() {
       <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center border-x *:px-6">
         {!isVerified ? (
           <>
-            <div className="flex flex-col space-y-6">
-              <Link aria-label="Home" to="/" className="w-fit">
+            <div className="flex flex-col space-y-2">
+              <Link aria-label="Home" to="/" className="w-fit -ml-2">
                 <Logo className="h-5" />
               </Link>
               <div className="space-y-1">
@@ -70,21 +70,21 @@ export default function VerifyEmailPage() {
               <FullWidthDivider position="top" />
               <Button
                 className="w-full"
-                size="sm"
+
                 onClick={handleVerify}
                 disabled={isLoading || isTokenMissing}
               >
                 {isLoading ? "Verifying..." : "Verify email"}
               </Button>
               {isTokenMissing ? (
-                <Button variant="outline" className="w-full" size="sm">
+                <Button variant="outline" className="w-full">
                   <Link to="/signup">
                     <IconRefreshAlert data-icon="inline-start" />
                     Sign up again
                   </Link>
                 </Button>
               ) : null}
-              <Button variant="outline" className="w-full" size="sm">
+              <Button variant="outline" className="w-full">
                 <Link to="/login">Back to sign in</Link>
               </Button>
               <FullWidthDivider position="bottom" />
@@ -109,11 +109,7 @@ export default function VerifyEmailPage() {
 
             <div className="relative my-6 flex size-full flex-col gap-3 py-8">
               <FullWidthDivider position="top" />
-              <Button
-                onClick={() => navigate("/dashboard")}
-                className="w-full"
-                size="sm"
-              >
+              <Button onClick={() => navigate("/dashboard")} className="w-full">
                 Continue to dashboard
               </Button>
               <FullWidthDivider position="bottom" />

@@ -4,6 +4,7 @@ import { auth } from "./config/auth";
 import openapi from "@elysiajs/openapi";
 import z from "zod";
 import cors from "@elysiajs/cors";
+import { clip } from "./modules/clip";
 
 const app = new Elysia()
   .use(cors({
@@ -50,6 +51,7 @@ const app = new Elysia()
     };
   })
   .use(betterAuth)
+  .use(clip)
   .listen({
     port: 8000,
     hostname: "localhost",

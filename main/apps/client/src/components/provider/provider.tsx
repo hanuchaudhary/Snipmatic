@@ -1,11 +1,12 @@
 import { Toaster } from "sonner";
 
+import { TooltipProvider } from "../ui/tooltip";
 import { ThemeProvider } from "./theme-provider";
 
 export const Provider = ({ children }: { children: React.ReactNode }) => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="theme">
-      {children}
+      <TooltipProvider>{children}</TooltipProvider>
       <Toaster
         position="top-center"
         toastOptions={{

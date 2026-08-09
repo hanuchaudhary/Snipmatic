@@ -30,9 +30,9 @@ export function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen font-jost">
+    <div className="min-h-screen scrollbar-hidden">
       <Navbar />
-      <div className="mt-20 max-w-7xl mx-auto px-8">
+      <div className="mt-20 max-w-5xl mx-auto px-8">
         <CreateClip />
         <div className="py-20">
           <div className="flex items-center justify-between mb-2">

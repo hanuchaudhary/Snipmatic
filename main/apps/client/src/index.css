@@ -148,3 +148,16 @@
 ::view-transition-old(root) {
   animation: none;
 }
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: var(--foreground) !important;
+  transition: background-color 9999s ease-in-out 0s;
+  background-color: transparent !important;
+}

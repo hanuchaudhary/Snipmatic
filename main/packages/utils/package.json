@@ -6,6 +6,14 @@
   "exports": {
     ".": {
       "import": "./src/index.ts"
+    },
+    "./types": {
+      "import": "./src/types/index.ts",
+      "types": "./src/types/index.ts"
+    },
+    "./models": {
+      "import": "./src/models/index.ts",
+      "types": "./src/models/index.ts"
     }
   },
   "devDependencies": {
@@ -13,5 +21,8 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   }
 }

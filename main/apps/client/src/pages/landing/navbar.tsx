@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 import { useSession } from "@/lib/auth/auth.client";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -37,6 +38,11 @@ export function Navbar() {
                   </span>
                 </Link>
               ))}
+            <img
+              src="/logo.png"
+              className={cn("h-12", pathname === "/" && "hidden md:block")}
+              alt="Snipmatic Logo"
+            />
           </div>
 
           <div className="hidden md:flex items-center gap-2">

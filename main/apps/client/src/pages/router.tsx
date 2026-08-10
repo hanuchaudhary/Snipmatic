@@ -9,6 +9,9 @@ import { LoginPage } from "./auth/login"
 import ResetPassword from "./auth/reset"
 import { SignupPage } from "./auth/signup"
 import VerifyEmailPage from "./auth/verify-email"
+import { DashboardLayout } from "@/layouts/dashboard-layout"
+
+import { ClipsPage } from "./clips"
 import { Dashboard } from "./dashboard"
 import { Home } from "./home"
 
@@ -40,7 +43,10 @@ export const Router = () => {
             </Route>
 
             <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route element={<DashboardLayout />}>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/clips" element={<ClipsPage />} />
+                </Route>
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

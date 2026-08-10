@@ -1,5 +1,5 @@
-import { create } from "youtube-dl-exec";
 import { ClipModel } from "@snipmatic/utils";
+import { create } from "youtube-dl-exec";
 
 //prod have a path TODO:
 const ytdlp = create("/opt/homebrew/bin/yt-dlp");
@@ -14,16 +14,15 @@ export const getVideoInfo = async (url: string) => {
     } as any);
     const data = {
       title: info.title,
-      description: info.description,
       thumbnail: info.thumbnail,
       duration: info.duration,
-      videoLanguage: info.language,
+      videoLanguage: info.language || "",
       videoQuality: info.format_id, // TODO
-    } as ClipModel['previewResponse']
-    console.log("Ytdl inflo:", data)
-    return data
+    } as ClipModel["previewResponse"];
+    console.log("Ytdl inflo:", data);
+    return data;
   } catch (error) {
-    console.error('Error fetching video info:', error)
-    throw new Error('Failed to fetch video info')
+    console.error("Error fetching video info:", error);
+    throw new Error("Failed to fetch video info");
   }
-}
+};

@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 import { useSession } from "@/lib/auth/auth.client";
-import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -22,7 +21,7 @@ export function Navbar() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="fixed w-full left-1/2 -translate-x-1/2 md:my-4 top-0 z-50 max-w-7xl mx-auto md:backdrop-blur-none backdrop-blur-sm"
+        className="absolute w-full left-1/2 -translate-x-1/2 md:my-4 top-0 z-60 max-w-7xl mx-auto md:backdrop-blur-none backdrop-blur-sm"
       >
         <div className="md:px-8 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -38,11 +37,6 @@ export function Navbar() {
                   </span>
                 </Link>
               ))}
-            <img
-              src="/logo.png"
-              className={cn("h-12", pathname === "/" && "hidden md:block")}
-              alt="Snipmatic Logo"
-            />
           </div>
 
           <div className="hidden md:flex items-center gap-2">

@@ -58,7 +58,6 @@ export const ClipModel = {
   previewResponse: z.object({
     thumbnail: z.string(),
     title: z.string(),
-    description: z.string(),
     duration: z.number(),
     videoLanguage: z.string().optional(),
     videoQuality: z.string().optional(),

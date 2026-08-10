@@ -1,5 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
+import { useLocation, useNavigate } from "react-router";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type ClipModel, youtubeUrlSchema } from "@snipmatic/utils";
@@ -11,6 +12,7 @@ import z from "zod";
 
 import { ClipApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import type { ClipsPageState } from "@/types/clip-navigation";
 
 import { Button } from "../ui/button";
 import {
@@ -21,25 +23,7 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { Slider } from "../ui/slider";
-import { Switch } from "../ui/switch";
 import { VideoInfo } from "./video-info";
-
-const formatDuration = (seconds: number) => {
-  const totalSeconds = Math.floor(seconds);
-
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const remainingSeconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, "0")}:${remainingSeconds
-      .toString()
-      .padStart(2, "0")}`;
-  }
-
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-};
 
 const formSchema = z.object({
   url: youtubeUrlSchema,
@@ -48,24 +32,41 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export const CreateClip = () => {
-  const [isGettingInfo, setIsGettingInfo] = React.useState<boolean>(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isClipsPage = location.pathname === "/clips";
+  const pageState = location.state as ClipsPageState | null;
 
+  const [isGettingInfo, setIsGettingInfo] = React.useState(false);
   const [videoInfo, setVideoInfo] = React.useState<
     ClipModel["previewResponse"] | null
-  >(null);
-
+  >(isClipsPage ? (pageState?.videoInfo ?? null) : null);
   const [isCreatingClip, setIsCreatingClip] = React.useState(false);
-
-  const [clipRange, setClipRange] = React.useState<[number, number]>([0, 1]);
-
-  const [subtitles, setSubtitles] = React.useState(false);
+  const [clipRange, setClipRange] = React.useState<[number, number]>(
+    pageState?.clipRange ?? [0, 1]
+  );
+  const [subtitles, setSubtitles] = React.useState(
+    pageState?.subtitles ?? false
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      url: "",
+      url: pageState?.url ?? "",
     },
   });
+
+  React.useEffect(() => {
+    if (!isClipsPage || !pageState?.videoInfo) {
+      return;
+    }
+
+    setVideoInfo(pageState.videoInfo);
+    setClipRange(pageState.clipRange);
+    setSubtitles(pageState.subtitles);
+    form.setValue("url", pageState.url);
+  }, [form, isClipsPage, pageState]);
+
   const onGetVideoInfo = async (values: FormValues) => {
     if (isGettingInfo) {
       return;
@@ -88,11 +89,22 @@ export const CreateClip = () => {
         );
       }
 
-      setVideoInfo(info);
-
       const duration = Math.floor(info.duration);
+      const nextState: ClipsPageState = {
+        url: sanitizedUrl,
+        videoInfo: info,
+        clipRange: [0, Math.max(1, duration)],
+        subtitles: false,
+      };
 
-      setClipRange([0, Math.max(1, duration)]);
+      if (isClipsPage) {
+        setVideoInfo(info);
+        setClipRange(nextState.clipRange);
+        setSubtitles(false);
+        navigate("/clips", { state: nextState, replace: true });
+      } else {
+        navigate("/clips", { state: nextState });
+      }
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -112,6 +124,10 @@ export const CreateClip = () => {
     form.reset({
       url: "",
     });
+
+    if (isClipsPage) {
+      navigate("/dashboard", { replace: true });
+    }
   };
 
   const onCreateClip = async () => {
@@ -135,7 +151,6 @@ export const CreateClip = () => {
       };
 
       console.log(payload);
-
       toast.success("Clip processing started.");
     } catch (error) {
       toast.error(
@@ -148,11 +163,12 @@ export const CreateClip = () => {
     }
   };
 
+  const showVideoDetails = isClipsPage && videoInfo;
+
   return (
     <motion.div
       className={cn(
-        "min-h-[30vh] pt-16 transition-transform",
-        videoInfo ? "mx-30" : "mx-20"
+        "min-h-[30vh] pt-16 transition-transform"
       )}
     >
       <div className="w-full flex items-center justify-center pb-16">
@@ -161,7 +177,7 @@ export const CreateClip = () => {
             You are using the Free Plan of OpusClip with watermark and limited
             features.
           </p>
-          <Button className="font-normal" variant={"secondary"}>
+          <Button className="font-normal" variant="secondary">
             Upgrade
           </Button>
         </div>
@@ -178,24 +194,24 @@ export const CreateClip = () => {
                   <img
                     src="/youtube-icon.png"
                     alt="YouTube Icon"
-                    className="absolute top-1/2 -translate-y-1/2 left-0 w-10"
+                    className="absolute top-1/2 -translate-y-1/2 left-0 w-8"
                   />
                   <FormControl>
                     <Input
                       {...field}
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
-                      disabled={Boolean(videoInfo)}
+                      disabled={Boolean(showVideoDetails)}
                       placeholder="Paste a YouTube link or upload a video"
                       autoFocus
-                      className="w-full border-0 rounded-none focus-visible:ring-0 focus:ring-0 focus-visible:outline-0 bg-transparent! text-[1.4rem]! mask-r-from-80% font-light pl-12! border-b py-6!"
+                      className="w-full border-0 rounded-none focus-visible:ring-0 focus:ring-0 focus-visible:outline-0 bg-transparent! text-[1.4rem]! mask-r-from-80% font-light pl-10! border-b py-6!"
                     />
                   </FormControl>
 
-                  {videoInfo ? (
+                  {showVideoDetails ? (
                     <Button
                       type="button"
-                      variant={"secondary"}
+                      variant="secondary"
                       className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full"
                       size="icon"
                       onClick={onResetVideo}
@@ -228,40 +244,40 @@ export const CreateClip = () => {
       </Form>
       <div className="flex mt-4">
         <Button
-          disabled={videoInfo ? true : false}
-          variant={"ghost"}
+          disabled={Boolean(showVideoDetails)}
+          variant="ghost"
           className="flex items-center gap-2 text-muted-foreground hover:text-primary cursor-pointer"
         >
           <IconUpload className="size-5" /> Upload
         </Button>
         <Button
-          disabled={videoInfo ? true : false}
-          variant={"ghost"}
+          disabled={Boolean(showVideoDetails)}
+          variant="ghost"
           className="flex items-center gap-2 text-muted-foreground hover:text-primary cursor-pointer"
         >
           <img src="/gdrive-icon.png" alt="Gdrive Icon" className="w-5" />
           Google Drive
         </Button>
       </div>
-      {videoInfo && (
-        <Button
-          type="button"
-          className="w-full py-6 rounded-full mt-4"
-          onClick={onCreateClip}
-          disabled={isCreatingClip || clipRange[1] <= clipRange[0]}
-        >
-          {isCreatingClip ? (
-            <>
-              <IconLoader2 className="animate-spin" />
-              Creating Clips
-            </>
-          ) : (
-            "Get Clips in 1 Click"
-          )}
-        </Button>
-      )}
-      {videoInfo && (
+
+      {showVideoDetails && (
         <>
+          <Button
+            type="button"
+            className="w-full py-6 rounded-full mt-4"
+            onClick={onCreateClip}
+            disabled={isCreatingClip || clipRange[1] <= clipRange[0]}
+          >
+            {isCreatingClip ? (
+              <>
+                <IconLoader2 className="animate-spin" />
+                Creating Clips
+              </>
+            ) : (
+              "Get Clips in 1 Click"
+            )}
+          </Button>
+
           <VideoInfo
             videoInfo={videoInfo}
             clipRange={clipRange}

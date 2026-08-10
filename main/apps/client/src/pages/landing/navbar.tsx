@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 import { useSession } from "@/lib/auth/auth.client";
+import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -55,6 +56,7 @@ export function Navbar() {
                 </Link>
               </>
             )}
+            <ProfileDropdown />
           </div>
 
           <div className="md:hidden">

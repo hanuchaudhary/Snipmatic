@@ -59,10 +59,12 @@ export const VideoInfo = ({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h3 className="line-clamp-2 text-lg">{videoInfo.title}</h3>
-
-              <p className="mt-2 text-sm text-muted-foreground">
-                {formatDuration(videoInfo.duration)}
-              </p>
+              {
+                showThumbnail && (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {formatDuration(videoInfo.duration)}
+                  </p>
+                )}
             </div>
             <TooltipButton
               tooltipText={showThumbnail ? "Hide thumbnail" : "Show Thumbnail"}
@@ -89,7 +91,6 @@ export const VideoInfo = ({
               Processing Timeframe
             </h4>
           </div>
-
           <div className="rounded-md bg-muted px-3 py-1.5 text-sm font-medium">
             {formatDuration(clipDuration)}
           </div>

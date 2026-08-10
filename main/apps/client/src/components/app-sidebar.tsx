@@ -8,6 +8,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -18,6 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { TooltipButton } from "./ui/tooltip-button";
+import { ProfileDropdown } from "./ui/profile-dropdown";
 
 const navItems = [
   {
@@ -75,6 +77,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <ProfileDropdown/>
+      </SidebarFooter>
     </Sidebar>
   );
 }

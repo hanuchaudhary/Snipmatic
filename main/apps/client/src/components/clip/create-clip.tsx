@@ -168,11 +168,16 @@ export const CreateClip = () => {
   return (
     <motion.div
       className={cn(
-        "min-h-[30vh] pt-16 transition-transform"
+        "min-h-[30vh] pt-16 transition-transform relative"
       )}
     >
-      <div className="w-full flex items-center justify-center pb-16">
-        <div className="flex items-center justify-center gap-2 border rounded-[20px] w-fit pl-4 pr-1 py-1 font-sans text-sm">
+      <div className={cn("absolute md:-bottom-55 -bottom-45 left-1/2 -translate-x-1/2 text-muted-foreground/20 md:text-[12rem] text-[10rem] mask-b-from-0%", isClipsPage && "hidden")}>
+        <p>
+          Snipmatic
+        </p>
+      </div>
+      <div className="w-full hidden md:flex items-center justify-center pb-16">
+        <div className="flex items-center justify-center gap-2 border rounded-[20px] w-fit pl-4 pr-1 py-1 font-sans md:text-sm">
           <p>
             You are using the Free Plan of OpusClip with watermark and limited
             features.
@@ -189,12 +194,12 @@ export const CreateClip = () => {
             name="url"
             render={({ field }) => (
               <FormItem>
-                <h2 className="text-2xl">Snipmatic</h2>
+                <h2 className="md:text-2xl">Snipmatic</h2>
                 <div className="relative">
                   <img
                     src="/youtube-icon.png"
                     alt="YouTube Icon"
-                    className="absolute top-1/2 -translate-y-1/2 left-0 w-8"
+                    className="absolute top-1/2 -translate-y-1/2 left-0 md:w-8 w-5"
                   />
                   <FormControl>
                     <Input
@@ -204,7 +209,7 @@ export const CreateClip = () => {
                       disabled={Boolean(showVideoDetails)}
                       placeholder="Paste a YouTube link or upload a video"
                       autoFocus
-                      className="w-full border-0 rounded-none focus-visible:ring-0 focus:ring-0 focus-visible:outline-0 bg-transparent! text-[1.4rem]! mask-r-from-80% font-light pl-10! border-b py-6!"
+                      className="w-full border-0 rounded-none focus-visible:ring-0 focus:ring-0 focus-visible:outline-0 bg-transparent! md:text-[1.4rem]! text-lg mask-r-from-80% font-light md:pl-10! pl-6! border-b md:py-6! py-4"
                     />
                   </FormControl>
 
@@ -212,7 +217,7 @@ export const CreateClip = () => {
                     <Button
                       type="button"
                       variant="secondary"
-                      className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full md:flex hidden"
                       size="icon"
                       onClick={onResetVideo}
                     >
@@ -220,7 +225,7 @@ export const CreateClip = () => {
                     </Button>
                   ) : (
                     <Button
-                      className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full md:flex hidden"
                       type="submit"
                       disabled={isGettingInfo}
                     >
@@ -242,21 +247,36 @@ export const CreateClip = () => {
           />
         </form>
       </Form>
-      <div className="flex mt-4">
+      <div className="flex md:mt-4 mt-3">
         <Button
           disabled={Boolean(showVideoDetails)}
           variant="ghost"
-          className="flex items-center gap-2 text-muted-foreground hover:text-primary cursor-pointer"
+          className="flex items-center md:gap-2 text-muted-foreground hover:text-primary cursor-pointer text-xs md:text-base"
         >
-          <IconUpload className="size-5" /> Upload
+          <IconUpload className="md:size-5 size-4" /> Upload
         </Button>
         <Button
           disabled={Boolean(showVideoDetails)}
           variant="ghost"
-          className="flex items-center gap-2 text-muted-foreground hover:text-primary cursor-pointer"
+          className="flex items-center md:gap-2 text-muted-foreground hover:text-primary cursor-pointer md:text-base text-xs"
         >
-          <img src="/gdrive-icon.png" alt="Gdrive Icon" className="w-5" />
+          <img src="/gdrive-icon.png" alt="Gdrive Icon" className="md:w-5 w-4" />
           Google Drive
+        </Button>
+        {/* //TODO */}
+        <Button
+          className="md:hidden block"
+          type="submit"
+          disabled={isGettingInfo}
+        >
+          {isGettingInfo ? (
+            <>
+              <IconLoader2 className="animate-spin" />
+              Getting Clips
+            </>
+          ) : (
+            "Get Clips"
+          )}
         </Button>
       </div>
 

@@ -26,3 +26,17 @@ export const getVideoInfo = async (url: string) => {
     throw new Error("Failed to fetch video info");
   }
 };
+
+export const downloadVideo = async (url: string) => {
+  try {
+    const download = await ytdlp(url, {
+      cookiesFromBrowser: "chrome",
+      dumpSingleJson: true,
+      noWarnings: true,
+    } as any);
+    return download
+  } catch (error) {
+    console.error("Error downloading video:", error);
+    throw new Error("Failed to download video");
+  }
+};

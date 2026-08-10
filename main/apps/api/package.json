@@ -15,15 +15,16 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@snipmatic/db": "workspace:*",
-    "@snipmatic/utils": "workspace:*",
     "@elysiajs/cors": "^1.4.2",
     "@elysiajs/openapi": "^1.4.15",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "@snipmatic/db": "workspace:*",
+    "@snipmatic/utils": "workspace:*",
     "better-auth": "^1.6.26",
     "dotenv": "^17.4.2",
     "elysia": "^1.4.29",
+    "inngest": "^4.18.0",
     "resend": "^6.18.1",
     "youtube-dl-exec": "^3.1.12",
     "zod": "^4.4.3"

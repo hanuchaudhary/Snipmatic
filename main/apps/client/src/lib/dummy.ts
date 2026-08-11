@@ -29,8 +29,8 @@ export const dummyTasks: Task[] = [
     status: "COMPLETED",
     clipType: "AI",
     progress: 100,
-    youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+    youtubeUrl: "/placeholder.png",
+    thumbnailUrl: "/placeholder.png",
     createdAt: new Date(Date.now() - 86400000).toISOString(),
     completedAt: new Date().toISOString(),
     duration: 120,
@@ -55,7 +55,7 @@ export const dummyTasks: Task[] = [
     status: "PROCESSING",
     clipType: "AI",
     progress: 65,
-    youtubeUrl: "https://www.youtube.com/watch?v=M576WlNmIQQ",
+    youtubeUrl: "/placeholder.png",
     createdAt: new Date().toISOString(),
     duration: 300
   },
@@ -65,7 +65,7 @@ export const dummyTasks: Task[] = [
     status: "FAILED",
     clipType: "Manual",
     progress: 30,
-    youtubeUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    youtubeUrl: "/placeholder.png",
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     duration: 180,
     errorMessage: "Could not download the video due to an unexpected error."

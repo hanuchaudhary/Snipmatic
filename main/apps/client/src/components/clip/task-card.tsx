@@ -66,7 +66,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
       <DrawerTrigger>
         <div
           className={cn(
-            "cursor-pointer w-full max-w-xs rounded-3xl overflow-hidden shadow-lg border bg-muted hover:shadow-xl transition",
+            "cursor-pointer w-full max-w-xs rounded-3xl transition",
             className
           )}
         >
@@ -75,10 +75,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
               src={
                 task.thumbnailUrl ||
                 (task.youtubeUrl ? task.youtubeUrl : null) ||
-                "/placeholder.jpg"
+                "/placeholder.png"
               }
               alt={task.title}
-              className={`object-cover w-full h-full ${
+              className={`object-cover rounded-3xl ring w-full h-full ${
                 isProcessing ? "opacity-20" : ""
               }`}
               onError={(e) => {
@@ -100,17 +100,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 style={{
                   width: Math.round(displayProgress) + "%",
                 }}
-                className="absolute flex items-center transition-all duration-300 ease-out justify-center inset-0 right-2 bg-orange-400/30 h-full w-full text-xl font-semibold px-2 py-1"
+                className="absolute flex items-center rounded-3xl transition-all duration-300 ease-out justify-center inset-0 right-2 bg-orange-400/30 h-full w-full text-xl font-semibold px-2 py-1"
               >
                 <span className="">{Math.round(displayProgress)}%</span>
               </div>
             )}
           </div>
-          <div className="p-3">
-            <div className="text-sm font-semibold line-clamp-1">
+          <div className="py-3">
+            <div className="text-sm text-left line-clamp-1">
               {task.title}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-muted-foreground text-left">
               {task.clipType === "AI" ? "AI Generated" : "Manual Clip"}
             </div>
           </div>

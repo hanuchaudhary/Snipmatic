@@ -54,7 +54,7 @@ export function Dashboard() {
               {getEmptyMessage()}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-4 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 md:gap-4 gap-2">
               {processingTasks.map((task) => (
                 <TaskCard task={task} key={task.taskId} />
               ))}
@@ -63,7 +63,7 @@ export function Dashboard() {
         ) : (
           <div
             key="completed"
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-4 gap-2"
+            className="grid grid-cols-2 md:grid-cols-3 md:gap-4 gap-2"
           >
             {completedTasks.length > 0 ? (
               completedTasks.map((task) => (

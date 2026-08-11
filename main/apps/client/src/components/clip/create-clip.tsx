@@ -32,6 +32,7 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { VideoInfo } from "./video-info";
+import { TooltipButton } from "../ui/tooltip-button";
 
 const formSchema = z.object({
   url: youtubeUrlSchema,
@@ -419,23 +420,27 @@ export const CreateClip = () => {
         </div>
       )}
       <div className="flex md:mt-4 mt-3 relative z-20">
-        <Button
-          type="button"
-          disabled={Boolean(showVideoDetails) || isBusy}
-          variant="ghost"
-          className="flex items-center md:gap-2 text-muted-foreground hover:text-primary cursor-pointer text-xs md:text-base"
-          onClick={onUploadClick}
-        >
-          <IconUpload className="md:size-5 size-4" /> Upload
-        </Button>
-        <Button
-          disabled={Boolean(showVideoDetails) || isBusy}
-          variant="ghost"
-          className="flex items-center md:gap-2 text-muted-foreground hover:text-primary cursor-pointer md:text-base text-xs"
-        >
-          <img src="/gdrive-icon.png" alt="Gdrive Icon" className="md:w-5 w-4" />
-          Google Drive
-        </Button>
+        <TooltipButton tooltipText="Upload raw video">
+          <Button
+            type="button"
+            disabled={Boolean(showVideoDetails) || isBusy}
+            variant="ghost"
+            className="flex items-center md:gap-2 text-muted-foreground hover:text-primary cursor-pointer text-xs md:text-base"
+            onClick={onUploadClick}
+          >
+            <IconUpload className="md:size-5 size-4" /> Upload
+          </Button>
+        </TooltipButton>
+        <TooltipButton tooltipText="Comming Soon">
+          <Button
+            disabled
+            variant="ghost"
+            className="flex items-center md:gap-2 text-muted-foreground hover:text-primary cursor-pointer md:text-base text-xs"
+          >
+            <img src="/gdrive-icon.png" alt="Gdrive Icon" className="md:w-5 w-4" />
+            Google Drive
+          </Button>
+        </TooltipButton>
         <Button
           className="md:hidden block"
           type="submit"

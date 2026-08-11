@@ -14,6 +14,11 @@ import { DashboardLayout } from "@/layouts/dashboard-layout"
 import { ClipsPage } from "./clips"
 import { Dashboard } from "./dashboard"
 import { Home } from "./home"
+import {
+  PricingCancelPage,
+  PricingPage,
+  PricingSuccessPage,
+} from "./pricing"
 
 function GuestRoute() {
     const { data, isPending } = useSession()
@@ -33,6 +38,9 @@ export const Router = () => {
     return (
         <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/pricing/success" element={<PricingSuccessPage />} />
+            <Route path="/pricing/cancel" element={<PricingCancelPage />} />
 
             <Route element={<GuestRoute />}>
                 <Route path="/login" element={<LoginPage />} />

@@ -14,6 +14,7 @@ type VideoInfoProps = {
   onClipRangeChange: (value: [number, number]) => void;
   subtitles: boolean;
   onSubtitlesChange: (value: boolean) => void;
+  previewUrl?: string;
 };
 
 const formatDuration = (seconds: number) => {
@@ -38,6 +39,7 @@ export const VideoInfo = ({
   onClipRangeChange,
   subtitles,
   onSubtitlesChange,
+  previewUrl,
 }: VideoInfoProps) => {
   const clipDuration = clipRange[1] - clipRange[0];
   const [showThumbnail, setShowThumbnail] = React.useState<boolean>(true);
@@ -47,11 +49,20 @@ export const VideoInfo = ({
       <div className="flex items-start gap-4">
         {showThumbnail && (
           <div className="relative aspect-video w-98 shrink-0 overflow-hidden rounded-xl bg-muted">
-            <img
-              src={videoInfo.thumbnail}
-              alt={videoInfo.title}
-              className="h-full w-full object-cover"
-            />
+            {previewUrl ? (
+              <video
+                src={previewUrl}
+                className="h-full w-full object-cover"
+                controls
+                preload="metadata"
+              />
+            ) : (
+              <img
+                src={videoInfo.thumbnail}
+                alt={videoInfo.title}
+                className="h-full w-full object-cover"
+              />
+            )}
           </div>
         )}
 

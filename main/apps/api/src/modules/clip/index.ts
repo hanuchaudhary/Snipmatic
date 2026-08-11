@@ -1,8 +1,10 @@
 import { Elysia } from 'elysia'
 import { ClipService } from './service'
 import { ClipModel } from "@snipmatic/utils/types"
+import { withAuth } from "../../config/auth.plugin"
 
 export const clip = new Elysia({ prefix: '/clip' })
+  .use(withAuth)
   .post(
     '/preview',
     async ({ body }) => {
@@ -15,4 +17,17 @@ export const clip = new Elysia({ prefix: '/clip' })
       400: ClipModel.invalidUrl
     }
   }
-  )
+  ).post('/presigned-url', async ({ body, user }) => {
+    const response = await ClipService.presignedUrl({
+      ...body,
+      userId: user.id,
+    })
+    return response
+  }, {
+    auth: true,
+    body: ClipModel.presignedUrlBody,
+    response: {
+      200: ClipModel.presignedUrlResponse,
+      400: ClipModel.invalidFilename
+    }
+  })

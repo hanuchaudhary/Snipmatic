@@ -6,4 +6,9 @@ export abstract class ClipApi {
     const res = await api.post('/clip/preview', { url })
     return res.data as ClipModel["previewResponse"]
   }
+
+  static async presignedUrl({ filename }: ClipModel["presignedUrlBody"]) {
+    const res = await api.post('/clip/presigned-url', { filename })
+    return res.data as ClipModel["presignedUrlResponse"]
+  }
 }

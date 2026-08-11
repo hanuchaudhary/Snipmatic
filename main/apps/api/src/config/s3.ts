@@ -16,11 +16,17 @@ export abstract class S3Service {
     filepath: string;
   }) {}
 
-  static async presignedUrl() {
-    const uploadUrl = s3Client.presign("uploads/image.jpg", {
+  static async presignedUrl({
+    filename,
+    filepath = `raw/${filename}`,
+  }: {
+    filename: string;
+    filepath?: string;
+  }) {
+    const uploadUrl = s3Client.presign(filepath, {
       method: "PUT",
       expiresIn: 3600,
-      type: "video/*",
+      type: filename.split(".").pop()?.toLowerCase() === "mp4" ? "video/*" : "image/*",
     });
 
     return uploadUrl;

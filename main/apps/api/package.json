@@ -26,6 +26,7 @@
     "elysia": "^1.4.29",
     "inngest": "^4.18.0",
     "resend": "^6.18.1",
+    "stripe": "^22.5.0",
     "youtube-dl-exec": "^3.1.12",
     "zod": "^4.4.3"
   }

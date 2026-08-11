@@ -64,6 +64,19 @@ export const ClipModel = {
   }),
 
   invalidUrl: z.literal("Invalid url"),
+  
+  // presigned url
+  presignedUrlBody: z.object({
+    filename: z.string(),
+  }),
+
+  presignedUrlResponse: z.object({
+    url: z.string(),
+    key: z.string(),
+    publicUrl: z.string(),
+  }),
+
+  invalidFilename: z.literal("Invalid filename"),
 } as const;
 
 export type ClipModel = {

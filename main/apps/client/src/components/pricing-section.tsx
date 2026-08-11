@@ -1,55 +1,54 @@
+import { Link, useNavigate } from "react-router";
 import { AlertCircle, ArrowRight, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-const pricingTiers = [
-  {
-    cta: "GET STARTED FREE",
-    description: "Perfect for individuals getting started",
-    featured: false,
-    features: [
-      "Access to 50+ Templates",
-      "Basic AI Writer",
-      "Limited Word Count",
-      "Email Support",
-      "Brand Voice Customization",
-      "SEO Optimization Tools",
-    ],
-    name: "FREE",
-    price: "$0",
-  },
-  {
-    cta: "START 7-DAY FREE TRIAL",
-    description: "Best for solo creators and marketers",
-    featured: true,
-    features: [
-      "Everything in Free",
-      "Unlimited Words",
-      "Export to WordPress & Notion",
-      "Long-Form Assistant",
-      "Brand Voice Customization",
-      "SEO Optimization Tools",
-    ],
-    name: "PRO",
-    price: "$299",
-  },
-  {
-    cta: "CONTACT SALES",
-    description: "For the growing teams and businesses",
-    featured: false,
-    features: [
-      "Everything in Pro",
-      "5 User Seats",
-      "Shared Workspaces",
-      "Team Performance Analytics",
-      "Priority Support",
-      "SEO Optimization Tools",
-    ],
-    name: "ENTERPRISE",
-    price: "Contact us",
-  },
-];
+import { Button } from "@/components/ui/button";
+import { useSession } from "@/lib/auth/auth.client";
+import { PaymentApi } from "@/lib/api/payment";
+import { PLAN_TIERS, PLANS, type PlanTier } from "@snipmatic/utils";
+
+const pricingTiers = PLAN_TIERS.map((tier) => ({
+  id: tier,
+  name: PLANS[tier].name.toUpperCase(),
+  description:
+    tier === "starter"
+      ? "Perfect for getting started with clip generation"
+      : tier === "influencer"
+        ? "Best for creators publishing clips every week"
+        : "For teams and high-volume clip workflows",
+  price: `$${PLANS[tier].price}`,
+  featured: PLANS[tier].highlighted,
+  features: PLANS[tier].features,
+  cta:
+    tier === "starter"
+      ? "START WITH STARTER"
+      : tier === "influencer"
+        ? "UPGRADE TO INFLUENCER"
+        : "GO STUDIO",
+}));
 
 export default function PricingSection() {
+  const navigate = useNavigate();
+  const { data: session } = useSession();
+
+  const handleCheckout = async (planTier: PlanTier) => {
+    if (!session?.user) {
+      navigate("/signup");
+      return;
+    }
+
+    try {
+      const { url } = await PaymentApi.checkout({ planTier });
+      window.location.href = url;
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to start checkout. Please try again."
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black px-4 text-white">
       <div className="mx-auto max-w-5xl border-neutral-700 border-x py-20">
@@ -60,13 +59,13 @@ export default function PricingSection() {
             </p>
             <h1 className="font-normal text-3xl tracking-tight md:text-5xl">
               Plans that fit your{" "}
-              <span className="text-gray-500">writing needs</span>
+              <span className="text-gray-500">clip workflow</span>
             </h1>
           </div>
           <div className="md:col-span-4 md:mt-auto">
             <p className="text-gray-500">
-              <span className="text-white">Simple pricing</span> with powerful
-              tools to help you write faster
+              <span className="text-white">Credit-based pricing</span> with
+              monthly plans for processing, subtitles, and templates
             </p>
           </div>
         </div>
@@ -118,9 +117,7 @@ export default function PricingSection() {
                     <span className="font-medium text-4xl text-white">
                       {tier.price}
                     </span>
-                    {tier.price !== "Contact us" && (
-                      <span className="text-gray-400">/month</span>
-                    )}
+                    <span className="text-gray-400">/month</span>
                   </div>
                 </div>
 
@@ -129,8 +126,8 @@ export default function PricingSection() {
                     WHAT&apos;S INCLUDED:
                   </p>
                   <ul className="mb-6 space-y-3">
-                    {tier.features.map((feature, idx) => (
-                      <li className="flex items-start gap-3" key={idx}>
+                    {tier.features.map((feature) => (
+                      <li className="flex items-start gap-3" key={feature}>
                         {tier.featured ? (
                           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
                         ) : (
@@ -146,6 +143,7 @@ export default function PricingSection() {
                         ? "bg-red-500 text-white hover:bg-red-600"
                         : "bg-white text-black hover:bg-gray-100"
                     }`}
+                    onClick={() => handleCheckout(tier.id)}
                   >
                     {tier.cta}
                     <ArrowRight className="h-4 w-4" />
@@ -165,6 +163,14 @@ export default function PricingSection() {
             </div>
           ))}
         </div>
+
+        {session?.user && (
+          <div className="px-4 text-center md:px-10">
+            <Button variant="outline" className="border-neutral-700 bg-transparent text-white hover:bg-neutral-900" asChild>
+              <Link to="/dashboard">Back to dashboard</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

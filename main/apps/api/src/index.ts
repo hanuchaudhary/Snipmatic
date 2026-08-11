@@ -8,6 +8,7 @@ import { auth } from "./config/auth";
 import { betterAuth, OpenAPI } from "./config/auth.plugin";
 import { functions, inngest } from "./inngest";
 import { clip } from "./modules/clip";
+import { payment } from "./modules/payment";
 
 const handler = serve({
   client: inngest,
@@ -66,6 +67,7 @@ const app = new Elysia()
     };
   })
   .use(betterAuth)
+  .use(payment)
   .use(clip)
   .listen({
     port: 8000,

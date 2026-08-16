@@ -18,10 +18,7 @@ export function Navbar() {
 
   return (
     <>
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
+      <header
         className="absolute w-full left-1/2 -translate-x-1/2 md:my-4 top-0 z-60 max-w-7xl mx-auto md:backdrop-blur-none backdrop-blur-sm"
       >
         <div className="md:px-8 px-4 py-2 flex items-center justify-between">
@@ -42,19 +39,17 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-2">
             <ThemeSwitch />
-            {session?.user ? (
+            {session?.user ? pathname == "/" ? (
               <Link to="/dashboard" className="px-4 text-xs">
                 Dashboard
               </Link>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="rounded-md px-3 py-1.5 text-smtext-muted-foreground transition-colors hover:text-primary font-jost"
-                >
-                  Sign in
-                </Link>
-              </>
+            ) : null : (
+              <Link
+                to="/login"
+                className="rounded-md px-3 py-1.5 text-smtext-muted-foreground transition-colors hover:text-primary font-jost"
+              >
+                Sign in
+              </Link>
             )}
             <ProfileDropdown />
           </div>
@@ -92,7 +87,7 @@ export function Navbar() {
             </motion.button>
           </div>
         </div>
-      </motion.header>
+      </header>
 
       <AnimatePresence>
         {isMobileMenuOpen && (

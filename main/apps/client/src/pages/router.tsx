@@ -15,9 +15,9 @@ import { ClipsPage } from "./clips"
 import { Dashboard } from "./dashboard"
 import { Home } from "./home"
 import {
-  PricingCancelPage,
-  PricingPage,
-  PricingSuccessPage,
+    PricingCancelPage,
+    PricingPage,
+    PricingSuccessPage,
 } from "./pricing"
 
 function GuestRoute() {
@@ -38,9 +38,6 @@ export const Router = () => {
     return (
         <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/pricing/success" element={<PricingSuccessPage />} />
-            <Route path="/pricing/cancel" element={<PricingCancelPage />} />
 
             <Route element={<GuestRoute />}>
                 <Route path="/login" element={<LoginPage />} />
@@ -54,6 +51,9 @@ export const Router = () => {
                 <Route element={<DashboardLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/clips" element={<ClipsPage />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/pricing/success" element={<PricingSuccessPage />} />
+                    <Route path="/pricing/cancel" element={<PricingCancelPage />} />
                 </Route>
             </Route>
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { type Task } from "@/lib/dummy";
 import { cn } from "@/lib/utils";
 
@@ -62,8 +62,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
   }, [progress, displayProgress]);
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger>
+    <Sheet open={open} onOpenChange={setOpen} >
+      <SheetTrigger>
         <div
           className={cn(
             "cursor-pointer w-full max-w-xs rounded-3xl transition",
@@ -78,9 +78,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
                 "/placeholder.png"
               }
               alt={task.title}
-              className={`object-cover rounded-3xl ring w-full h-full ${
-                isProcessing ? "opacity-20" : ""
-              }`}
+              className={`object-cover rounded-3xl ring w-full h-full ${isProcessing ? "opacity-20" : ""
+                }`}
               onError={(e) => {
                 if (
                   task.youtubeUrl &&
@@ -106,7 +105,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
               </div>
             )}
           </div>
-          <div className="py-3">
+          <div className="py-3 pl-1">
             <div className="text-sm text-left line-clamp-1">
               {task.title}
             </div>
@@ -115,10 +114,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
             </div>
           </div>
         </div>
-      </DrawerTrigger>
+      </SheetTrigger>
 
-      <DrawerContent className="max-w-4xl mx-auto p-2 border overflow-hidden font-jost mb-2">
-        <div className="p-6 max-h-[80vh] rounded-4xl mask-b-from-[90%] border bg-secondary dark:bg-secondary/50 overflow-y-auto space-y-6 hide-scrollbar">
+      <SheetContent side="bottom" className="max-w-4xl mx-auto p-2 border overflow-hidden font-jost rounded-t-4xl">
+        <div className="p-6 max-h-[80vh] mask-b-from-90% border border-muted bg-secondary dark:bg-secondary/50 overflow-y-auto space-y-6 hide-scrollbar rounded-t-3xl">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h2 className="text-xl font-semibold mb-2 max-w-[95%]">
@@ -136,12 +135,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
               <WrapButton
                 className=""
                 href={task.clipURL}
-                // onClick={() => {
-                //   downloadFile(
-                //     task.clipURL!,
-                //     `${task.title?.slice(0, 10)}.mp4`
-                //   );
-                // }}
+              // onClick={() => {
+              //   downloadFile(
+              //     task.clipURL!,
+              //     `${task.title?.slice(0, 10)}.mp4`
+              //   );
+              // }}
               >
                 {/* <Globe className="animate-spin h-5 w-5" /> */}
                 Download
@@ -218,8 +217,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
             </div>
           )}
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SheetContent>
+    </Sheet>
   );
 };
 

@@ -1,41 +1,26 @@
-import { Link, useNavigate } from "react-router";
-import { AlertCircle, ArrowRight, Check } from "lucide-react";
+import React from "react";
+import { useNavigate } from "react-router";
+import { IconLoader2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth/auth.client";
 import { PaymentApi } from "@/lib/api/payment";
 import { PLAN_TIERS, PLANS, type PlanTier } from "@snipmatic/utils";
-
-const pricingTiers = PLAN_TIERS.map((tier) => ({
-  id: tier,
-  name: PLANS[tier].name.toUpperCase(),
-  description:
-    tier === "starter"
-      ? "Perfect for getting started with clip generation"
-      : tier === "influencer"
-        ? "Best for creators publishing clips every week"
-        : "For teams and high-volume clip workflows",
-  price: `$${PLANS[tier].price}`,
-  featured: PLANS[tier].highlighted,
-  features: PLANS[tier].features,
-  cta:
-    tier === "starter"
-      ? "START WITH STARTER"
-      : tier === "influencer"
-        ? "UPGRADE TO INFLUENCER"
-        : "GO STUDIO",
-}));
+import { cn } from "@/lib/utils";
 
 export default function PricingSection() {
   const navigate = useNavigate();
   const { data: session } = useSession();
+  const [loadingTier, setLoadingTier] = React.useState<PlanTier | null>(null);
 
   const handleCheckout = async (planTier: PlanTier) => {
     if (!session?.user) {
       navigate("/signup");
       return;
     }
+
+    setLoadingTier(planTier);
 
     try {
       const { url } = await PaymentApi.checkout({ planTier });
@@ -46,131 +31,68 @@ export default function PricingSection() {
           ? error.message
           : "Unable to start checkout. Please try again."
       );
+      setLoadingTier(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black px-4 text-white">
-      <div className="mx-auto max-w-5xl border-neutral-700 border-x py-20">
-        <div className="mb-10 grid grid-cols-1 items-center gap-6 px-4 md:grid-cols-12 md:px-10">
-          <div className="md:col-span-8">
-            <p className="mb-4 w-fit rounded-full border border-neutral-700 px-2 py-0.5 text-red-400 text-xs tracking-wide">
-              SIMPLE, SCALABLE PRICING
-            </p>
-            <h1 className="font-normal text-3xl tracking-tight md:text-5xl">
-              Plans that fit your{" "}
-              <span className="text-gray-500">clip workflow</span>
-            </h1>
-          </div>
-          <div className="md:col-span-4 md:mt-auto">
-            <p className="text-gray-500">
-              <span className="text-white">Credit-based pricing</span> with
-              monthly plans for processing, subtitles, and templates
-            </p>
-          </div>
-        </div>
+    <div className="w-full px-8 pt-16 pb-20">
+      <h2 className="md:text-2xl">Pricing</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Monthly plans. Credits refresh each billing cycle.
+      </p>
 
-        <div className="mb-8 grid md:grid-cols-3">
-          {pricingTiers.map((tier) => (
+      <div className="mt-10 grid gap-4 md:grid-cols-3">
+        {PLAN_TIERS.map((tier) => {
+          const plan = PLANS[tier];
+          const isLoading = loadingTier === tier;
+
+          return (
             <div
-              className={`relative flex h-full flex-col ${
-                tier.featured ? "" : ""
-              }`}
-              key={tier.name}
+              key={tier}
+              className={cn(
+                "flex flex-col gap-6 rounded-2xl border p-6",
+                plan.highlighted && "border-foreground/20 bg-muted/30"
+              )}
             >
-              <div
-                className={`relative flex h-full flex-col ${
-                  tier.featured
-                    ? "border-2 border-red-500 bg-neutral-900"
-                    : "border border-neutral-700 bg-black md:border-x-0 md:border-y"
-                }`}
-              >
-                <div className="relative mb-6 border-neutral-700 border-b p-6">
-                  <h3
-                    className={`mb-2 font-medium text-xl ${
-                      tier.featured ? "text-red-500" : "text-white"
-                    }`}
-                  >
-                    {tier.name}
-                  </h3>
-                  <p className="text-gray-400 text-sm">{tier.description}</p>
-                  {!tier.featured && (
-                    <div className="absolute inset-0 z-10 flex flex-col justify-between">
-                      <div className="absolute -top-0.5 -left-0.5">
-                        <div className="size-1.5 border-neutral-400 border-t-2 border-l-2" />
-                      </div>
-                      <div className="absolute -top-0.5 -right-0.5">
-                        <div className="size-1.5 border-neutral-400 border-t-2 border-r-2" />
-                      </div>
-                      <div className="absolute -right-0.5 -bottom-0.5">
-                        <div className="size-1.5 border-neutral-400 border-r-2 border-b-2" />
-                      </div>
-                      <div className="absolute -bottom-0.5 -left-0.5">
-                        <div className="size-1.5 border-neutral-400 border-b-2 border-l-2" />
-                      </div>
-                    </div>
-                  )}
+              <div>
+                <p className="text-sm text-muted-foreground">{plan.name}</p>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-3xl font-light">${plan.price}</span>
+                  <span className="text-sm text-muted-foreground">/month</span>
                 </div>
-
-                <div className="mb-6 px-6">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-medium text-4xl text-white">
-                      {tier.price}
-                    </span>
-                    <span className="text-gray-400">/month</span>
-                  </div>
-                </div>
-
-                <div className="mb-8 flex-1 px-6">
-                  <p className="mb-4 font-bold text-gray-300 text-xs tracking-wide">
-                    WHAT&apos;S INCLUDED:
-                  </p>
-                  <ul className="mb-6 space-y-3">
-                    {tier.features.map((feature) => (
-                      <li className="flex items-start gap-3" key={feature}>
-                        {tier.featured ? (
-                          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
-                        ) : (
-                          <Check className="mt-0.5 h-5 w-5 shrink-0 text-gray-500" />
-                        )}
-                        <span className="text-gray-300 text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className={`w-full gap-2 rounded-sm py-2 ${
-                      tier.featured
-                        ? "bg-red-500 text-white hover:bg-red-600"
-                        : "bg-white text-black hover:bg-gray-100"
-                    }`}
-                    onClick={() => handleCheckout(tier.id)}
-                  >
-                    {tier.cta}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                {!tier.featured && (
-                  <div className="absolute inset-0 z-10 flex flex-col justify-between">
-                    <div className="absolute -right-0.5 -bottom-0.5">
-                      <div className="size-1.5 border-neutral-400 border-r-2 border-b-2" />
-                    </div>
-                    <div className="absolute -bottom-0.5 -left-0.5">
-                      <div className="size-1.5 border-neutral-400 border-b-2 border-l-2" />
-                    </div>
-                  </div>
-                )}
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {plan.monthlyCredits.toLocaleString()} credits
+                </p>
               </div>
-            </div>
-          ))}
-        </div>
 
-        {session?.user && (
-          <div className="px-4 text-center md:px-10">
-            <Button variant="outline" className="border-neutral-700 bg-transparent text-white hover:bg-neutral-900" asChild>
-              <Link to="/dashboard">Back to dashboard</Link>
-            </Button>
-          </div>
-        )}
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex gap-2">
+                    <span className="text-foreground/40">·</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                className="mt-auto w-full rounded-full"
+                variant={plan.highlighted ? "default" : "secondary"}
+                onClick={() => handleCheckout(tier)}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <IconLoader2 className="animate-spin" />
+                    Redirecting
+                  </>
+                ) : (
+                  "Subscribe"
+                )}
+              </Button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

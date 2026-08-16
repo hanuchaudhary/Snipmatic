@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import { CLIP_MODES } from "../lib/clip-config";
+
+export const aspectRatioIdSchema = z.enum(["16:9", "9:16", "1:1", "4:5"]);
+export const clipModeSchema = z.enum(CLIP_MODES);
+export const clipSourceSchema = z.enum(["youtube", "upload"]);
+
 export const youtubeUrlSchema = z
   .string()
   .trim()
@@ -77,6 +83,22 @@ export const ClipModel = {
   }),
 
   invalidFilename: z.literal("Invalid filename"),
+
+  createClipBody: z.object({
+    source: clipSourceSchema,
+    url: z.string().optional(),
+    sourceKey: z.string().optional(),
+    from: z.number(),
+    to: z.number(),
+    subtitles: z.boolean(),
+    clipMode: clipModeSchema,
+    aspectRatio: aspectRatioIdSchema,
+    subtitleTemplateId: z.string().optional(),
+    bgMusicTemplateId: z.string().optional(),
+    bgMusicIntensity: z.number().min(0).max(100),
+    videoTemplateId: z.string().optional(),
+    attachedClipId: z.string().optional(),
+  }),
 } as const;
 
 export type ClipModel = {

@@ -4,6 +4,11 @@ import { Link, useLocation, useNavigate } from "react-router";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  BGM_RECOMMENDED_INTENSITY,
+  DEFAULT_CLIP_CONFIGURATION,
+  SUBTITLE_TEMPLATES,
+  type AspectRatioId,
+  type ClipMode,
   type ClipModel,
   type PaymentModel,
   calculateClipCredits,
@@ -40,6 +45,16 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const defaultClipConfig = () => ({
+  clipMode: DEFAULT_CLIP_CONFIGURATION.clipMode,
+  aspectRatio: DEFAULT_CLIP_CONFIGURATION.aspectRatio,
+  subtitleTemplateId: undefined,
+  bgMusicTemplateId: undefined,
+  bgMusicIntensity: BGM_RECOMMENDED_INTENSITY,
+  videoTemplateId: undefined,
+  attachedClipId: undefined,
+});
+
 export const CreateClip = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -66,6 +81,27 @@ export const CreateClip = () => {
   const [subtitles, setSubtitles] = React.useState(
     pageState?.subtitles ?? false
   );
+  const [clipMode, setClipMode] = React.useState<ClipMode>(
+    pageState?.clipMode ?? DEFAULT_CLIP_CONFIGURATION.clipMode
+  );
+  const [aspectRatio, setAspectRatio] = React.useState<AspectRatioId>(
+    pageState?.aspectRatio ?? DEFAULT_CLIP_CONFIGURATION.aspectRatio
+  );
+  const [subtitleTemplateId, setSubtitleTemplateId] = React.useState<
+    string | undefined
+  >(pageState?.subtitleTemplateId);
+  const [bgMusicTemplateId, setBgMusicTemplateId] = React.useState<
+    string | undefined
+  >(pageState?.bgMusicTemplateId);
+  const [bgMusicIntensity, setBgMusicIntensity] = React.useState(
+    pageState?.bgMusicIntensity ?? BGM_RECOMMENDED_INTENSITY
+  );
+  const [videoTemplateId, setVideoTemplateId] = React.useState<
+    string | undefined
+  >(pageState?.videoTemplateId);
+  const [attachedClipId, setAttachedClipId] = React.useState<
+    string | undefined
+  >(pageState?.attachedClipId);
   const [credits, setCredits] = React.useState<
     PaymentModel["creditsResponse"] | null
   >(null);
@@ -93,6 +129,13 @@ export const CreateClip = () => {
     setSubtitles(pageState.subtitles);
     setPreviewUrl(pageState.previewUrl);
     setSourceKey(pageState.sourceKey);
+    setClipMode(pageState.clipMode ?? DEFAULT_CLIP_CONFIGURATION.clipMode);
+    setAspectRatio(pageState.aspectRatio ?? DEFAULT_CLIP_CONFIGURATION.aspectRatio);
+    setSubtitleTemplateId(pageState.subtitleTemplateId);
+    setBgMusicTemplateId(pageState.bgMusicTemplateId);
+    setBgMusicIntensity(pageState.bgMusicIntensity ?? BGM_RECOMMENDED_INTENSITY);
+    setVideoTemplateId(pageState.videoTemplateId);
+    setAttachedClipId(pageState.attachedClipId);
 
     if (pageState.url) {
       form.setValue("url", pageState.url);
@@ -107,16 +150,51 @@ export const CreateClip = () => {
     };
   }, [previewUrl]);
 
+  const processingDuration = React.useMemo(() => {
+    if (!videoInfo) {
+      return 0;
+    }
+
+    return clipRange[1] - clipRange[0];
+  }, [clipRange, videoInfo]);
+
   const estimatedCredits = React.useMemo(() => {
     if (!videoInfo) {
       return 0;
     }
 
     return calculateClipCredits({
-      durationSeconds: clipRange[1] - clipRange[0],
-      subtitles,
+      durationSeconds: processingDuration,
+      subtitles: clipMode === "ai" ? subtitles : false,
+      templateId: clipMode === "ai" ? videoTemplateId : undefined,
     });
-  }, [clipRange, subtitles, videoInfo]);
+  }, [clipMode, processingDuration, subtitles, videoInfo, videoTemplateId]);
+
+  const handleClipModeChange = (mode: ClipMode) => {
+    setClipMode(mode);
+  };
+
+  const handleAspectRatioChange = (ratio: AspectRatioId) => {
+    setAspectRatio(ratio);
+
+    if (ratio !== "9:16") {
+      setVideoTemplateId(undefined);
+      setAttachedClipId(undefined);
+    }
+  };
+
+  const handleAttachClipClear = () => {
+    setVideoTemplateId(undefined);
+    setAttachedClipId(undefined);
+  };
+
+  const handleSubtitlesChange = (enabled: boolean) => {
+    setSubtitles(enabled);
+
+    if (enabled && !subtitleTemplateId) {
+      setSubtitleTemplateId(SUBTITLE_TEMPLATES[0]?.id);
+    }
+  };
 
   const onGetVideoInfo = async (values: FormValues) => {
     if (isGettingInfo || isUploading) {
@@ -147,6 +225,7 @@ export const CreateClip = () => {
         videoInfo: info,
         clipRange: [0, Math.max(1, duration)],
         subtitles: false,
+        ...defaultClipConfig(),
       };
 
       if (isClipsPage) {
@@ -155,6 +234,13 @@ export const CreateClip = () => {
         setSubtitles(false);
         setPreviewUrl(undefined);
         setSourceKey(undefined);
+        setClipMode(DEFAULT_CLIP_CONFIGURATION.clipMode);
+        setAspectRatio(DEFAULT_CLIP_CONFIGURATION.aspectRatio);
+        setSubtitleTemplateId(undefined);
+        setBgMusicTemplateId(undefined);
+        setBgMusicIntensity(BGM_RECOMMENDED_INTENSITY);
+        setVideoTemplateId(undefined);
+        setAttachedClipId(undefined);
         navigate("/clips", { state: nextState, replace: true });
       } else {
         navigate("/clips", { state: nextState });
@@ -199,11 +285,19 @@ export const CreateClip = () => {
         },
         clipRange: [0, Math.max(1, result.duration)],
         subtitles: false,
+        ...defaultClipConfig(),
       };
 
       setVideoInfo(nextState.videoInfo);
       setClipRange(nextState.clipRange);
       setSubtitles(false);
+      setClipMode(DEFAULT_CLIP_CONFIGURATION.clipMode);
+      setAspectRatio(DEFAULT_CLIP_CONFIGURATION.aspectRatio);
+      setSubtitleTemplateId(undefined);
+      setBgMusicTemplateId(undefined);
+      setBgMusicIntensity(BGM_RECOMMENDED_INTENSITY);
+      setVideoTemplateId(undefined);
+      setAttachedClipId(undefined);
       setPreviewUrl(result.previewUrl);
       setSourceKey(result.key);
       form.reset({ url: "" });
@@ -236,6 +330,13 @@ export const CreateClip = () => {
     setSourceKey(undefined);
     setClipRange([0, 1]);
     setSubtitles(false);
+    setClipMode(DEFAULT_CLIP_CONFIGURATION.clipMode);
+    setAspectRatio(DEFAULT_CLIP_CONFIGURATION.aspectRatio);
+    setSubtitleTemplateId(undefined);
+    setBgMusicTemplateId(undefined);
+    setBgMusicIntensity(BGM_RECOMMENDED_INTENSITY);
+    setVideoTemplateId(undefined);
+    setAttachedClipId(undefined);
 
     form.reset({
       url: "",
@@ -257,8 +358,9 @@ export const CreateClip = () => {
     }
 
     const requiredCredits = calculateClipCredits({
-      durationSeconds: clipRange[1] - clipRange[0],
-      subtitles,
+      durationSeconds: processingDuration,
+      subtitles: clipMode === "ai" ? subtitles : false,
+      templateId: clipMode === "ai" ? videoTemplateId : undefined,
     });
 
     let balance = credits?.balance ?? 0;
@@ -293,7 +395,14 @@ export const CreateClip = () => {
         sourceKey,
         from: clipRange[0],
         to: clipRange[1],
-        subtitles,
+        subtitles: clipMode === "ai" ? subtitles : false,
+        clipMode,
+        aspectRatio,
+        subtitleTemplateId,
+        bgMusicTemplateId,
+        bgMusicIntensity,
+        videoTemplateId,
+        attachedClipId,
       };
 
       console.log(payload);
@@ -460,9 +569,33 @@ export const CreateClip = () => {
 
       {showVideoDetails && (
         <>
+          <VideoInfo
+            videoInfo={videoInfo}
+            clipRange={clipRange}
+            onClipRangeChange={setClipRange}
+            subtitles={subtitles}
+            onSubtitlesChange={handleSubtitlesChange}
+            previewUrl={previewUrl}
+            clipMode={clipMode}
+            onClipModeChange={handleClipModeChange}
+            aspectRatio={aspectRatio}
+            onAspectRatioChange={handleAspectRatioChange}
+            subtitleTemplateId={subtitleTemplateId}
+            onSubtitleTemplateChange={setSubtitleTemplateId}
+            bgMusicTemplateId={bgMusicTemplateId}
+            onBgMusicTemplateChange={setBgMusicTemplateId}
+            bgMusicIntensity={bgMusicIntensity}
+            onBgMusicIntensityChange={setBgMusicIntensity}
+            videoTemplateId={videoTemplateId}
+            onVideoTemplateChange={setVideoTemplateId}
+            attachedClipId={attachedClipId}
+            onAttachedClipChange={setAttachedClipId}
+            onAttachClipClear={handleAttachClipClear}
+          />
+
           <Button
             type="button"
-            className="w-full py-6 rounded-full mt-4"
+            className="mt-6 w-full rounded-full py-6"
             onClick={onCreateClip}
             disabled={isCreatingClip || clipRange[1] <= clipRange[0]}
           >
@@ -475,15 +608,6 @@ export const CreateClip = () => {
               `Get Clips in 1 Click · ${estimatedCredits} credits`
             )}
           </Button>
-
-          <VideoInfo
-            videoInfo={videoInfo}
-            clipRange={clipRange}
-            onClipRangeChange={setClipRange}
-            subtitles={subtitles}
-            onSubtitlesChange={setSubtitles}
-            previewUrl={previewUrl}
-          />
         </>
       )}
     </motion.div>

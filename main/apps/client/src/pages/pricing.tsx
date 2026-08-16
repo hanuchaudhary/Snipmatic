@@ -16,20 +16,22 @@ export function PricingSuccessPage() {
   React.useEffect(() => {
     PaymentApi.getCredits()
       .then(() => {
-        toast.success("Subscription updated. Credits are ready.");
+        toast.success("Subscription updated.");
         navigate("/dashboard", { replace: true });
       })
       .catch(() => {
-        toast.success("Subscription updated.");
         navigate("/dashboard", { replace: true });
       });
   }, [navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-4 text-white">
+    <div className="flex w-full items-center justify-center px-8 py-24">
       <div className="text-center">
-        <h1 className="text-2xl font-medium">Processing your subscription...</h1>
-        <Button className="mt-6" asChild>
+        <h2 className="md:text-2xl">Processing subscription</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Redirecting to dashboard...
+        </p>
+        <Button className="mt-6 rounded-full" asChild>
           <Link to="/dashboard">Go to dashboard</Link>
         </Button>
       </div>
@@ -39,11 +41,10 @@ export function PricingSuccessPage() {
 
 export function PricingCancelPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-4 text-white">
+    <div className="flex w-full items-center justify-center px-8 py-24">
       <div className="text-center">
-        <h1 className="text-2xl font-medium">Checkout cancelled</h1>
-        <p className="mt-2 text-white/60">You can choose a plan anytime.</p>
-        <Button className="mt-6" asChild>
+        <h2 className="md:text-2xl">Checkout cancelled</h2>
+        <Button className="mt-6 rounded-full" asChild>
           <Link to="/pricing">Back to pricing</Link>
         </Button>
       </div>

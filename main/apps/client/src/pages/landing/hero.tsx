@@ -1,145 +1,75 @@
-import { useRef } from "react";
-import { Link } from "react-router";
+import ImageStreamHero from "./hero-animation";
 
-import { ArrowUpRight } from "lucide-react";
-import { motion, type Variants } from "motion/react";
+const CDN = "https://pub-940ccf6255b54fa799a9b01050e6c227.r2.dev";
 
-import { useTheme } from "@/components/provider/theme-provider";
-import { GradientText } from "@/components/ui/gradient-text";
-import { VideoCard } from "@/components/ui/video-card";
-
-import { Navbar } from "./navbar";
+const IMAGES = [
+  {
+    src: `${CDN}/stock-images/767d99bb371a54d0d36751e8cecae43c.jpg`,
+    alt: "Diver silhouetted inside a sunset seascape shaped like a profile",
+  },
+  {
+    src: `${CDN}/gradients/hero_gradient/hero-gradients-01.png`,
+    alt: "Soft multi-tone gradient wash",
+  },
+  {
+    src: `${CDN}/stock-images/821d815affa6496c39cbdeeec7a84603.jpg`,
+    alt: "Double-exposure portrait blended with a city skyline at dusk",
+  },
+  {
+    src: `${CDN}/gradients/crimson_aura/crimson-aura-02.png`,
+    alt: "Crimson aura gradient",
+  },
+  {
+    src: `${CDN}/stock-images/937438c560ada1c83317f2c11b3454b0.jpg`,
+    alt: "Motion-blurred side-profile portrait against a deep orange backdrop",
+  },
+  {
+    src: `${CDN}/gradients/hue-flow/hue-flow-01.png`,
+    alt: "Flowing hue gradient",
+  },
+  {
+    src: `${CDN}/stock-images/98f89cb9994f5c382ab964062c4039db.jpg`,
+    alt: "Figure holding a racket that dissolves into a swirling colourful cloud",
+  },
+  {
+    src: `${CDN}/gradients/moon/moon-grade-03.png`,
+    alt: "Moon-toned gradient",
+  },
+  {
+    src: `${CDN}/stock-images/ddcbee38be8b7274e19e132d7ab35b53.jpg`,
+    alt: "Hand gesture with a colourful cutout of a bird flying through the fingers",
+  },
+  {
+    src: `${CDN}/gradients/hero_gradient/hero-gradients-03.png`,
+    alt: "Layered hero gradient",
+  },
+  {
+    src: `${CDN}/gradients/hue-flow/hue-flow-02.png`,
+    alt: "Second flowing hue gradient",
+  },
+  {
+    src: `${CDN}/gradients/moon/moon-grade-05.png`,
+    alt: "Deep moon-toned gradient",
+  },
+];
 
 export function HeroSection() {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const { theme } = useTheme();
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        delayChildren: 0.3,
-        staggerChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: {
-      y: 20,
-      opacity: 0,
-      filter: "blur(10px)",
-    },
-    visible: {
-      y: 0,
-      opacity: 1,
-      filter: "blur(0px)",
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      },
-    },
-  };
-
-  const buttonVariants: Variants = {
-    hidden: {
-      y: 20,
-      opacity: 0,
-      filter: "blur(10px)",
-      scale: 0.9,
-    },
-    visible: {
-      y: 0,
-      opacity: 1,
-      filter: "blur(0px)",
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.46, 0.45, 0.94],
-        delay: 0.8,
-      },
-    },
-  };
-
   return (
-    <section className="relative flex flex-col justify-center">
-      <Navbar />
-      <motion.div
-        className="mx-auto z-10 min-h-[calc(100vh-15rem)] flex items-center flex-col justify-center relative md:pt-0 pt-40 md:w-4xl md:text-[5rem] text-4xl"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.h1
-          className="mt-20 mx-auto font-[family-name:var(--font-instrumental)] text-center leading-none"
-          variants={itemVariants}
-        >
-          Snip Your Way
-        </motion.h1>
-
-        <motion.h1
-          className="mx-auto font-[family-name:var(--font-instrumental)] text-center leading-none flex items-center justify-center md:gap-3 gap-1"
-          variants={itemVariants}
-        >
-          to Virality with
-          <GradientText
-            colors={["#ff4500", "#ff8c00", "#ffd700"]}
-            animationSpeed={5}
-            showBorder={false}
-            className="custom-class"
-          >
-            Snipmatic
-          </GradientText>
-        </motion.h1>
-
-        <motion.p
-          className="md:text-lg text-sm font-jost md:px-0 px-4 text-neutral-400 my-8 text-center mx-auto max-w-2xl"
-          variants={itemVariants}
-        >
-          Get famous with Snipmatic — transform any YouTube video into
-          viral-ready shorts with AI-powered precision.
-        </motion.p>
-
-        <motion.div
-          className="flex flex-wrap flex-col gap-2 md:text-base text-sm font-jost tracking-wider items-center justify-center"
-          variants={buttonVariants}
-        >
-          <Link to="/signup">
-            <motion.button
-              ref={buttonRef}
-              style={{
-                boxShadow: "rgba(255, 255, 255, 0.16) 0px 2px 6px -2px inset",
-              }}
-              className="border hover:scale-105 transition-transform px-7 py-3 rounded-xl font-semibold bg-neutral-900 dark:text-muted-foreground text-white cursor-pointer flex items-center gap-2"
-              whileHover={{
-                boxShadow: "rgba(255, 255, 255, 0.25) 0px 4px 12px -4px inset",
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Start Creating Now
-              <ArrowUpRight />
-            </motion.button>
-          </Link>
-        </motion.div>
-      </motion.div>
-
-      <motion.div
-        className="w-full mx-auto overflow-hidden px-4 sm:px-2 mt-12"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 1.2 }}
-      >
-        <VideoCard
-          imageUrl={
-            theme === "dark"
-              ? "https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-08-17 21-39-13.png"
-              : "https://d10d2f3sgu39wn.cloudfront.net/Screenshot from 2025-09-02 00-44-55.png"
-          }
-          videoUrl="https://d10d2f3sgu39wn.cloudfront.net/snipmatic-demo-1754599920218.mp4"
-          className="w-full"
-        />
-      </motion.div>
-    </section>
+    <ImageStreamHero
+      axis={70}
+      images={IMAGES}
+      className="h-screen w-full"
+    >
+      <div className="relative z-10 flex h-full flex-col items-center justify-between py-12 text-center">
+        <div className="px-6">
+          <h1 className="text-balance text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
+            Share your work, front and centre.
+          </h1>
+          <p className="text-balance text-sm text-muted-foreground">
+            Share your work, front and centre.
+          </p>
+        </div>
+      </div>
+    </ImageStreamHero>
   );
 }

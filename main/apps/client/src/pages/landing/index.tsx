@@ -4,7 +4,7 @@ import GradualBlurMemo from "@/components/ui/gradual-blur";
 
 export function LandingPage() {
   return (
-    <div className="relative z-20 max-w-7xl mx-auto flex flex-col justify-center min-h-screen">
+    <div className="relative z-20 w-full">
       <HeroSection />
       <GradualBlurMemo
         target="page"

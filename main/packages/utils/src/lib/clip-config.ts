@@ -23,7 +23,7 @@ export type ClipTemplate = {
   description?: string;
 };
 
-export const BGM_RECOMMENDED_INTENSITY = 100;
+export const BGM_RECOMMENDED_INTENSITY = 15;
 
 export const SUBTITLE_TEMPLATES: ClipTemplate[] = [
   {
@@ -93,14 +93,14 @@ export const VIDEO_LAYOUT_TEMPLATES: ClipTemplate[] = [
     name: "Clip on Top",
     mediaType: "video",
     previewUrl: "/placeholder.png",
-    description: "Main video on top half",
+    description: "Attached clip on the top half",
   },
   {
     id: "video-attach-bottom",
     name: "Clip on Bottom",
     mediaType: "video",
     previewUrl: "/placeholder.png",
-    description: "Main video on bottom half",
+    description: "Attached clip on the bottom half",
   },
 ];
 
@@ -143,14 +143,16 @@ export type ClipConfiguration = {
   attachedClipId?: string;
 };
 
+export const DEFAULT_ATTACH_POSITION_ID = "video-attach-bottom";
+
 export const DEFAULT_CLIP_CONFIGURATION: ClipConfiguration = {
-  clipMode: "manual",
+  clipMode: "ai",
   aspectRatio: "9:16",
   bgMusicIntensity: BGM_RECOMMENDED_INTENSITY,
 };
 
 export const getAspectRatio = (id: AspectRatioId) => {
-  return ASPECT_RATIOS.find((ratio) => ratio.id === id) ?? ASPECT_RATIOS[1];
+  return ASPECT_RATIOS.find((ratio) => ratio.id === id) ?? ASPECT_RATIOS[0];
 };
 
 export const getTemplateById = (id: string | undefined) => {

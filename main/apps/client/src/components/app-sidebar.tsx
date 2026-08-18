@@ -1,11 +1,6 @@
 import { Link, useLocation } from "react-router";
 
 import {
-  IconScissors,
-  IconSmartHome,
-} from "@tabler/icons-react";
-
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -20,17 +15,24 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipButton } from "./ui/tooltip-button";
 import { ProfileDropdown } from "./ui/profile-dropdown";
+import { ClapperboardIcon, Crown03Icon, Home04Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 const navItems = [
   {
     to: "/dashboard",
     label: "Dashboard",
-    icon: IconSmartHome,
+    icon: Home04Icon,
   },
   {
     to: "/clips",
     label: "Clips",
-    icon: IconScissors,
+    icon: ClapperboardIcon,
+  },
+  {
+    to: "/pricing",
+    label: "Pricing",
+    icon: Crown03Icon,
   },
 ] as const;
 
@@ -68,7 +70,10 @@ export function AppSidebar() {
                     render={<Link to={to} />}
                     isActive={pathname === to}
                   >
-                    <Icon className="stroke-1" />
+                    <HugeiconsIcon
+                      icon={Icon}
+                      color="currentColor"
+                    />
                     <span>{label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -78,7 +83,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <ProfileDropdown/>
+        <ProfileDropdown />
       </SidebarFooter>
     </Sidebar>
   );

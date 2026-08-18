@@ -17,7 +17,6 @@ import {
   youtubeUrlSchema,
 } from "@snipmatic/utils";
 import { IconLoader2, IconUpload, IconX } from "@tabler/icons-react";
-import { motion } from "motion/react";
 import { toast } from "sonner";
 import z from "zod";
 
@@ -365,26 +364,26 @@ export const CreateClip = () => {
 
     let balance = credits?.balance ?? 0;
 
-    if (!credits) {
-      try {
-        const latestCredits = await PaymentApi.getCredits();
-        setCredits(latestCredits);
-        balance = latestCredits.balance;
-      } catch {
-        toast.error("Unable to verify credits. Please try again.");
-        return;
-      }
-    }
+    // if (!credits) {
+    //   try {
+    //     const latestCredits = await PaymentApi.getCredits();
+    //     setCredits(latestCredits);
+    //     balance = latestCredits.balance;
+    //   } catch {
+    //     toast.error("Unable to verify credits. Please try again.");
+    //     return;
+    //   }
+    // }
 
-    if (!hasEnoughCredits(balance, requiredCredits)) {
-      toast.error("Not enough credits for this clip.", {
-        action: {
-          label: "Upgrade",
-          onClick: () => navigate("/pricing"),
-        },
-      });
-      return;
-    }
+    // if (!hasEnoughCredits(balance, requiredCredits)) {
+    //   toast.error("Not enough credits for this clip.", {
+    //     action: {
+    //       label: "Upgrade",
+    //       onClick: () => navigate("/pricing"),
+    //     },
+    //   });
+    //   return;
+    // }
 
     setIsCreatingClip(true);
 
@@ -422,12 +421,12 @@ export const CreateClip = () => {
   const isBusy = isGettingInfo || isUploading;
 
   return (
-    <motion.div
+    <div
       className={cn(
-        "min-h-[30vh] pt-16 transition-transform relative"
+        "min-h-[30vh] pt-16 pb-10"
       )}
     >
-      <div className={cn("absolute md:-bottom-55 -bottom-45 left-1/2 -translate-x-1/2 text-muted-foreground/20 md:text-[12rem] text-[10rem] mask-b-from-0% z-0 select-none pointer-events-none", isClipsPage && "hidden")}>
+      <div className={cn("absolute md:-bottom-55 -bottom-45 left-1/2 -translate-x-1/2 text-muted-foreground/15 md:text-[12rem] text-[10rem] mask-b-from-0 z-0 select-none pointer-events-none", isClipsPage && "hidden")}>
         <p>
           Snipmatic
         </p>
@@ -569,6 +568,24 @@ export const CreateClip = () => {
 
       {showVideoDetails && (
         <>
+          <div className="sticky top-0 z-50 -mx-6 mt-6 bg-background/95 px-6 py-3 backdrop-blur-sm">
+            <Button
+              type="button"
+              className="w-full rounded-full py-6"
+              onClick={onCreateClip}
+              disabled={isCreatingClip || clipRange[1] <= clipRange[0]}
+            >
+              {isCreatingClip ? (
+                <>
+                  <IconLoader2 className="animate-spin" />
+                  Creating Clips
+                </>
+              ) : (
+                `Get Clips in 1 Click · ${estimatedCredits} credits`
+              )}
+            </Button>
+          </div>
+
           <VideoInfo
             videoInfo={videoInfo}
             clipRange={clipRange}
@@ -591,25 +608,10 @@ export const CreateClip = () => {
             attachedClipId={attachedClipId}
             onAttachedClipChange={setAttachedClipId}
             onAttachClipClear={handleAttachClipClear}
+            youtubeUrl={form.watch("url")}
           />
-
-          <Button
-            type="button"
-            className="mt-6 w-full rounded-full py-6"
-            onClick={onCreateClip}
-            disabled={isCreatingClip || clipRange[1] <= clipRange[0]}
-          >
-            {isCreatingClip ? (
-              <>
-                <IconLoader2 className="animate-spin" />
-                Creating Clips
-              </>
-            ) : (
-              `Get Clips in 1 Click · ${estimatedCredits} credits`
-            )}
-          </Button>
         </>
       )}
-    </motion.div>
+    </div>
   );
 };

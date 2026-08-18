@@ -1,8 +1,8 @@
 import React from "react";
 
 import {
+  DEFAULT_ATTACH_POSITION_ID,
   MOCK_ATTACH_CLIPS,
-  VIDEO_LAYOUT_TEMPLATES,
   getAttachClipById,
 } from "@snipmatic/utils";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 type AttachClipSectionProps = {
   mainPreviewUrl?: string;
   mainThumbnail?: string;
+  useThumbnail?: boolean;
   videoTemplateId?: string;
   attachedClipId?: string;
   onVideoTemplateChange: (value: string) => void;
@@ -19,58 +20,86 @@ type AttachClipSectionProps = {
   onClear: () => void;
 };
 
+const MediaPanel = ({
+  src,
+  isVideo,
+  alt,
+  fallback,
+}: {
+  src?: string;
+  isVideo?: boolean;
+  alt: string;
+  fallback: string;
+}) => {
+  if (!src) {
+    return (
+      <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
+        {fallback}
+      </div>
+    );
+  }
+
+  if (isVideo) {
+    return (
+      <video
+        src={src}
+        className="h-full w-full object-contain"
+        muted
+        playsInline
+        preload="metadata"
+      />
+    );
+  }
+
+  return <img src={src} alt={alt} className="h-full w-full object-contain" />;
+};
+
 const SplitPreview = ({
-  layoutId,
   mainPreviewUrl,
   mainThumbnail,
+  useThumbnail,
   attachedPreviewUrl,
 }: {
-  layoutId?: string;
   mainPreviewUrl?: string;
   mainThumbnail?: string;
+  useThumbnail?: boolean;
   attachedPreviewUrl?: string;
 }) => {
-  const mainSrc = mainPreviewUrl || mainThumbnail;
+  const mainIsVideo = !useThumbnail && Boolean(mainPreviewUrl);
+  const mainSrc = useThumbnail
+    ? mainThumbnail || mainPreviewUrl
+    : mainPreviewUrl || mainThumbnail;
   const attachSrc = attachedPreviewUrl || "/placeholder.png";
 
   const MainPanel = (
     <div className="relative flex-1 overflow-hidden bg-muted">
-      {mainSrc ? (
-        <img src={mainSrc} alt="Main clip" className="h-full w-full object-cover" />
-      ) : (
-        <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
-          Main
-        </div>
-      )}
+      <MediaPanel
+        src={mainSrc}
+        isVideo={mainIsVideo}
+        alt="Main clip"
+        fallback="Main"
+      />
     </div>
   );
 
   const AttachPanel = (
     <div className="relative flex-1 overflow-hidden bg-muted-foreground/20">
-      <img src={attachSrc} alt="Attached clip" className="h-full w-full object-cover" />
+      <MediaPanel
+        src={attachSrc}
+        isVideo={false}
+        alt="Attached clip"
+        fallback="Clip"
+      />
     </div>
   );
 
   return (
-    <div className="mx-auto aspect-[9/16] w-full max-w-[140px] overflow-hidden rounded-xl border bg-muted">
-      <div className="flex h-full flex-col">
-        {layoutId === "video-attach-top" && (
-          <>
-            {MainPanel}
-            <div className="border-t border-background/30">{AttachPanel}</div>
-          </>
-        )}
-        {layoutId === "video-attach-bottom" && (
-          <>
-            {AttachPanel}
-            <div className="border-t border-background/30">{MainPanel}</div>
-          </>
-        )}
-        {!layoutId && (
-          <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
-            9:16
-          </div>
-        )}
+    <div className="mx-auto aspect-9/16 w-full overflow-hidden rounded-xl border bg-muted">
+      <div className="flex flex-col h-full">
+        <div className="h-1/2 flex items-center justify-center">
+          {MainPanel}
+        </div>
+        <div className="h-1/2 border-t border-background/30">{AttachPanel}</div>
       </div>
     </div>
   );
@@ -79,6 +108,7 @@ const SplitPreview = ({
 export const AttachClipSection = ({
   mainPreviewUrl,
   mainThumbnail,
+  useThumbnail,
   videoTemplateId,
   attachedClipId,
   onVideoTemplateChange,
@@ -90,6 +120,13 @@ export const AttachClipSection = ({
   );
 
   const attachedClip = getAttachClipById(attachedClipId);
+  const openSection = () => {
+    setIsOpen(true);
+
+    if (!videoTemplateId) {
+      onVideoTemplateChange(DEFAULT_ATTACH_POSITION_ID);
+    }
+  };
 
   if (!isOpen) {
     return (
@@ -99,7 +136,7 @@ export const AttachClipSection = ({
           type="button"
           variant="secondary"
           className="w-full rounded-full"
-          onClick={() => setIsOpen(true)}
+          onClick={openSection}
         >
           Attach clips
         </Button>
@@ -124,71 +161,50 @@ export const AttachClipSection = ({
           Remove
         </Button>
       </div>
-
-      <SplitPreview
-        layoutId={videoTemplateId}
-        mainPreviewUrl={mainPreviewUrl}
-        mainThumbnail={mainThumbnail}
-        attachedPreviewUrl={attachedClip?.previewUrl}
-      />
-
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">Layout</p>
-        <div className="grid grid-cols-2 gap-2">
-          {VIDEO_LAYOUT_TEMPLATES.map((template) => {
-            const isSelected = videoTemplateId === template.id;
-
-            return (
-              <button
-                key={template.id}
-                type="button"
-                onClick={() => onVideoTemplateChange(template.id)}
-                className={cn(
-                  "rounded-xl border p-3 text-left transition-colors",
-                  isSelected
-                    ? "border-foreground bg-muted"
-                    : "border-border hover:bg-muted/40"
-                )}
-              >
-                <p className="text-sm font-medium">{template.name}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {template.description}
-                </p>
-              </button>
-            );
-          })}
+      <div className="grid grid-cols-5 gap-4">
+        <div className="col-span-3 space-y-2">
+          <p className="text-xs text-muted-foreground">Choose clip</p>
+          <div className="grid grid-cols-2 gap-2">
+            {MOCK_ATTACH_CLIPS.map((clip) => {
+              const isSelected = attachedClipId === clip.id;
+              return (
+                <button
+                  key={clip.id}
+                  type="button"
+                  onClick={() => {
+                    if (!videoTemplateId) {
+                      onVideoTemplateChange(DEFAULT_ATTACH_POSITION_ID);
+                    }
+                    onAttachedClipChange(clip.id);
+                  }}
+                  className={cn(
+                    "overflow-hidden text-left transition-colors",
+                    isSelected
+                      ? "border-foreground"
+                      : "border-border hover:bg-muted/40"
+                  )}
+                >
+                  <div className={cn("aspect-video", isSelected && "border-foreground border")}>
+                    <img
+                      src={clip.previewUrl}
+                      alt={clip.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <p className="p-2 text-xs font-medium">{clip.name}</p>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">Choose clip</p>
-        <div className="grid grid-cols-2 gap-2">
-          {MOCK_ATTACH_CLIPS.map((clip) => {
-            const isSelected = attachedClipId === clip.id;
-
-            return (
-              <button
-                key={clip.id}
-                type="button"
-                onClick={() => onAttachedClipChange(clip.id)}
-                className={cn(
-                  "overflow-hidden rounded-xl border text-left transition-colors",
-                  isSelected
-                    ? "border-foreground bg-muted"
-                    : "border-border hover:bg-muted/40"
-                )}
-              >
-                <div className="aspect-video bg-muted">
-                  <img
-                    src={clip.previewUrl}
-                    alt={clip.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <p className="p-2 text-xs font-medium">{clip.name}</p>
-              </button>
-            );
-          })}
+        <div className="col-span-2 space-y-2">
+          <h5 className="text-xs text-muted-foreground">Preview</h5>
+          <SplitPreview
+            mainPreviewUrl={mainPreviewUrl}
+            mainThumbnail={mainThumbnail}
+            useThumbnail={useThumbnail}
+            attachedPreviewUrl={attachedClip?.previewUrl}
+          />
         </div>
       </div>
     </div>

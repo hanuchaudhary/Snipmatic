@@ -65,11 +65,11 @@ export const TemplateGrid = ({
               className={cn(
                 "text-left transition-colors",
                 isSelected
-                  ? "border border-primary p-1 rounded-md"
+                  ? "border border-primary"
                   : "border-border"
               )}
             >
-              <div className="mb-2 aspect-[4/3] overflow-hidden rounded-lg bg-muted">
+              <div className="aspect-[4/3] overflow-hidden bg-muted">
                 {template.mediaType === "subtitle" ? (
                   <img
                     src={template.previewUrl}
@@ -84,12 +84,6 @@ export const TemplateGrid = ({
                   </div>
                 )}
               </div>
-              <p className="text-xs font-medium">{template.name}</p>
-              {template.description && (
-                <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
-                  {template.description}
-                </p>
-              )}
             </button>
           );
         })}

@@ -6,10 +6,10 @@ import { Navbar } from "@/pages/landing/navbar";
 
 export function DashboardLayout() {
   return (
-    <div className="min-h-screen scrollbar-hidden bg-background w-full">
-      <div className="flex">
+    <div className="h-svh overflow-hidden scrollbar-hidden bg-background w-full">
+      <div className="flex h-full">
         <AppSidebar />
-        <SidebarInset className="min-h-[calc(100vh-5rem)] overflow-auto scrollbar-hidden relative ">
+        <SidebarInset className="h-full min-h-0 overflow-y-auto scrollbar-hidden relative">
           <Navbar />
           <div className="w-full max-w-4xl mx-auto">
             <Outlet />

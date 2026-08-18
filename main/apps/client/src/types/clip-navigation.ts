@@ -32,7 +32,7 @@ export const clipConfigFromState = (
   state: Partial<ClipConfigState> | null | undefined
 ): ClipConfiguration => ({
   clipMode: state?.clipMode ?? "manual",
-  aspectRatio: state?.aspectRatio ?? "9:16",
+  aspectRatio: state?.aspectRatio ?? "16:9",
   subtitleTemplateId: state?.subtitleTemplateId,
   bgMusicTemplateId: state?.bgMusicTemplateId,
   bgMusicIntensity: state?.bgMusicIntensity ?? 15,

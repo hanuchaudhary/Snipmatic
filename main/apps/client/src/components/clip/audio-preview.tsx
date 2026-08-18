@@ -7,7 +7,7 @@ import {
 } from "@snipmatic/utils";
 import { cn } from "@/lib/utils";
 
-import { Slider } from "../ui/slider";
+import { RangeSlider } from "../ui/custom-slider";
 import { IconPlayerPauseFilled, IconPlayerPlayFilled } from "@tabler/icons-react";
 
 type AudioPreviewProps = {
@@ -27,14 +27,13 @@ export function AudioPreview({
   intensity,
   onSelect,
   onPlayToggle,
-  onIntensityChange,
   className,
+  onIntensityChange,
 }: AudioPreviewProps & React.ComponentProps<"div">) {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   React.useEffect(() => {
     const audio = new Audio(template.previewUrl);
-    audio.volume = Math.min(1, Math.max(0, intensity / 100));
     audioRef.current = audio;
 
     return () => {
@@ -61,16 +60,15 @@ export function AudioPreview({
     }
 
     if (isPlaying && isActive) {
-      audio.volume = Math.min(1, Math.max(0, intensity / 100));
       audio.play().catch(() => undefined);
       return;
     }
 
     audio.pause();
-  }, [intensity, isActive, isPlaying]);
+  }, [isActive, isPlaying]);
 
   return (
-    <>
+    <div className="space-y-2">
       <div
         className={cn(
           "rounded-full border p-2 transition-colors flex gap-2",
@@ -90,9 +88,7 @@ export function AudioPreview({
         >
           <div className="flex h-6 w-6 items-center justify-center">
             {isPlaying && isActive ? (
-              <motion.div
-                className="flex size-6 items-center justify-center rounded-full bg-primary"
-              >
+              <motion.div className="flex size-6 items-center justify-center rounded-full bg-primary">
                 <IconPlayerPauseFilled className="size-3 text-primary-foreground" />
               </motion.div>
             ) : (
@@ -143,45 +139,30 @@ export function AudioPreview({
             )}
           </button>
         </div>
-
       </div>
-      <AnimatePresence>
-        {isPlaying && isActive && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div
-              className="mt-2 space-y-2 mb-2"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1">
-                  <span className="text-muted-foreground">Intensity</span>
-                  <p className="text-xs text-primary">
-                    (Recommended {BGM_RECOMMENDED_INTENSITY}%)
-                  </p>
-                </div>
-                <span className="font-medium">{intensity}%</span>
-              </div>
-              <Slider
-                min={0}
-                max={100}
-                step={1}
-                value={[intensity]}
-                onValueChange={(value) => {
-                  if (Array.isArray(value) && typeof value[0] === "number") {
-                    onIntensityChange(value[0]);
-                  }
-                }}
-              />
+
+      {isActive && (
+        <div className="space-y-2 px-1 pb-1">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Intensity</span>
+              <p className="text-xs text-primary">
+                (Recommended {BGM_RECOMMENDED_INTENSITY}%)
+              </p>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+            <span className="font-medium">{intensity}%</span>
+          </div>
+          <RangeSlider
+            min={0}
+            max={100}
+            step={1}
+            showTicks={false}
+            value={intensity}
+            aria-label="Background music intensity"
+            onValueChange={onIntensityChange}
+          />
+        </div>
+      )}
+    </div>
   );
-}
+};

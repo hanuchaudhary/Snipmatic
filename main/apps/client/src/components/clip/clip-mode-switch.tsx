@@ -1,13 +1,11 @@
-import React from "react";
-
 import { motion } from "motion/react";
 
 import { type ClipMode } from "@snipmatic/utils";
 import { cn } from "@/lib/utils";
 
 const clipModeOptions = [
+  { key: "ai" as const, label: "AI Clipping" },
   { key: "manual" as const, label: "Manual" },
-  { key: "ai" as const, label: "AI" },
 ];
 
 export const ClipModeSwitch = ({
@@ -38,7 +36,7 @@ export const ClipModeSwitch = ({
             )}
             <span
               className={cn(
-                "relative block px-4 py-1.5 text-xs md:text-sm",
+                "relative block px-4 py-1.5 text-xs md:text-sm text-nowrap",
                 isActive ? "text-primary-foreground" : "text-muted-foreground"
               )}
             >

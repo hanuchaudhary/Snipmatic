@@ -66,7 +66,7 @@ export function AppSidebar() {
               {navItems.map(({ to, label, icon: Icon }) => (
                 <SidebarMenuItem key={to}>
                   <SidebarMenuButton
-                    className="text-[14px] font-normal!"
+                    className="text-[13px] font-normal!"
                     render={<Link to={to} />}
                     isActive={pathname === to}
                   >

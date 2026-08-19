@@ -1,4 +1,5 @@
 import ImageStreamHero from "./hero-animation";
+import { Navbar } from "./navbar";
 
 const CDN = "https://pub-940ccf6255b54fa799a9b01050e6c227.r2.dev";
 
@@ -55,21 +56,24 @@ const IMAGES = [
 
 export function HeroSection() {
   return (
-    <ImageStreamHero
-      axis={70}
-      images={IMAGES}
-      className="h-screen w-full"
-    >
-      <div className="relative z-10 flex h-full flex-col items-center justify-between py-12 text-center">
-        <div className="px-6">
-          <h1 className="text-balance text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
-            Share your work, front and centre.
-          </h1>
-          <p className="text-balance text-sm text-muted-foreground">
-            Share your work, front and centre.
-          </p>
+    <>
+      <Navbar />
+      <ImageStreamHero
+        axis={70}
+        images={IMAGES}
+        className="h-screen w-full"
+      >
+        <div className="relative z-10 flex h-full flex-col items-center justify-between py-12 text-center">
+          <div className="px-6">
+            <h1 className="text-balance text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
+              Share your work, front and centre.
+            </h1>
+            <p className="text-balance text-sm text-muted-foreground">
+              Share your work, front and centre.
+            </p>
+          </div>
         </div>
-      </div>
-    </ImageStreamHero>
+      </ImageStreamHero>
+    </>
   );
 }

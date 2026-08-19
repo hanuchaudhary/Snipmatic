@@ -76,10 +76,8 @@ export function AudioPreview({
           className
         )}
       >
-        <motion.div
+        <div
           className="flex cursor-pointer items-center justify-center rounded-full border p-2"
-          layout
-          transition={{ layout: { duration: 0.4 } }}
           onClick={(event) => {
             event.stopPropagation();
             onSelect();
@@ -88,9 +86,9 @@ export function AudioPreview({
         >
           <div className="flex h-6 w-6 items-center justify-center">
             {isPlaying && isActive ? (
-              <motion.div className="flex size-6 items-center justify-center rounded-full bg-primary">
+              <div className="flex size-6 items-center justify-center rounded-full bg-primary">
                 <IconPlayerPauseFilled className="size-3 text-primary-foreground" />
-              </motion.div>
+              </div>
             ) : (
               <IconPlayerPlayFilled className="size-4" />
             )}
@@ -124,7 +122,7 @@ export function AudioPreview({
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
         <div className="flex items-center justify-between gap-3 w-full">
           <button
             type="button"

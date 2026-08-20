@@ -1,15 +1,19 @@
-import math
 import yt_dlp
-import time
 
-from utils.config import DOWNLOAD_PATH
+from app.utils.config import DOWNLOAD_PATH
+
+ydl_opts = {
+    'outtmpl': f'{DOWNLOAD_PATH}/%(id)s.%(ext)s', 
+    'format': 'bestvideo[height<=720]+bestaudio/best', # dev medium quality TOOD
+    "cookiesfrombrowser": ("chrome",),
+}
 
 def download_video(url: str):
-    video_id = math.floor(time.time() * 1000)
-    ydl_opts = {
-        'outtmpl': f'{DOWNLOAD_PATH}/{video_id}',
-        'format': 'bestvideo+bestaudio/best',
-    }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-    return video_id
+        info: dict = ydl.extract_info(url, download=True)
+        file_extension = info.get("ext")
+        video_id = info.get("id")
+        return {
+            "video_path": f"{DOWNLOAD_PATH}/{video_id}.{file_extension}",
+            "audio_path": f"{DOWNLOAD_PATH}/{video_id}.mp3",
+        }

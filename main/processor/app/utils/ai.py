@@ -1,5 +1,7 @@
 from google import genai
+import json
 import os
+import re
 
 class AI:
     def __init__(self):
@@ -31,5 +33,15 @@ class AI:
     If there are no valid clips to extract, the output should be an empty list [], in JSON format. Also readable by json.loads() in Python.
 
     The transcript is as follows:\n\n""" + str(transcript))
-        print(f"Identified moments response: ${response.output_text}")
-        return response.output_text
+        text = response.output_text.strip()
+        print(f"Identified moments response: {text}")
+
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:json)?\s*", "", text)
+            text = re.sub(r"\s*```$", "", text)
+
+        moments = json.loads(text)
+        if not isinstance(moments, list):
+            raise ValueError(f"Expected a list of moments, got {type(moments)}")
+
+        return moments

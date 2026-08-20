@@ -29,4 +29,8 @@ export abstract class ClipService {
 
     return { url, key, publicUrl } satisfies ClipModel["presignedUrlResponse"];
   }
+
+  static async process(payload: ClipModel["processClipBody"] & { userId: string }) {
+    return { clips: [] } satisfies ClipModel["processClipResponse"];
+  }
 }

@@ -4,7 +4,7 @@ import { CLIP_MODES } from "../lib/clip-config";
 
 export const aspectRatioIdSchema = z.enum(["16:9", "9:16", "1:1", "4:5"]);
 export const clipModeSchema = z.enum(CLIP_MODES);
-export const clipSourceSchema = z.enum(["youtube", "upload"]);
+export const clipSourceSchema = z.enum(["YOUTUBE", "UPLOAD"]);
 
 export const youtubeUrlSchema = z
   .string()
@@ -47,7 +47,10 @@ export const youtubeUrlSchema = z
       }
 
       if (hostname === "youtube-nocookie.com") {
-        return url.pathname.startsWith("/embed/") && (url.pathname.split("/")[2] ?? "")?.length > 0;
+        return (
+          url.pathname.startsWith("/embed/") &&
+          (url.pathname.split("/")[2] ?? "")?.length > 0
+        );
       }
 
       return false;
@@ -70,7 +73,7 @@ export const ClipModel = {
   }),
 
   invalidUrl: z.literal("Invalid url"),
-  
+
   // presigned url
   presignedUrlBody: z.object({
     filename: z.string(),
@@ -84,21 +87,43 @@ export const ClipModel = {
 
   invalidFilename: z.literal("Invalid filename"),
 
-  createClipBody: z.object({
+  processClipBody: z.object({
+    thumbnail: z.string().optional(),
+    title: z.string().optional(),
+
     source: clipSourceSchema,
-    url: z.string().optional(),
-    sourceKey: z.string().optional(),
+    sourceKey: z.string(), // s3 key if source is UPLOAD, yt url if source is YOUTUBE
+    
     from: z.number(),
     to: z.number(),
-    subtitles: z.boolean(),
+    duration: z.number(),
+
     clipMode: clipModeSchema,
+
+    subtitles: z.boolean(),
+    subtitleStyle: z.string().optional(),
+
     aspectRatio: aspectRatioIdSchema,
-    subtitleTemplateId: z.string().optional(),
-    bgMusicTemplateId: z.string().optional(),
+
+    bgMusic: z.boolean(),
+    bgMusicKey: z.string().optional(),
     bgMusicIntensity: z.number().min(0).max(100),
-    videoTemplateId: z.string().optional(),
-    attachedClipId: z.string().optional(),
+
+    videoLayout: z.boolean(),
+    videoLayoutKey: z.string().optional(),
   }),
+  processClipResponse: z.object({
+    clips: z.array(
+      z.object({
+        id: z.string(),
+        url: z.string(),
+        thumbnail: z.string(),
+        title: z.string(),
+        duration: z.number(),
+      })
+    ),
+  }),
+  processClipError: z.literal("Error processing clip"),
 } as const;
 
 export type ClipModel = {
@@ -121,10 +146,7 @@ export const sanitizeYoutubeUrl = (value: string) => {
     return `https://www.youtube.com/watch?v=${videoId}`;
   }
 
-  if (
-    hostname === "youtube.com" ||
-    hostname === "m.youtube.com"
-  ) {
+  if (hostname === "youtube.com" || hostname === "m.youtube.com") {
     if (url.pathname === "/watch") {
       const videoId = url.searchParams.get("v");
 

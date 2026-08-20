@@ -55,6 +55,8 @@ export function SignupPage() {
         email: data.email,
         password: data.password,
         name: data.email.split("@")[0],
+        role: "USER",
+        
       });
 
       if (result.error) {

@@ -1,4 +1,9 @@
-import type { AspectRatioId, ClipConfiguration, ClipMode, ClipModel } from "@snipmatic/utils";
+import type {
+  AspectRatioId,
+  ClipConfiguration,
+  ClipMode,
+  ClipModel,
+} from "@snipmatic/utils";
 
 export type ClipsPageState = {
   source: "youtube" | "upload";
@@ -8,6 +13,7 @@ export type ClipsPageState = {
   videoInfo: ClipModel["previewResponse"];
   clipRange: [number, number];
   subtitles: boolean;
+  bgMusic: boolean;
   clipMode: ClipMode;
   aspectRatio: AspectRatioId;
   subtitleTemplateId?: string;
@@ -31,8 +37,8 @@ export type ClipConfigState = Pick<
 export const clipConfigFromState = (
   state: Partial<ClipConfigState> | null | undefined
 ): ClipConfiguration => ({
-  clipMode: state?.clipMode ?? "manual",
-  aspectRatio: state?.aspectRatio ?? "16:9",
+  clipMode: state?.clipMode ?? "AI",
+  aspectRatio: state?.aspectRatio ?? "9:16",
   subtitleTemplateId: state?.subtitleTemplateId,
   bgMusicTemplateId: state?.bgMusicTemplateId,
   bgMusicIntensity: state?.bgMusicIntensity ?? 15,

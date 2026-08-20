@@ -1,14 +1,31 @@
 import { prisma } from "@snipmatic/db";
+import { WEB_URL } from "@snipmatic/utils";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { openAPI } from "better-auth/plugins";
+
 import { resend } from "./resend";
-import { WEB_URL } from "@snipmatic/utils";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        fieldName: "role",
+      },
+    },
+  },
+  session: {
+    additionalFields: {
+      role: {
+        type: "string",
+        fieldName: "role",
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     onExistingUserSignUp: async ({ user }) => {

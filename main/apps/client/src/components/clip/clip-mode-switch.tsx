@@ -4,8 +4,8 @@ import { type ClipMode } from "@snipmatic/utils";
 import { cn } from "@/lib/utils";
 
 const clipModeOptions = [
-  { key: "ai" as const, label: "AI Clipping" },
-  { key: "manual" as const, label: "Manual" },
+  { key: "AI" as const, label: "AI Clipping" },
+  { key: "MANUAL" as const, label: "Manual" },
 ];
 
 export const ClipModeSwitch = ({

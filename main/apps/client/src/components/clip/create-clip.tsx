@@ -4,15 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  BGM_RECOMMENDED_INTENSITY,
-  DEFAULT_CLIP_CONFIGURATION,
-  SUBTITLE_TEMPLATES,
-  type AspectRatioId,
-  type ClipMode,
-  type ClipModel,
   type PaymentModel,
-  calculateClipCredits,
-  hasEnoughCredits,
   sanitizeYoutubeUrl,
   youtubeUrlSchema,
 } from "@snipmatic/utils";
@@ -21,9 +13,9 @@ import { toast } from "sonner";
 import z from "zod";
 
 import { useVideoUpload } from "@/hooks/use-video-upload";
-import { ClipApi } from "@/lib/api";
 import { PaymentApi } from "@/lib/api/payment";
 import { cn } from "@/lib/utils";
+import { useClipStore } from "@/store/clip.store";
 import type { ClipsPageState } from "@/types/clip-navigation";
 
 import { Button } from "../ui/button";
@@ -44,16 +36,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const defaultClipConfig = () => ({
-  clipMode: DEFAULT_CLIP_CONFIGURATION.clipMode,
-  aspectRatio: DEFAULT_CLIP_CONFIGURATION.aspectRatio,
-  subtitleTemplateId: undefined,
-  bgMusicTemplateId: undefined,
-  bgMusicIntensity: BGM_RECOMMENDED_INTENSITY,
-  videoTemplateId: undefined,
-  attachedClipId: undefined,
-});
-
 export const CreateClip = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,46 +43,11 @@ export const CreateClip = () => {
   const isClipsPage = location.pathname === "/clips";
   const pageState = location.state as ClipsPageState | null;
 
-  const { upload, progress, isUploading, abort, reset } = useVideoUpload();
+  const { upload, progress, isUploading, abort, reset: resetUpload } =
+    useVideoUpload();
 
-  const [isGettingInfo, setIsGettingInfo] = React.useState(false);
-  const [videoInfo, setVideoInfo] = React.useState<
-    ClipModel["previewResponse"] | null
-  >(isClipsPage ? (pageState?.videoInfo ?? null) : null);
-  const [previewUrl, setPreviewUrl] = React.useState<string | undefined>(
-    pageState?.previewUrl
-  );
-  const [sourceKey, setSourceKey] = React.useState<string | undefined>(
-    pageState?.sourceKey
-  );
-  const [isCreatingClip, setIsCreatingClip] = React.useState(false);
-  const [clipRange, setClipRange] = React.useState<[number, number]>(
-    pageState?.clipRange ?? [0, 1]
-  );
-  const [subtitles, setSubtitles] = React.useState(
-    pageState?.subtitles ?? false
-  );
-  const [clipMode, setClipMode] = React.useState<ClipMode>(
-    pageState?.clipMode ?? DEFAULT_CLIP_CONFIGURATION.clipMode
-  );
-  const [aspectRatio, setAspectRatio] = React.useState<AspectRatioId>(
-    pageState?.aspectRatio ?? DEFAULT_CLIP_CONFIGURATION.aspectRatio
-  );
-  const [subtitleTemplateId, setSubtitleTemplateId] = React.useState<
-    string | undefined
-  >(pageState?.subtitleTemplateId);
-  const [bgMusicTemplateId, setBgMusicTemplateId] = React.useState<
-    string | undefined
-  >(pageState?.bgMusicTemplateId);
-  const [bgMusicIntensity, setBgMusicIntensity] = React.useState(
-    pageState?.bgMusicIntensity ?? BGM_RECOMMENDED_INTENSITY
-  );
-  const [videoTemplateId, setVideoTemplateId] = React.useState<
-    string | undefined
-  >(pageState?.videoTemplateId);
-  const [attachedClipId, setAttachedClipId] = React.useState<
-    string | undefined
-  >(pageState?.attachedClipId);
+  const { url, videoInfo, clipRange, clipMode, subtitles, videoTemplateId, isGettingInfo, isCreatingClip, setUrl, hydrateFromPageState, setUploadPreview, reset, fetchVideoInfo, processClip, getEstimatedCredits } = useClipStore();
+
   const [credits, setCredits] = React.useState<
     PaymentModel["creditsResponse"] | null
   >(null);
@@ -108,7 +55,7 @@ export const CreateClip = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      url: pageState?.url ?? "",
+      url: url || pageState?.url || "",
     },
   });
 
@@ -123,135 +70,71 @@ export const CreateClip = () => {
       return;
     }
 
-    setVideoInfo(pageState.videoInfo);
-    setClipRange(pageState.clipRange);
-    setSubtitles(pageState.subtitles);
-    setPreviewUrl(pageState.previewUrl);
-    setSourceKey(pageState.sourceKey);
-    setClipMode(pageState.clipMode ?? DEFAULT_CLIP_CONFIGURATION.clipMode);
-    setAspectRatio(pageState.aspectRatio ?? DEFAULT_CLIP_CONFIGURATION.aspectRatio);
-    setSubtitleTemplateId(pageState.subtitleTemplateId);
-    setBgMusicTemplateId(pageState.bgMusicTemplateId);
-    setBgMusicIntensity(pageState.bgMusicIntensity ?? BGM_RECOMMENDED_INTENSITY);
-    setVideoTemplateId(pageState.videoTemplateId);
-    setAttachedClipId(pageState.attachedClipId);
+    hydrateFromPageState(pageState);
 
     if (pageState.url) {
       form.setValue("url", pageState.url);
     }
-  }, [form, isClipsPage, pageState]);
+  }, [form, hydrateFromPageState, isClipsPage, pageState]);
 
-  React.useEffect(() => {
-    return () => {
-      if (previewUrl?.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  const processingDuration = React.useMemo(() => {
-    if (!videoInfo) {
-      return 0;
-    }
-
-    return clipRange[1] - clipRange[0];
-  }, [clipRange, videoInfo]);
-
-  const estimatedCredits = React.useMemo(() => {
-    if (!videoInfo) {
-      return 0;
-    }
-
-    return calculateClipCredits({
-      durationSeconds: processingDuration,
-      subtitles: clipMode === "ai" ? subtitles : false,
-      templateId: clipMode === "ai" ? videoTemplateId : undefined,
-    });
-  }, [clipMode, processingDuration, subtitles, videoInfo, videoTemplateId]);
-
-  const handleClipModeChange = (mode: ClipMode) => {
-    setClipMode(mode);
-  };
-
-  const handleAspectRatioChange = (ratio: AspectRatioId) => {
-    setAspectRatio(ratio);
-
-    if (ratio !== "9:16") {
-      setVideoTemplateId(undefined);
-      setAttachedClipId(undefined);
-    }
-  };
-
-  const handleAttachClipClear = () => {
-    setVideoTemplateId(undefined);
-    setAttachedClipId(undefined);
-  };
-
-  const handleSubtitlesChange = (enabled: boolean) => {
-    setSubtitles(enabled);
-
-    if (enabled && !subtitleTemplateId) {
-      setSubtitleTemplateId(SUBTITLE_TEMPLATES[0]?.id);
-    }
-  };
+  const estimatedCredits = React.useMemo(
+    () => getEstimatedCredits(),
+    [
+      clipMode,
+      clipRange,
+      getEstimatedCredits,
+      subtitles,
+      videoInfo,
+      videoTemplateId,
+    ]
+  );
+  const showVideoDetails = isClipsPage && Boolean(videoInfo);
+  const isBusy = isGettingInfo || isUploading;
 
   const onGetVideoInfo = async (values: FormValues) => {
     if (isGettingInfo || isUploading) {
       return;
     }
 
-    setIsGettingInfo(true);
-
     try {
       const sanitizedUrl = sanitizeYoutubeUrl(values.url);
 
       form.setValue("url", sanitizedUrl);
+      setUrl(sanitizedUrl);
 
-      const info = await ClipApi.preview({
-        url: sanitizedUrl,
-      });
+      await fetchVideoInfo(sanitizedUrl);
 
-      if (!info) {
+      const state = useClipStore.getState();
+
+      if (!state.videoInfo) {
         throw new Error(
           "Unable to fetch video information. Please check the URL and try again."
         );
       }
 
-      const duration = Math.floor(info.duration);
       const nextState: ClipsPageState = {
         source: "youtube",
         url: sanitizedUrl,
-        videoInfo: info,
-        clipRange: [0, Math.max(1, duration)],
-        subtitles: false,
-        ...defaultClipConfig(),
+        videoInfo: state.videoInfo,
+        clipRange: state.clipRange,
+        subtitles: state.subtitles,
+        bgMusic: state.bgMusic,
+        clipMode: state.clipMode,
+        aspectRatio: state.aspectRatio,
+        subtitleTemplateId: state.subtitleTemplateId,
+        bgMusicTemplateId: state.bgMusicTemplateId,
+        bgMusicIntensity: state.bgMusicIntensity,
+        videoTemplateId: state.videoTemplateId,
+        attachedClipId: state.attachedClipId,
       };
 
-      if (isClipsPage) {
-        setVideoInfo(info);
-        setClipRange(nextState.clipRange);
-        setSubtitles(false);
-        setPreviewUrl(undefined);
-        setSourceKey(undefined);
-        setClipMode(DEFAULT_CLIP_CONFIGURATION.clipMode);
-        setAspectRatio(DEFAULT_CLIP_CONFIGURATION.aspectRatio);
-        setSubtitleTemplateId(undefined);
-        setBgMusicTemplateId(undefined);
-        setBgMusicIntensity(BGM_RECOMMENDED_INTENSITY);
-        setVideoTemplateId(undefined);
-        setAttachedClipId(undefined);
-        navigate("/clips", { state: nextState, replace: true });
-      } else {
-        navigate("/clips", { state: nextState });
-      }
+      navigate("/clips", { state: nextState, replace: isClipsPage });
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
           : "Something went wrong while fetching the video."
       );
-    } finally {
-      setIsGettingInfo(false);
     }
   };
 
@@ -273,32 +156,36 @@ export const CreateClip = () => {
 
     try {
       const result = await upload(file);
+      const videoInfoPayload = {
+        title: result.filename.replace(/\.[^/.]+$/, ""),
+        duration: result.duration,
+        thumbnail: "",
+      };
+
+      setUploadPreview({
+        sourceKey: result.key,
+        previewUrl: result.previewUrl,
+        videoInfo: videoInfoPayload,
+      });
+
+      const state = useClipStore.getState();
       const nextState: ClipsPageState = {
         source: "upload",
         sourceKey: result.key,
         previewUrl: result.previewUrl,
-        videoInfo: {
-          title: result.filename.replace(/\.[^/.]+$/, ""),
-          duration: result.duration,
-          thumbnail: "",
-        },
-        clipRange: [0, Math.max(1, result.duration)],
-        subtitles: false,
-        ...defaultClipConfig(),
+        videoInfo: videoInfoPayload,
+        clipRange: state.clipRange,
+        subtitles: state.subtitles,
+        bgMusic: state.bgMusic,
+        clipMode: state.clipMode,
+        aspectRatio: state.aspectRatio,
+        subtitleTemplateId: state.subtitleTemplateId,
+        bgMusicTemplateId: state.bgMusicTemplateId,
+        bgMusicIntensity: state.bgMusicIntensity,
+        videoTemplateId: state.videoTemplateId,
+        attachedClipId: state.attachedClipId,
       };
 
-      setVideoInfo(nextState.videoInfo);
-      setClipRange(nextState.clipRange);
-      setSubtitles(false);
-      setClipMode(DEFAULT_CLIP_CONFIGURATION.clipMode);
-      setAspectRatio(DEFAULT_CLIP_CONFIGURATION.aspectRatio);
-      setSubtitleTemplateId(undefined);
-      setBgMusicTemplateId(undefined);
-      setBgMusicIntensity(BGM_RECOMMENDED_INTENSITY);
-      setVideoTemplateId(undefined);
-      setAttachedClipId(undefined);
-      setPreviewUrl(result.previewUrl);
-      setSourceKey(result.key);
       form.reset({ url: "" });
       navigate("/clips", { state: nextState, replace: isClipsPage });
       toast.success("Video uploaded successfully.");
@@ -319,27 +206,8 @@ export const CreateClip = () => {
     }
 
     reset();
-
-    if (previewUrl?.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
-    setVideoInfo(null);
-    setPreviewUrl(undefined);
-    setSourceKey(undefined);
-    setClipRange([0, 1]);
-    setSubtitles(false);
-    setClipMode(DEFAULT_CLIP_CONFIGURATION.clipMode);
-    setAspectRatio(DEFAULT_CLIP_CONFIGURATION.aspectRatio);
-    setSubtitleTemplateId(undefined);
-    setBgMusicTemplateId(undefined);
-    setBgMusicIntensity(BGM_RECOMMENDED_INTENSITY);
-    setVideoTemplateId(undefined);
-    setAttachedClipId(undefined);
-
-    form.reset({
-      url: "",
-    });
+    resetUpload();
+    form.reset({ url: "" });
 
     if (isClipsPage) {
       navigate("/dashboard", { replace: true });
@@ -347,64 +215,8 @@ export const CreateClip = () => {
   };
 
   const onCreateClip = async () => {
-    if (!videoInfo) {
-      return;
-    }
-
-    if (clipRange[1] <= clipRange[0]) {
-      toast.error("Please select a valid clip duration.");
-      return;
-    }
-
-    const requiredCredits = calculateClipCredits({
-      durationSeconds: processingDuration,
-      subtitles: clipMode === "ai" ? subtitles : false,
-      templateId: clipMode === "ai" ? videoTemplateId : undefined,
-    });
-
-    let balance = credits?.balance ?? 0;
-
-    // if (!credits) {
-    //   try {
-    //     const latestCredits = await PaymentApi.getCredits();
-    //     setCredits(latestCredits);
-    //     balance = latestCredits.balance;
-    //   } catch {
-    //     toast.error("Unable to verify credits. Please try again.");
-    //     return;
-    //   }
-    // }
-
-    // if (!hasEnoughCredits(balance, requiredCredits)) {
-    //   toast.error("Not enough credits for this clip.", {
-    //     action: {
-    //       label: "Upgrade",
-    //       onClick: () => navigate("/pricing"),
-    //     },
-    //   });
-    //   return;
-    // }
-
-    setIsCreatingClip(true);
-
     try {
-      const payload = {
-        source: sourceKey ? "upload" : "youtube",
-        url: form.getValues("url") || undefined,
-        sourceKey,
-        from: clipRange[0],
-        to: clipRange[1],
-        subtitles: clipMode === "ai" ? subtitles : false,
-        clipMode,
-        aspectRatio,
-        subtitleTemplateId,
-        bgMusicTemplateId,
-        bgMusicIntensity,
-        videoTemplateId,
-        attachedClipId,
-      };
-
-      console.log(payload);
+      await processClip();
       toast.success("Clip processing started.");
     } catch (error) {
       toast.error(
@@ -412,24 +224,18 @@ export const CreateClip = () => {
           ? error.message
           : "Unable to create clips. Please try again."
       );
-    } finally {
-      setIsCreatingClip(false);
     }
   };
 
-  const showVideoDetails = isClipsPage && videoInfo;
-  const isBusy = isGettingInfo || isUploading;
-
   return (
-    <div
-      className={cn(
-        "min-h-[30vh] pt-16 pb-10"
-      )}
-    >
-      <div className={cn("absolute md:-bottom-55 -bottom-45 left-1/2 -translate-x-1/2 text-muted-foreground/15 md:text-[12rem] text-[10rem] mask-b-from-0 z-0 select-none pointer-events-none", isClipsPage && "hidden")}>
-        <p>
-          Snipmatic
-        </p>
+    <div className={cn("min-h-[30vh] pt-16 pb-10 relative")}>
+      <div
+        className={cn(
+          "absolute md:-bottom-55 -bottom-45 left-1/2 -translate-x-1/2 text-muted-foreground/15 md:text-[12rem] text-[10rem] mask-b-from-0 z-0 select-none pointer-events-none",
+          isClipsPage && "hidden"
+        )}
+      >
+        <p>Snipmatic</p>
       </div>
       <div className="w-full hidden md:flex items-center justify-center pb-16">
         <div className="flex items-center justify-center gap-2 border rounded-[20px] w-fit pl-4 pr-1 py-1 font-sans md:text-sm">
@@ -451,7 +257,10 @@ export const CreateClip = () => {
         onChange={onFileSelected}
       />
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onGetVideoInfo)} className="relative z-20">
+        <form
+          onSubmit={form.handleSubmit(onGetVideoInfo)}
+          className="relative z-20"
+        >
           <FormField
             control={form.control}
             name="url"
@@ -468,7 +277,10 @@ export const CreateClip = () => {
                     <Input
                       {...field}
                       value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
+                      onChange={(e) => {
+                        field.onChange(e.target.value);
+                        setUrl(e.target.value);
+                      }}
                       disabled={Boolean(showVideoDetails) || isBusy}
                       placeholder="Paste a YouTube link or upload a video"
                       autoFocus
@@ -545,7 +357,11 @@ export const CreateClip = () => {
             variant="ghost"
             className="flex items-center md:gap-2 text-muted-foreground hover:text-primary cursor-pointer md:text-base text-xs"
           >
-            <img src="/gdrive-icon.png" alt="Gdrive Icon" className="md:w-5 w-4" />
+            <img
+              src="/gdrive-icon.png"
+              alt="Gdrive Icon"
+              className="md:w-5 w-4"
+            />
             Google Drive
           </Button>
         </TooltipButton>
@@ -586,30 +402,7 @@ export const CreateClip = () => {
             </Button>
           </div>
 
-          <VideoInfo
-            videoInfo={videoInfo}
-            clipRange={clipRange}
-            onClipRangeChange={setClipRange}
-            subtitles={subtitles}
-            onSubtitlesChange={handleSubtitlesChange}
-            previewUrl={previewUrl}
-            clipMode={clipMode}
-            onClipModeChange={handleClipModeChange}
-            aspectRatio={aspectRatio}
-            onAspectRatioChange={handleAspectRatioChange}
-            subtitleTemplateId={subtitleTemplateId}
-            onSubtitleTemplateChange={setSubtitleTemplateId}
-            bgMusicTemplateId={bgMusicTemplateId}
-            onBgMusicTemplateChange={setBgMusicTemplateId}
-            bgMusicIntensity={bgMusicIntensity}
-            onBgMusicIntensityChange={setBgMusicIntensity}
-            videoTemplateId={videoTemplateId}
-            onVideoTemplateChange={setVideoTemplateId}
-            attachedClipId={attachedClipId}
-            onAttachedClipChange={setAttachedClipId}
-            onAttachClipClear={handleAttachClipClear}
-            youtubeUrl={form.watch("url")}
-          />
+          <VideoInfo />
         </>
       )}
     </div>

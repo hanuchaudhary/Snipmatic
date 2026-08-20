@@ -3,7 +3,7 @@ import { ClipService } from './service'
 import { ClipModel } from "@snipmatic/utils/types"
 import { withAuth } from "../../config/auth.plugin"
 
-export const clip = new Elysia({ prefix: '/clip' })
+export const clip = new Elysia({ prefix: '/clip' , tags: ['Clip'] })
   .use(withAuth)
   .post(
     '/preview',
@@ -29,5 +29,18 @@ export const clip = new Elysia({ prefix: '/clip' })
     response: {
       200: ClipModel.presignedUrlResponse,
       400: ClipModel.invalidFilename
+    }
+  }).post('/process', async ({ body, user }) => {
+    const response = await ClipService.process({
+      ...body,
+      userId: user.id,
+    })
+    return response
+  }, {
+    auth: true,
+    body: ClipModel.processClipBody,
+    response: {
+      200: ClipModel.processClipResponse,
+      400: ClipModel.invalidUrl
     }
   })

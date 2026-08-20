@@ -15,7 +15,7 @@ const handler = serve({
   functions,
 });
 
-const inngestHandler = new Elysia().all("/api/inngest", ({ request }) =>
+const inngestHandler = new Elysia({tags: ['Inngest']}).all("/api/inngest", ({ request }) =>
   handler(request)
 );
 
@@ -36,9 +36,9 @@ const app = new Elysia()
       },
       documentation: {
         info: {
-          title: "Quiz API",
+          title: "Snipmatic API",
           description:
-            "API for Quiz, a quiz application that helps you create and manage quizzes.",
+            "Snipmatic API for viral video content",
           version: "1.0.0",
         },
 
@@ -46,14 +46,14 @@ const app = new Elysia()
         paths: await OpenAPI.getPaths(),
         tags: [
           {
-            name: "Quiz",
+            name: "Clip",
             description:
-              "Endpoints for managing quizzes and retrieving quiz data",
+              "Endpoints for managing clips and retrieving clip data",
           },
           {
-            name: "Session",
+            name: "Payment",
             description:
-              "Endpoints for managing sessions and retrieving session data",
+              "Endpoints for managing payments and retrieving payment data",
           },
         ],
       },
@@ -63,7 +63,7 @@ const app = new Elysia()
     return {
       status: "ok",
       timestamp: new Date().toLocaleTimeString(),
-      message: "Welcome to Quiz API! Visit /docs for API documentation.",
+      message: "Welcome to Snipmatic API! Visit /docs for API documentation.",
     };
   })
   .use(betterAuth)

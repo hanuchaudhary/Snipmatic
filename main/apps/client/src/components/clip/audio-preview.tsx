@@ -1,10 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "motion/react";
 
-import {
-  BGM_RECOMMENDED_INTENSITY,
-  type ClipTemplate,
-} from "@snipmatic/utils";
+import { type ClipTemplate, BGM_RECOMMENDED_INTENSITY } from "@snipmatic/utils";
 import { cn } from "@/lib/utils";
 
 import { RangeSlider } from "../ui/custom-slider";
@@ -130,11 +127,6 @@ export function AudioPreview({
             className="min-w-0 flex-1 text-left"
           >
             <p className="text-sm font-medium">{template.name}</p>
-            {template.description && (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {template.description}
-              </p>
-            )}
           </button>
         </div>
       </div>

@@ -4,11 +4,10 @@ import { Eye, EyeOff } from "lucide-react";
 import {
   BGM_RECOMMENDED_INTENSITY,
   BGM_TEMPLATES,
-  SUBTITLE_TEMPLATES,
-  type AspectRatioId,
-  type ClipMode,
-  type ClipModel,
+  SUBTITLE_STYLES,
 } from "@snipmatic/utils";
+
+import { useClipStore } from "@/store/clip.store";
 
 import { AttachClipSection } from "./attach-clip-section";
 import { AspectRatioPicker } from "./aspect-ratio-picker";
@@ -20,31 +19,6 @@ import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { TooltipButton } from "../ui/tooltip-button";
 import { GooeyInput } from "../ui/gooey-input";
-
-type VideoInfoProps = {
-  videoInfo: ClipModel["previewResponse"];
-  clipRange: [number, number];
-  onClipRangeChange: (value: [number, number]) => void;
-  subtitles: boolean;
-  onSubtitlesChange: (value: boolean) => void;
-  previewUrl?: string;
-  clipMode: ClipMode;
-  onClipModeChange: (value: ClipMode) => void;
-  aspectRatio: AspectRatioId;
-  onAspectRatioChange: (value: AspectRatioId) => void;
-  subtitleTemplateId?: string;
-  onSubtitleTemplateChange: (value: string) => void;
-  bgMusicTemplateId?: string;
-  onBgMusicTemplateChange: (value: string | undefined) => void;
-  bgMusicIntensity: number;
-  onBgMusicIntensityChange: (value: number) => void;
-  videoTemplateId?: string;
-  onVideoTemplateChange: (value: string) => void;
-  attachedClipId?: string;
-  onAttachedClipChange: (value: string) => void;
-  onAttachClipClear: () => void;
-  youtubeUrl?: string;
-};
 
 const formatDuration = (seconds: number) => {
   const totalSeconds = Math.max(0, Math.floor(seconds));
@@ -62,34 +36,40 @@ const formatDuration = (seconds: number) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 };
 
-export const VideoInfo = ({
-  videoInfo,
-  clipRange,
-  onClipRangeChange,
-  subtitles,
-  onSubtitlesChange,
-  previewUrl,
-  clipMode,
-  onClipModeChange,
-  aspectRatio,
-  onAspectRatioChange,
-  subtitleTemplateId,
-  onSubtitleTemplateChange,
-  bgMusicTemplateId,
-  onBgMusicTemplateChange,
-  bgMusicIntensity,
-  onBgMusicIntensityChange,
-  videoTemplateId,
-  onVideoTemplateChange,
-  attachedClipId,
-  onAttachedClipChange,
-  onAttachClipClear,
-  youtubeUrl,
-}: VideoInfoProps) => {
-  const [showThumbnail, setShowThumbnail] = React.useState<boolean>(true);
+export const VideoInfo = () => {
+  const videoInfo = useClipStore((state) => state.videoInfo);
+  const clipRange = useClipStore((state) => state.clipRange);
+  const setClipRange = useClipStore((state) => state.setClipRange);
+  const subtitles = useClipStore((state) => state.subtitles);
+  const setSubtitles = useClipStore((state) => state.setSubtitles);
+  const bgMusic = useClipStore((state) => state.bgMusic);
+  const setBgMusic = useClipStore((state) => state.setBgMusic);
+  const previewUrl = useClipStore((state) => state.previewUrl);
+  const clipMode = useClipStore((state) => state.clipMode);
+  const setClipMode = useClipStore((state) => state.setClipMode);
+  const aspectRatio = useClipStore((state) => state.aspectRatio);
+  const setAspectRatio = useClipStore((state) => state.setAspectRatio);
+  const subtitleTemplateId = useClipStore((state) => state.subtitleTemplateId);
+  const setSubtitleTemplateId = useClipStore(
+    (state) => state.setSubtitleTemplateId
+  );
+  const bgMusicTemplateId = useClipStore((state) => state.bgMusicTemplateId);
+  const setBgMusicTemplateId = useClipStore(
+    (state) => state.setBgMusicTemplateId
+  );
+  const bgMusicIntensity = useClipStore((state) => state.bgMusicIntensity);
+  const setBgMusicIntensity = useClipStore((state) => state.setBgMusicIntensity);
+  const videoTemplateId = useClipStore((state) => state.videoTemplateId);
+  const setVideoTemplateId = useClipStore((state) => state.setVideoTemplateId);
+  const attachedClipId = useClipStore((state) => state.attachedClipId);
+  const setAttachedClipId = useClipStore((state) => state.setAttachedClipId);
+  const clearAttachClip = useClipStore((state) => state.clearAttachClip);
+  const url = useClipStore((state) => state.url);
+
+  const [showThumbnail, setShowThumbnail] = React.useState(true);
   const [playingBgmId, setPlayingBgmId] = React.useState<string | null>(null);
   const [musicSearch, setMusicSearch] = React.useState("");
-  const hasYoutubeLink = Boolean(youtubeUrl?.trim());
+  const hasYoutubeLink = Boolean(url.trim());
 
   React.useEffect(() => {
     return () => setPlayingBgmId(null);
@@ -105,12 +85,24 @@ export const VideoInfo = ({
     return BGM_TEMPLATES.filter(
       (template) =>
         template.name.toLowerCase().includes(query) ||
-        template.description?.toLowerCase().includes(query)
+        template.previewUrl.toLowerCase().includes(query)
     );
   }, [musicSearch]);
 
+  if (!videoInfo) {
+    return null;
+  }
+
+  const handleBgmEnabledChange = (enabled: boolean) => {
+    setBgMusic(enabled);
+
+    if (!enabled) {
+      setPlayingBgmId(null);
+    }
+  };
+
   const handleBgmSelect = (templateId: string) => {
-    onBgMusicTemplateChange(templateId);
+    setBgMusicTemplateId(templateId);
 
     if (bgMusicTemplateId !== templateId) {
       setPlayingBgmId(null);
@@ -123,7 +115,7 @@ export const VideoInfo = ({
       return;
     }
 
-    onBgMusicTemplateChange(templateId);
+    setBgMusicTemplateId(templateId);
     setPlayingBgmId(templateId);
   };
 
@@ -185,35 +177,35 @@ export const VideoInfo = ({
 
       <div className="space-y-1">
         <h4 className="text-sm text-muted-foreground">Clip Mode</h4>
-        <ClipModeSwitch clipMode={clipMode} onClipModeChange={onClipModeChange} />
+        <ClipModeSwitch clipMode={clipMode} onClipModeChange={setClipMode} />
       </div>
 
       <DurationController
         duration={videoInfo.duration}
         clipRange={clipRange}
-        onClipRangeChange={onClipRangeChange}
+        onClipRangeChange={setClipRange}
       />
 
-      <AspectRatioPicker value={aspectRatio} onChange={onAspectRatioChange} />
+      <AspectRatioPicker value={aspectRatio} onChange={setAspectRatio} />
 
-      {clipMode === "ai" && (
+      {clipMode === "AI" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium">Subtitles</h4>
+              <h4 className="">Subtitles</h4>
               <p className="text-sm text-muted-foreground">
                 Automatically generate subtitles for your clips
               </p>
             </div>
-            <Switch checked={subtitles} onCheckedChange={onSubtitlesChange} />
+            <Switch checked={subtitles} onCheckedChange={setSubtitles} />
           </div>
 
           {subtitles && (
             <TemplateGrid
               title="Subtitle Style"
-              templates={SUBTITLE_TEMPLATES}
+              templates={SUBTITLE_STYLES}
               selectedId={subtitleTemplateId}
-              onSelect={onSubtitleTemplateChange}
+              onSelect={(id) => setSubtitleTemplateId(id)}
               columns={4}
             />
           )}
@@ -223,53 +215,67 @@ export const VideoInfo = ({
       <div className="space-y-6">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <h4 className="text-sm text-muted-foreground">Background Music</h4>
-            <div className="flex items-center">
-              <GooeyInput
-                value={musicSearch}
-                onValueChange={(value) => setMusicSearch(value)}
-                placeholder="Search music"
-              />
+            <div>
+              <h4 className="">Background Music</h4>
+              <p className="text-sm text-muted-foreground">
+                Add background music to your clips
+              </p>
             </div>
+            <Switch
+              checked={bgMusic}
+              onCheckedChange={handleBgmEnabledChange}
+            />
           </div>
 
-          <div className="space-y-2">
-            {filteredBgmTemplates.length > 0 ? (
-              filteredBgmTemplates.map((template) => (
-                <AudioPreview
-                  key={template.id}
-                  template={template}
-                  isActive={bgMusicTemplateId === template.id}
-                  isPlaying={playingBgmId === template.id}
-                  intensity={
-                    bgMusicTemplateId === template.id
-                      ? bgMusicIntensity
-                      : BGM_RECOMMENDED_INTENSITY
-                  }
-                  onSelect={() => handleBgmSelect(template.id)}
-                  onPlayToggle={() => handleBgmPlayToggle(template.id)}
-                  onIntensityChange={(value) => {
-                    onBgMusicTemplateChange(template.id);
-                    onBgMusicIntensityChange(value);
-                  }}
+          {bgMusic && (
+            <>
+              <div className="flex items-center justify-end">
+                <GooeyInput
+                  value={musicSearch}
+                  onValueChange={(value) => setMusicSearch(value)}
+                  placeholder="Search music"
                 />
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No music found.</p>
-            )}
-          </div>
+              </div>
+
+              <div className="space-y-2">
+                {filteredBgmTemplates.length > 0 ? (
+                  filteredBgmTemplates.map((template) => (
+                    <AudioPreview
+                      key={template.name}
+                      template={template}
+                      isActive={bgMusicTemplateId === template.name}
+                      isPlaying={playingBgmId === template.name}
+                      intensity={
+                        bgMusicTemplateId === template.name
+                          ? bgMusicIntensity
+                          : BGM_RECOMMENDED_INTENSITY
+                      }
+                      onSelect={() => handleBgmSelect(template.name)}
+                      onPlayToggle={() => handleBgmPlayToggle(template.name)}
+                      onIntensityChange={(value) => {
+                        setBgMusicTemplateId(template.name);
+                        setBgMusicIntensity(value);
+                      }}
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No music found.</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
-        {aspectRatio === "9:16" && (
+        {clipMode === "MANUAL" && aspectRatio === "9:16" && (
           <AttachClipSection
             mainPreviewUrl={previewUrl}
             mainThumbnail={videoInfo.thumbnail}
             useThumbnail={hasYoutubeLink}
             videoTemplateId={videoTemplateId}
             attachedClipId={attachedClipId}
-            onVideoTemplateChange={onVideoTemplateChange}
-            onAttachedClipChange={onAttachedClipChange}
-            onClear={onAttachClipClear}
+            onVideoTemplateChange={setVideoTemplateId}
+            onAttachedClipChange={setAttachedClipId}
+            onClear={clearAttachClip}
           />
         )}
       </div>

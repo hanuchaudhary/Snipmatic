@@ -55,13 +55,13 @@ export const TemplateGrid = ({
         )}
       >
         {templates.map((template) => {
-          const isSelected = selectedId === template.id;
+          const isSelected = selectedId === template.name;
 
           return (
             <button
-              key={template.id}
+              key={template.name}
               type="button"
-              onClick={() => onSelect(template.id)}
+              onClick={() => onSelect(template.name)}
               className={cn(
                 "text-left transition-colors",
                 isSelected
@@ -77,7 +77,7 @@ export const TemplateGrid = ({
                     className="h-full w-full object-cover"
                   />
                 ) : template.mediaType === "video" ? (
-                  <VideoTemplatePreview templateId={template.id} />
+                  <VideoTemplatePreview templateId={template.name} />
                 ) : (
                   <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
                     Audio

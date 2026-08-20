@@ -1,7 +1,6 @@
 import React from "react";
 
 import {
-  DEFAULT_ATTACH_POSITION_ID,
   MOCK_ATTACH_CLIPS,
   getAttachClipById,
 } from "@snipmatic/utils";
@@ -124,7 +123,7 @@ export const AttachClipSection = ({
     setIsOpen(true);
 
     if (!videoTemplateId) {
-      onVideoTemplateChange(DEFAULT_ATTACH_POSITION_ID);
+      onVideoTemplateChange(MOCK_ATTACH_CLIPS[0]?.name);
     }
   };
 
@@ -166,16 +165,16 @@ export const AttachClipSection = ({
           <p className="text-xs text-muted-foreground">Choose clip</p>
           <div className="grid grid-cols-2 gap-2">
             {MOCK_ATTACH_CLIPS.map((clip) => {
-              const isSelected = attachedClipId === clip.id;
+              const isSelected = attachedClipId === clip.name;
               return (
                 <button
-                  key={clip.id}
+                  key={clip.name}
                   type="button"
                   onClick={() => {
                     if (!videoTemplateId) {
-                      onVideoTemplateChange(DEFAULT_ATTACH_POSITION_ID);
+                      onVideoTemplateChange(MOCK_ATTACH_CLIPS[0]?.name);
                     }
-                    onAttachedClipChange(clip.id);
+                    onAttachedClipChange(clip.name);
                   }}
                   className={cn(
                     "overflow-hidden text-left transition-colors",

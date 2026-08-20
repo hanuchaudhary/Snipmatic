@@ -11,4 +11,9 @@ export abstract class ClipApi {
     const res = await api.post('/clip/presigned-url', { filename })
     return res.data as ClipModel["presignedUrlResponse"]
   }
+
+  static async process(body: ClipModel["processClipBody"]) {
+    const res = await api.post('/clip/process', body)
+    return res.data as ClipModel["processClipResponse"]
+  }
 }

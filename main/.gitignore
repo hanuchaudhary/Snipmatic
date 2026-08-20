@@ -6,6 +6,7 @@ node_modules
 .pnp.js
 
 storage
+__pycache__
 
 # Local env files
 .env

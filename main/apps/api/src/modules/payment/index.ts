@@ -4,7 +4,7 @@ import { PaymentModel } from "@snipmatic/utils/types";
 import { withAuth } from "../../config/auth.plugin";
 import { PaymentService } from "./service";
 
-export const payment = new Elysia({ prefix: "/payment" })
+export const payment = new Elysia({ prefix: "/payment" , tags: ['Payment'] })
   .use(withAuth)
   .post(
     "/checkout",

@@ -1,0 +1,4 @@
+libass for mac dont know about linux prod 💀
+
+mac ffmpeg(homebrew) does not come with libass that is used for .ass word by word subtile burning (fk) lets see in prod whaaat happens
+

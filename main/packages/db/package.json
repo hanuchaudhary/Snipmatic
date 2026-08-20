@@ -3,6 +3,12 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "db:generate": "prisma generate", 
+    "db:migrate": "prisma migrate dev", 
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio"
+  },
   "exports": {
     ".": {
       "import": "./index.ts",

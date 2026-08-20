@@ -216,6 +216,14 @@ export const CreateClip = () => {
 
   const onCreateClip = async () => {
     try {
+      const estimatedCredits = getEstimatedCredits();
+      const userCredits = credits?.balance;
+
+      if (estimatedCredits > userCredits!) {
+        toast.error("Insufficient credits.");
+        return;
+      }
+
       await processClip();
       toast.success("Clip processing started.");
     } catch (error) {

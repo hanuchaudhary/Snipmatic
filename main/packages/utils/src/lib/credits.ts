@@ -68,7 +68,7 @@ export type CalculateClipCreditsInput = {
 export function calculateClipCredits({
   durationSeconds,
   subtitles = false,
-  templateId,
+  templateId, // TODO: replace mf!
 }: CalculateClipCreditsInput) {
   const minutes = Math.ceil(Math.max(0, durationSeconds) / 60);
   let credits = minutes * CREDIT_RATES.processingPerMinute;

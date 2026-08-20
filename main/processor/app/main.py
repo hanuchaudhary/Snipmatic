@@ -11,7 +11,7 @@ from app.pipeline.subtitle import create_subtitles
 
 def main():
     print("Starting video processing pipeline...")
-    video_info = download_video("https://youtu.be/8DNQ8DYgCJE")
+    video_info = download_video("https://youtu.be/BbG1qc_Hnb4")
     video_path = video_info.get("video_path")
     audio_path = video_info.get("audio_path")
     print("Downloaded video and audio...")

@@ -124,6 +124,7 @@ export const ClipModel = {
     ),
   }),
   processClipError: z.literal("Error processing clip"),
+  insufficientCredits: z.literal("Insufficient credits"),
 } as const;
 
 export type ClipModel = {

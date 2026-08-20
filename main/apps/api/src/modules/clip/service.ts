@@ -1,8 +1,11 @@
+import { prisma } from "@snipmatic/db";
+import { calculateClipCredits } from "@snipmatic/utils";
 import type { ClipModel } from "@snipmatic/utils/types";
 import { status } from "elysia";
 
 import { S3Service } from "../../config/s3";
 import { getVideoInfo } from "../../config/yt-dlp";
+import { inngest } from "../../inngest";
 import { sanitizeFilename } from "./utils";
 
 export abstract class ClipService {
@@ -30,7 +33,45 @@ export abstract class ClipService {
     return { url, key, publicUrl } satisfies ClipModel["presignedUrlResponse"];
   }
 
-  static async process(payload: ClipModel["processClipBody"] & { userId: string }) {
+  static async process(
+    payload: ClipModel["processClipBody"] & { userId: string }
+  ) {
+    try {
+      const userCredits = await prisma.user.findUnique({
+        where: {
+          id: payload.userId,
+        },
+        select: {
+          billing: {
+            select: {
+              creditsBalance: true,
+            },
+          },
+        },
+      });
+
+      const estimatedCredits = calculateClipCredits({
+        durationSeconds: payload.duration,
+        subtitles: payload.subtitles,
+        templateId: "", // TODO: Add template id
+      });
+
+      if (estimatedCredits > userCredits?.billing?.creditsBalance!) {
+        throw status(
+          400,
+          "Insufficient credits" satisfies ClipModel["insufficientCredits"]
+        );
+      }
+
+      const result = await inngest.send({
+        name: "process-video",
+        data: { url: payload.sourceKey },
+      });
+
+      console.log(result);
+      
+      return { clips: [] } satisfies ClipModel["processClipResponse"];
+    } catch (error) {}
     return { clips: [] } satisfies ClipModel["processClipResponse"];
   }
 }

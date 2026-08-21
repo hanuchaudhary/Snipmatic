@@ -8,6 +8,7 @@ from app.utils.ai import AI
 from app.utils.config import DOWNLOAD_PATH, PROCESS_PATH
 from app.utils.ffmpeg import FFMPEG
 from app.utils.youtube import download_video
+from app.utils.types import JobPayload
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -36,39 +37,36 @@ app = modal.App("processor")
         modal.Secret.from_dotenv(ROOT),
     ],
 )
-def process_video(video_url: str):
-    print("Starting video processing pipeline...")
-    print("Starting video processing pipeline...")
-    video_info = download_video(video_url)
+def process_video(payload: JobPayload):
+    job_id = payload.jobId
+    clip_type = payload.clipType
+    
+    video_info = download_video(payload.sourceKey, payload.source)
+
     video_path = video_info.get("video_path")
     audio_path = video_info.get("audio_path")
-    print("Downloaded video and audio...")
-    print("Extracting audio...")
+
     ffmpeg = FFMPEG()
-    ffmpeg.extract_audio(video_path, audio_path)
-    print("Extracted audio...")
-    print("Transcribing audio...")
+    # might be error from and to
+    ffmpeg.extract_audio(video_path, audio_path, payload.from_, payload.to)
+
     transcript = transcribe(audio_path)
-    print("Transcribed audio...")
-    print("Transcript: ", transcript)
-    print("Identifying moments...")
+
     ai = AI()
-    moments = ai.identify_moments(transcript)
-    print("Identified moments...")
-    print("Moments: ", moments)
-    print("Creating subtitles...")
-    ass_paths = create_subtitles(transcript, moments, DOWNLOAD_PATH)
-    print("Created subtitles...")
-    print("Subtitle files: ", ass_paths)
-    print("Extracting clips...")
+    moments = ai.identify_moments(transcript, payload.prompt)
+
+    ass_paths = create_subtitles(transcript, moments, DOWNLOAD_PATH, payload.subtitlesKey)
+
     clips_path = f"{PROCESS_PATH}/clips"
     metadata = {
         "moments": moments,
-        "aspect_ratio": "9:16",
+        "aspect_ratio": payload.aspectRatio,
+        "subtitles_key": payload.subtitlesKey,
         "subtitles": ass_paths,
+        "bg_music": payload.bgMusicKey,
+        "layout": payload.layoutKey,
     }
     ffmpeg.extract_clips(video_path, clips_path, metadata)
-    print("Extracted clips...")
     
 @app.local_entrypoint()
 def main():

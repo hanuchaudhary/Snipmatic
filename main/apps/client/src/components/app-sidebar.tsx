@@ -13,9 +13,10 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useSession } from "@/lib/auth/auth.client";
 import { TooltipButton } from "./ui/tooltip-button";
 import { ProfileDropdown } from "./ui/profile-dropdown";
-import { ClapperboardIcon, Crown03Icon, Home04Icon } from "@hugeicons/core-free-icons";
+import { Analytics01Icon, ClapperboardIcon, Crown03Icon, Home04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 const navItems = [
@@ -39,6 +40,8 @@ const navItems = [
 export function AppSidebar() {
   const pathname = useLocation().pathname;
   const { open, setOpen } = useSidebar()
+  const { data } = useSession()
+  const isAdmin = data?.user.role === "ADMIN"
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -81,6 +84,30 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {isAdmin ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>
+              Admin
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="text-[13px] font-normal!"
+                    render={<Link to="/admin" />}
+                    isActive={pathname === "/admin"}
+                  >
+                    <HugeiconsIcon
+                      icon={Analytics01Icon}
+                      color="currentColor"
+                    />
+                    <span>Overview</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : null}
       </SidebarContent>
       <SidebarFooter>
         <ProfileDropdown />

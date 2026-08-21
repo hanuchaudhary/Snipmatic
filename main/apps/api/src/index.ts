@@ -7,6 +7,7 @@ import z from "zod";
 import { auth } from "./config/auth";
 import { betterAuth, OpenAPI } from "./config/auth.plugin";
 import { functions, inngest } from "./inngest";
+import { admin } from "./modules/admin";
 import { clip } from "./modules/clip";
 import { payment } from "./modules/payment";
 
@@ -55,6 +56,11 @@ const app = new Elysia()
             description:
               "Endpoints for managing payments and retrieving payment data",
           },
+          {
+            name: "Admin",
+            description:
+              "Read-only endpoints for visualizing platform data and statistics",
+          },
         ],
       },
     }).mount(auth.handler)
@@ -69,6 +75,7 @@ const app = new Elysia()
   .use(betterAuth)
   .use(payment)
   .use(clip)
+  .use(admin)
   .listen({
     port: 8000,
     hostname: "0.0.0.0",

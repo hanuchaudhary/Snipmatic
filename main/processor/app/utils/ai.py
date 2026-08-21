@@ -11,7 +11,7 @@ class AI:
         self.gemini_client = genai.Client(api_key=ai_api_key)
         self.model = "gemini-3.7-flash"
     
-    def identify_moments(self, transcript: dict):
+    def identify_moments(self, transcript: dict, prompt: str):
         response = self.gemini_client.interactions.create(model=self.model, input="""
     This is a podcast video transcript consisting of word, along with each words's start and end time. I am looking to create clips between a minimum of 30 and maximum of 60 seconds long. The clip should never exceed 60 seconds.
 

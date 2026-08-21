@@ -5,6 +5,7 @@ node_modules
 .pnp
 .pnp.js
 
+.agents/
 storage
 __pycache__
 cookies.txt

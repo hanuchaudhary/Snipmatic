@@ -5,6 +5,45 @@ import { CLIP_MODES } from "../lib/clip-config";
 export const aspectRatioIdSchema = z.enum(["16:9", "9:16", "1:1", "4:5"]);
 export const clipModeSchema = z.enum(CLIP_MODES);
 export const clipSourceSchema = z.enum(["YOUTUBE", "UPLOAD"]);
+export const clipStatusSchema = z.enum([
+  "QUEUED",
+  "DOWNLOADING",
+  "PREPROCESSING",
+  "TRANSCRIBING",
+  "DIARIZING",
+  "DETECTING_FACES",
+  "TRACKING",
+  "ANALYZING",
+  "FINDING_CLIPS",
+  "GENERATING_SUBTITLES",
+  "COMPLETED",
+]);
+export const clipListStatusSchema = z.enum(["PROCESSING", "COMPLETED"]);
+
+export const clipSchema = z.object({
+  id: z.string(),
+  status: clipStatusSchema,
+  progress: z.number().nullable(),
+  from: z.number().nullable(),
+  to: z.number().nullable(),
+  duration: z.number().nullable(),
+  prompt: z.string().nullable(),
+  clipType: clipModeSchema,
+  source: clipSourceSchema,
+  sourceKey: z.string(),
+  title: z.string().nullable(),
+  thumbnail: z.string().nullable(),
+  finalKeys: z.array(z.string()),
+  aspectRatio: z.string().nullable(),
+  bgMusicKey: z.string().nullable(),
+  subtitlesKey: z.string().nullable(),
+  layoutKey: z.string().nullable(),
+  creditUsage: z.number(),
+  error: z.string().nullable(),
+  userId: z.string(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
 
 export const youtubeUrlSchema = z
   .string()
@@ -93,7 +132,7 @@ export const ClipModel = {
 
     source: clipSourceSchema,
     sourceKey: z.string(), // s3 key if source is UPLOAD, yt url if source is YOUTUBE
-    
+
     from: z.number(),
     to: z.number(),
     duration: z.number(),
@@ -102,6 +141,7 @@ export const ClipModel = {
 
     subtitles: z.boolean(),
     subtitleStyle: z.string().optional(),
+    prompt: z.string().optional(),
 
     aspectRatio: aspectRatioIdSchema,
 
@@ -125,6 +165,29 @@ export const ClipModel = {
   }),
   processClipError: z.literal("Error processing clip"),
   insufficientCredits: z.literal("Insufficient credits"),
+
+  clipIdParams: z.object({
+    id: z.string(),
+  }),
+  clipNotFound: z.literal("Clip not found"),
+
+  clipResponse: z.object({
+    clip: clipSchema,
+  }),
+
+  listQuery: z.object({
+    status: clipListStatusSchema,
+  }),
+  listResponse: z.object({
+    clips: z.array(clipSchema),
+  }),
+
+  updateBody: z.object({
+    status: clipStatusSchema.optional(),
+    progress: z.number().int().min(0).max(100).optional(),
+    error: z.string().nullable().optional(),
+    finalKeys: z.array(z.string()).optional(),
+  }),
 } as const;
 
 export type ClipModel = {

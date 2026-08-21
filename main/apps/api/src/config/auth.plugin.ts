@@ -42,6 +42,25 @@ export const withAuth = new Elysia({ name: "with-auth" }).macro({
   },
 });
 
+export const withAdmin = new Elysia({ name: "with-admin" }).macro({
+  admin: {
+    async resolve({ status, request: { headers } }) {
+      const session = await auth.api.getSession({
+        headers,
+      });
+
+      if (!session) return status(401);
+
+      if (session.user.role !== "ADMIN") return status(403);
+
+      return {
+        user: session.user,
+        session: session.session,
+      };
+    },
+  },
+});
+
 export const betterAuth = new Elysia({ name: "better-auth" })
   .use(withAuth)
   .mount(auth.handler);

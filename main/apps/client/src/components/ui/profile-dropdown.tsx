@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
     ChevronDown,
+    LayoutDashboard,
     LogOut,
     Settings,
     User,
@@ -38,6 +39,7 @@ export function ProfileDropdown() {
     const { open } = useSidebar()
     const collapsed = !open;
     const navigate = useNavigate()
+    const isAdmin = data?.user.role === "ADMIN"
     const initials = data?.user.name
         .split(" ")
         .map((word) => word[0])
@@ -119,6 +121,13 @@ export function ProfileDropdown() {
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
 
+                    {isAdmin ? (
+                        <DropdownMenuItem onClick={() => navigate("/admin")}>
+                            <LayoutDashboard className="mr-2 size-4" />
+                            Admin
+                        </DropdownMenuItem>
+                    ) : null}
+
                     <DropdownMenuItem onClick={onProfile}>
                         <User className="mr-2 size-4" />
                         Profile
@@ -132,10 +141,9 @@ export function ProfileDropdown() {
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onSelect={(event) => {
-                            event.preventDefault();
-                            setLogoutOpen(true);
+                        variant="destructive"
+                        onClick={() => {
+                            window.setTimeout(() => setLogoutOpen(true), 0);
                         }}
                     >
                         <LogOut className="mr-2 size-4" />

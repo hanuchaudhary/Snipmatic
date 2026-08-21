@@ -18,6 +18,8 @@ export const {
       user: {
         role: {
           type: "string",
+          required: false,
+          input: false,
         },
       },
     }),

@@ -16,4 +16,14 @@ export abstract class ClipApi {
     const res = await api.post('/clip/process', body)
     return res.data as ClipModel["processClipResponse"]
   }
+
+  static async get(id: string) {
+    const res = await api.get(`/clip/${id}`)
+    return res.data as ClipModel["clipResponse"]
+  }
+
+  static async list(status: ClipModel["listQuery"]["status"]) {
+    const res = await api.get('/clip', { params: { status } })
+    return res.data as ClipModel["listResponse"]
+  }
 }

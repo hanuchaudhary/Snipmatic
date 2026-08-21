@@ -43,37 +43,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   jobs          Job[]
-  videos        Video[]
   billing       UserBilling?
-}
-
-model UserBilling {
-  id                   String              @id @default(cuid())
-  userId               String              @unique
-  stripeCustomerId     String?             @unique
-  stripeSubscriptionId String?             @unique
-  planTier             PlanTier            @default(STARTER)
-  creditsBalance       Int                 @default(30)
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
-  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions         CreditTransaction[]
-}
-
-model CreditTransaction {
-  id              String                @id @default(cuid())
-  userId          String
-  billingId       String
-  amount          Int
-  type            CreditTransactionType
-  description     String?
-  metadata        Json?
-  jobId           String?
-  stripeInvoiceId String?               @unique
-  createdAt       DateTime              @default(now())
-  billing         UserBilling           @relation(fields: [billingId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
 }
 
 model Session {
@@ -116,15 +86,45 @@ model Verification {
   updatedAt  DateTime @updatedAt
 }
 
-enum ProcessingStatus {
-  QUEUED
-  RUNNING
-  COMPLETED
-  FAILED
-  CANCELLED
+model UserBilling {
+  id                   String              @id @default(cuid())
+  userId               String              @unique
+  stripeCustomerId     String?             @unique
+  stripeSubscriptionId String?             @unique
+  planTier             PlanTier            @default(STARTER)
+  creditsBalance       Int                 @default(30)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions         CreditTransaction[]
 }
 
-enum ProcessingStage {
+model CreditUsage {
+  id          String  @id @default(cuid())
+  userId      String
+  amount      Int
+  description String?
+  metadata    Json?
+  jobId       String
+}
+
+model CreditTransaction {
+  id              String                @id @default(cuid())
+  userId          String
+  billingId       String
+  amount          Int
+  type            CreditTransactionType
+  description     String?
+  metadata        Json?
+  jobId           String?
+  stripeInvoiceId String?               @unique
+  createdAt       DateTime              @default(now())
+  billing         UserBilling           @relation(fields: [billingId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+enum Status {
   QUEUED
   DOWNLOADING
   PREPROCESSING
@@ -135,48 +135,9 @@ enum ProcessingStage {
   ANALYZING
   FINDING_CLIPS
   GENERATING_SUBTITLES
+  GENERATING_CLIPS
   COMPLETED
-}
-
-model Job {
-  id String @id @default(cuid())
-
-  userId  String
-  videoId String
-
-  status ProcessingStatus @default(QUEUED)
-  stage  ProcessingStage  @default(QUEUED)
-
-  progress Int?
-
-  from Float?
-  to   Float?
-
-  prompt String?
-
-  captions Json?
-  layout   Json?
-  audio    Json?
-  output   Json?
-
-  inngestRunId String?
-  modalCallId  String?
-
-  error String?
-
-  startedAt   DateTime?
-  completedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@index([videoId])
-  @@index([status])
-  @@index([status, stage])
+  FAILED
 }
 
 enum VideoSource {
@@ -184,77 +145,64 @@ enum VideoSource {
   UPLOAD
 }
 
-model Video {
+enum ClipType {
+  AI
+  MANUAL
+}
+
+model Job {
   id String @id @default(cuid())
 
-  userId String
+  status Status @default(QUEUED)
+
+  progress Int? @default(0)
+
+  from     Float?
+  to       Float?
+  duration Float?
+
+  prompt String?
+
+  clipType ClipType @default(AI)
 
   source    VideoSource
-  sourceUrl String
-  sourceId  String?
+  sourceKey String // either s3 key or youtube url
 
   title     String?
   thumbnail String?
-  duration  Float?
 
-  channelName String?
-  channelId   String?
+  finalKeys String[]
 
-  originalKey String?
-  finalKey    String?
+  aspectRatio  String?
+  bgMusicKey   String?
+  subtitlesKey String?
+  layoutKey    String?
+
+  creditUsage Int
+
+  error String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  jobs Job[]
-
   @@index([userId, createdAt])
-  @@index([source, sourceId])
+  @@index([status])
 }
 
-enum PresetAssetType {
-  VIDEO
-  MUSIC
-  IMAGE
-  FONT
-  OVERLAY
-}
-
+// TODO
 model Preset {
-  id          String  @id @default(cuid())
-  name        String
-  description String?
+  id   String @id @default(cuid())
+  name String
 
   thumbnailUrl String?
-  config       Json
+  config       Json // TODO: add type
 
   isActive Boolean @default(true)
   isPublic Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  assets PresetAsset[]
-}
-
-model PresetAsset {
-  id       String @id @default(cuid())
-  presetId String
-
-  name String
-  type PresetAssetType
-
-  s3Key       String
-  contentType String?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  preset Preset @relation(fields: [presetId], references: [id], onDelete: Cascade)
-
-  @@index([presetId])
 }

@@ -15,9 +15,12 @@ class FFMPEG:
     def __init__(self):
         self.ffmpeg = ffmpeg
 
-    def extract_audio(self, video_path: str, audio_path: str):
+    def extract_audio(self, video_path: str, audio_path: str, from_: float, to: float):
         try:
-            self.ffmpeg.input(video_path).output(audio_path).run()
+            self.ffmpeg.input(video_path).output(audio_path).ss(from_).t(to).run()
+        except ffmpeg.Error as e:
+            print(f"Error extracting audio: {e.stderr.decode('utf-8')}")
+            raise e
         except Exception as e:
             print(f"Error extracting audio: {e}")
             raise e
@@ -27,6 +30,8 @@ class FFMPEG:
         aspect_ratio = metadata.get("aspect_ratio", "9:16")
         moments = metadata.get("moments") or []
         subtitles = metadata.get("subtitles") or []
+        bg_music = metadata.get("bg_music") or None
+        layout = metadata.get("layout") or None
 
         crop_scale = ASPECT_FILTERS.get(aspect_ratio, ASPECT_FILTERS["9:16"])
 

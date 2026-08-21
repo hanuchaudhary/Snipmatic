@@ -117,12 +117,10 @@ export function LoginPage() {
 
           <SocialAuth mode="signin" />
 
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">
+          <div className="flex items-center gap-3 justify-center">
+            <span className="text-[10px] font-medium text-muted-foreground uppercase">
               or
             </span>
-            <div className="h-px flex-1 bg-border" />
           </div>
 
           <Form {...form}>

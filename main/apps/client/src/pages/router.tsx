@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes } from "react-router"
 
+import { AdminProtectedRoute } from "@/components/admin-protected-route"
 import { ProtectedRoute } from "@/components/protected-route"
 import { useSession } from "@/lib/auth/auth.client"
 import { SessionPageLoader } from "@/components/ui/session-page-loader"
@@ -11,6 +12,7 @@ import { SignupPage } from "./auth/signup"
 import VerifyEmailPage from "./auth/verify-email"
 import { DashboardLayout } from "@/layouts/dashboard-layout"
 
+import { AdminPage } from "./admin"
 import { ClipsPage } from "./clips"
 import { Dashboard } from "./dashboard"
 import { Home } from "./home"
@@ -54,6 +56,9 @@ export const Router = () => {
                     <Route path="/pricing" element={<PricingPage />} />
                     <Route path="/pricing/success" element={<PricingSuccessPage />} />
                     <Route path="/pricing/cancel" element={<PricingCancelPage />} />
+                    <Route element={<AdminProtectedRoute />}>
+                        <Route path="/admin" element={<AdminPage />} />
+                    </Route>
                 </Route>
             </Route>
 

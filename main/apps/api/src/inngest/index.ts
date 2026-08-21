@@ -1,3 +1,4 @@
+import type { Job } from "@snipmatic/db";
 import { Inngest } from "inngest";
 
 import { modal } from "../config/modal";
@@ -6,15 +7,13 @@ export const inngest = new Inngest({ id: "snipmatic" });
 
 const processVideo = inngest.createFunction(
   { id: "process-video", triggers: [{ event: "process-video" }] },
-  async ({ event, step }) => {
-    const url = event.data.url as string;
+  async ({ event }) => {
+    const job = event.data.job as Job;
 
-    const result = await step.run("modal-process-video", async () => {
-      const fn = await modal.functions.fromName("processor", "process_video");
-      return await fn.remote([url]);
-    });
+    const fn = await modal.functions.fromName("processor", "process_video");
+    const res = await fn.remote([{ ...job }]);
 
-    return { message: `Processing video ${url}!`, result };
+    return { message: `Processing video ${job.id}!`, job, modalResult: res };
   }
 );
 

@@ -1,4 +1,10 @@
-import { ClipModel } from "@snipmatic/utils/types";
+import {
+  ClipModel,
+  JobModel,
+  PresignedUrlModel,
+  PreviewModel,
+  ProcessModel,
+} from "@snipmatic/utils/types";
 import { Elysia } from "elysia";
 
 import { withAuth } from "../../config/auth.plugin";
@@ -13,10 +19,10 @@ export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
       return response;
     },
     {
-      body: ClipModel.previewBody,
+      body: PreviewModel.body,
       response: {
-        200: ClipModel.previewResponse,
-        400: ClipModel.invalidUrl,
+        200: PreviewModel.response,
+        400: PreviewModel.invalidUrl,
       },
     }
   )
@@ -31,10 +37,10 @@ export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
     },
     {
       auth: true,
-      body: ClipModel.presignedUrlBody,
+      body: PresignedUrlModel.body,
       response: {
-        200: ClipModel.presignedUrlResponse,
-        400: ClipModel.invalidFilename,
+        200: PresignedUrlModel.response,
+        400: PresignedUrlModel.invalidFilename,
       },
     }
   )
@@ -49,10 +55,10 @@ export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
     },
     {
       auth: true,
-      body: ClipModel.processClipBody,
+      body: ProcessModel.body,
       response: {
-        200: ClipModel.processClipResponse,
-        400: ClipModel.invalidUrl,
+        200: ProcessModel.response,
+        400: ProcessModel.insufficientCredits,
       },
     }
   )
@@ -64,9 +70,24 @@ export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
     },
     {
       auth: true,
-      query: ClipModel.listQuery,
+      query: JobModel.listQuery,
       response: {
-        200: ClipModel.listResponse,
+        200: JobModel.listResponse,
+      },
+    }
+  )
+  .patch(
+    "/output/:id",
+    async ({ params, body }) => {
+      const response = await ClipService.updateClip(params.id, body);
+      return response;
+    },
+    {
+      params: ClipModel.params,
+      body: ClipModel.updateBody,
+      response: {
+        200: ClipModel.response,
+        404: ClipModel.notFound,
       },
     }
   )
@@ -78,25 +99,25 @@ export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
     },
     {
       auth: true,
-      params: ClipModel.clipIdParams,
+      params: JobModel.params,
       response: {
-        200: ClipModel.clipResponse,
-        404: ClipModel.clipNotFound,
+        200: JobModel.response,
+        404: JobModel.notFound,
       },
     }
   )
   .patch(
     "/:id",
     async ({ params, body }) => {
-      const response = await ClipService.update(params.id, body);
+      const response = await ClipService.updateJob(params.id, body);
       return response;
     },
     {
-      params: ClipModel.clipIdParams,
-      body: ClipModel.updateBody,
+      params: JobModel.params,
+      body: JobModel.updateBody,
       response: {
-        200: ClipModel.clipResponse,
-        404: ClipModel.clipNotFound,
+        200: JobModel.response,
+        404: JobModel.notFound,
       },
     }
   );

@@ -30,7 +30,7 @@ export const ClipModeSwitch = ({
             {isActive && (
               <motion.div
                 layoutId="activeClipMode"
-                className="absolute inset-0 rounded-full bg-primary shadow-[inset_0_0_3px_rgba(255,255,255,1)]"
+                className="absolute inset-0 rounded-full bg-primary dark:shadow-[inset_0_0_5px_rgba(0,0,0,.5)] shadow-[inset_0_0_5px_rgba(255,255,255,1)]"
                 transition={{ type: "spring", duration: 0.5 }}
               />
             )}

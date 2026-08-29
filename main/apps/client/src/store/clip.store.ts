@@ -7,7 +7,8 @@ import {
   calculateClipCredits,
   type AspectRatioId,
   type ClipMode,
-  type ClipModel,
+  type PreviewModel,
+  type ProcessModel,
 } from "@snipmatic/utils";
 
 import { ClipApi } from "@/lib/api";
@@ -20,7 +21,7 @@ type ClipState = {
   url: string;
   sourceKey?: string;
   previewUrl?: string;
-  videoInfo: ClipModel["previewResponse"] | null;
+  videoInfo: PreviewModel["response"] | null;
   clipRange: [number, number];
   subtitles: boolean;
   bgMusic: boolean;
@@ -51,12 +52,12 @@ type ClipActions = {
   hydrateFromPageState: (state: ClipsPageState) => void;
   setYoutubePreview: (payload: {
     url: string;
-    videoInfo: ClipModel["previewResponse"];
+    videoInfo: PreviewModel["response"];
   }) => void;
   setUploadPreview: (payload: {
     sourceKey: string;
     previewUrl: string;
-    videoInfo: ClipModel["previewResponse"];
+    videoInfo: PreviewModel["response"];
   }) => void;
   reset: () => void;
   fetchVideoInfo: (url: string) => Promise<void>;
@@ -233,7 +234,8 @@ export const useClipStore = create<ClipState & ClipActions>((set, get) => ({
   },
 
   getEstimatedCredits: () => {
-    const { videoInfo, clipMode, subtitles, videoTemplateId } = get();
+    const { videoInfo, clipMode, subtitles, bgMusic, aspectRatio, attachedClipId } =
+      get();
 
     if (!videoInfo) {
       return 0;
@@ -242,7 +244,11 @@ export const useClipStore = create<ClipState & ClipActions>((set, get) => ({
     return calculateClipCredits({
       durationSeconds: get().getProcessingDuration(),
       subtitles: clipMode === "AI" ? subtitles : false,
-      templateId: clipMode === "AI" ? videoTemplateId : undefined,
+      bgMusic,
+      splitLayout:
+        clipMode === "MANUAL" &&
+        aspectRatio === "9:16" &&
+        Boolean(attachedClipId),
     });
   },
 
@@ -292,26 +298,24 @@ export const useClipStore = create<ClipState & ClipActions>((set, get) => ({
         state.aspectRatio === "9:16" &&
         Boolean(state.attachedClipId);
 
-      const payload: ClipModel["processClipBody"] = {
+      const payload: ProcessModel["body"] = {
         thumbnail: state.videoInfo.thumbnail || undefined,
         title: state.videoInfo.title,
         source: state.sourceKey ? "UPLOAD" : "YOUTUBE",
         sourceKey: state.sourceKey ?? state.url,
-        from: state.clipRange[0],
-        to: state.clipRange[1],
+        searchFrom: state.clipRange[0],
+        searchTo: state.clipRange[1],
         duration,
-        clipMode: state.clipMode,
-        subtitles: state.clipMode === "AI" ? state.subtitles : false,
-        subtitleStyle:
+        clipType: state.clipMode,
+        subtitleStyleKey:
           state.clipMode === "AI" && state.subtitles
             ? state.subtitleTemplateId
             : undefined,
         aspectRatio: state.aspectRatio,
-        bgMusic: state.bgMusic,
         bgMusicKey: state.bgMusic ? state.bgMusicTemplateId : undefined,
         bgMusicIntensity: state.bgMusicIntensity,
-        videoLayout: isManualLayout,
-        videoLayoutKey: isManualLayout ? state.attachedClipId : undefined,
+        layoutType: isManualLayout ? "SPLIT_VERTICAL" : "SINGLE",
+        secondaryVideoKey: isManualLayout ? state.attachedClipId : undefined,
       };
 
       await ClipApi.process(payload);

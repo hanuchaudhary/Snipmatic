@@ -46,7 +46,7 @@ export const CreateClip = () => {
   const { upload, progress, isUploading, abort, reset: resetUpload } =
     useVideoUpload();
 
-  const { url, videoInfo, clipRange, clipMode, subtitles, videoTemplateId, isGettingInfo, isCreatingClip, setUrl, hydrateFromPageState, setUploadPreview, reset, fetchVideoInfo, processClip, getEstimatedCredits } = useClipStore();
+  const { url, videoInfo, clipRange, clipMode, subtitles, bgMusic, aspectRatio, attachedClipId, isGettingInfo, isCreatingClip, setUrl, hydrateFromPageState, setUploadPreview, reset, fetchVideoInfo, processClip, getEstimatedCredits } = useClipStore();
 
   const [credits, setCredits] = React.useState<
     PaymentModel["creditsResponse"] | null
@@ -80,12 +80,14 @@ export const CreateClip = () => {
   const estimatedCredits = React.useMemo(
     () => getEstimatedCredits(),
     [
+      aspectRatio,
+      attachedClipId,
+      bgMusic,
       clipMode,
       clipRange,
       getEstimatedCredits,
       subtitles,
       videoInfo,
-      videoTemplateId,
     ]
   );
   const showVideoDetails = isClipsPage && Boolean(videoInfo);

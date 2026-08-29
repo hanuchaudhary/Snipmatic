@@ -3,9 +3,11 @@ import { z } from "zod";
 import { CLIP_MODES } from "../lib/clip-config";
 
 export const aspectRatioIdSchema = z.enum(["16:9", "9:16", "1:1", "4:5"]);
-export const clipModeSchema = z.enum(CLIP_MODES);
-export const clipSourceSchema = z.enum(["YOUTUBE", "UPLOAD"]);
-export const clipStatusSchema = z.enum([
+export const clipTypeSchema = z.enum(CLIP_MODES);
+export const videoSourceSchema = z.enum(["YOUTUBE", "UPLOAD"]);
+export const layoutTypeSchema = z.enum(["SINGLE", "SPLIT_VERTICAL"]);
+
+export const jobStatusSchema = z.enum([
   "QUEUED",
   "DOWNLOADING",
   "PREPROCESSING",
@@ -16,33 +18,69 @@ export const clipStatusSchema = z.enum([
   "ANALYZING",
   "FINDING_CLIPS",
   "GENERATING_SUBTITLES",
+  "GENERATING_CLIPS",
   "COMPLETED",
+  "FAILED",
 ]);
-export const clipListStatusSchema = z.enum(["PROCESSING", "COMPLETED"]);
+
+export const clipStatusSchema = z.enum([
+  "QUEUED",
+  "GENERATING_SUBTITLES",
+  "RENDERING",
+  "COMPLETED",
+  "FAILED",
+]);
+
+export const jobListStatusSchema = z.enum(["PROCESSING", "COMPLETED"]);
 
 export const clipSchema = z.object({
   id: z.string(),
+  jobId: z.string(),
   status: clipStatusSchema,
-  progress: z.number().nullable(),
-  from: z.number().nullable(),
-  to: z.number().nullable(),
+  from: z.number(),
+  to: z.number(),
+  aspectRatio: z.string().nullable(),
+  subtitleStyleKey: z.string().nullable(),
+  bgMusicKey: z.string().nullable(),
+  bgMusicIntensity: z.number().nullable(),
+  subtitlesKey: z.string().nullable(),
+  layoutType: layoutTypeSchema,
+  secondaryVideoKey: z.string().nullable(),
+  outputKey: z.string().nullable(),
+  thumbnail: z.string().nullable(),
   duration: z.number().nullable(),
-  prompt: z.string().nullable(),
-  clipType: clipModeSchema,
-  source: clipSourceSchema,
+  score: z.number().nullable(),
+  title: z.string().nullable(),
+  error: z.string().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
+
+export const jobSchema = z.object({
+  id: z.string(),
+  status: jobStatusSchema,
+  progress: z.number().nullable(),
+  clipType: clipTypeSchema,
+  source: videoSourceSchema,
   sourceKey: z.string(),
   title: z.string().nullable(),
   thumbnail: z.string().nullable(),
-  finalKeys: z.array(z.string()),
+  prompt: z.string().nullable(),
+  searchFrom: z.number().nullable(),
+  searchTo: z.number().nullable(),
   aspectRatio: z.string().nullable(),
+  subtitleStyleKey: z.string().nullable(),
   bgMusicKey: z.string().nullable(),
-  subtitlesKey: z.string().nullable(),
-  layoutKey: z.string().nullable(),
+  bgMusicIntensity: z.number().nullable(),
   creditUsage: z.number(),
   error: z.string().nullable(),
   userId: z.string(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+});
+
+export const jobWithClipsSchema = jobSchema.extend({
+  clips: z.array(clipSchema),
 });
 
 export const youtubeUrlSchema = z
@@ -98,101 +136,125 @@ export const youtubeUrlSchema = z
     }
   }, "Please enter a valid YouTube URL");
 
-export const ClipModel = {
-  previewBody: z.object({
+type ModelTypes<T extends Record<string, z.ZodType>> = {
+  [K in keyof T]: z.infer<T[K]>;
+};
+
+export const PreviewModel = {
+  body: z.object({
     url: youtubeUrlSchema,
   }),
-
-  previewResponse: z.object({
+  response: z.object({
     thumbnail: z.string(),
     title: z.string(),
     duration: z.number(),
     videoLanguage: z.string().optional(),
     videoQuality: z.string().optional(),
   }),
-
   invalidUrl: z.literal("Invalid url"),
+} as const;
 
-  // presigned url
-  presignedUrlBody: z.object({
+export type PreviewModel = ModelTypes<typeof PreviewModel>;
+
+export const PresignedUrlModel = {
+  body: z.object({
     filename: z.string(),
   }),
-
-  presignedUrlResponse: z.object({
+  response: z.object({
     url: z.string(),
     key: z.string(),
     publicUrl: z.string(),
   }),
-
   invalidFilename: z.literal("Invalid filename"),
+} as const;
 
-  processClipBody: z.object({
+export type PresignedUrlModel = ModelTypes<typeof PresignedUrlModel>;
+
+export const ProcessModel = {
+  body: z.object({
     thumbnail: z.string().optional(),
     title: z.string().optional(),
 
-    source: clipSourceSchema,
-    sourceKey: z.string(), // s3 key if source is UPLOAD, yt url if source is YOUTUBE
+    source: videoSourceSchema,
+    sourceKey: z.string(),
 
-    from: z.number(),
-    to: z.number(),
+    searchFrom: z.number().optional(),
+    searchTo: z.number().optional(),
     duration: z.number(),
 
-    clipMode: clipModeSchema,
-
-    subtitles: z.boolean(),
-    subtitleStyle: z.string().optional(),
+    clipType: clipTypeSchema,
     prompt: z.string().optional(),
 
     aspectRatio: aspectRatioIdSchema,
 
-    bgMusic: z.boolean(),
+    subtitleStyleKey: z.string().optional(),
     bgMusicKey: z.string().optional(),
-    bgMusicIntensity: z.number().min(0).max(100),
+    bgMusicIntensity: z.number().min(0).max(100).optional(),
 
-    videoLayout: z.boolean(),
-    videoLayoutKey: z.string().optional(),
+    layoutType: layoutTypeSchema.optional(),
+    secondaryVideoKey: z.string().optional(),
   }),
-  processClipResponse: z.object({
-    clips: z.array(
-      z.object({
-        id: z.string(),
-        url: z.string(),
-        thumbnail: z.string(),
-        title: z.string(),
-        duration: z.number(),
-      })
-    ),
+  response: z.object({
+    job: jobSchema,
   }),
-  processClipError: z.literal("Error processing clip"),
+  error: z.literal("Error processing clip"),
   insufficientCredits: z.literal("Insufficient credits"),
+} as const;
 
-  clipIdParams: z.object({
+export type ProcessModel = ModelTypes<typeof ProcessModel>;
+
+export const JobModel = {
+  params: z.object({
     id: z.string(),
   }),
-  clipNotFound: z.literal("Clip not found"),
-
-  clipResponse: z.object({
-    clip: clipSchema,
+  notFound: z.literal("Job not found"),
+  response: z.object({
+    job: jobWithClipsSchema,
   }),
-
   listQuery: z.object({
-    status: clipListStatusSchema,
+    status: jobListStatusSchema,
   }),
   listResponse: z.object({
-    clips: z.array(clipSchema),
+    jobs: z.array(jobWithClipsSchema),
   }),
-
   updateBody: z.object({
-    status: clipStatusSchema.optional(),
+    status: jobStatusSchema.optional(),
     progress: z.number().int().min(0).max(100).optional(),
     error: z.string().nullable().optional(),
-    finalKeys: z.array(z.string()).optional(),
   }),
 } as const;
 
-export type ClipModel = {
-  [K in keyof typeof ClipModel]: z.infer<(typeof ClipModel)[K]>;
-};
+export type JobModel = ModelTypes<typeof JobModel>;
+
+export const ClipModel = {
+  params: z.object({
+    id: z.string(),
+  }),
+  notFound: z.literal("Clip not found"),
+  response: z.object({
+    clip: clipSchema,
+  }),
+  updateBody: z.object({
+    status: clipStatusSchema.optional(),
+    from: z.number().optional(),
+    to: z.number().optional(),
+    aspectRatio: z.string().nullable().optional(),
+    subtitleStyleKey: z.string().nullable().optional(),
+    bgMusicKey: z.string().nullable().optional(),
+    bgMusicIntensity: z.number().nullable().optional(),
+    subtitlesKey: z.string().nullable().optional(),
+    layoutType: layoutTypeSchema.optional(),
+    secondaryVideoKey: z.string().nullable().optional(),
+    outputKey: z.string().nullable().optional(),
+    thumbnail: z.string().nullable().optional(),
+    duration: z.number().nullable().optional(),
+    score: z.number().nullable().optional(),
+    title: z.string().nullable().optional(),
+    error: z.string().nullable().optional(),
+  }),
+} as const;
+
+export type ClipModel = ModelTypes<typeof ClipModel>;
 
 export const sanitizeYoutubeUrl = (value: string) => {
   const parsed = youtubeUrlSchema.safeParse(value);

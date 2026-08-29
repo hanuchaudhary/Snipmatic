@@ -2,7 +2,7 @@ import type {
   AspectRatioId,
   ClipConfiguration,
   ClipMode,
-  ClipModel,
+  PreviewModel,
 } from "@snipmatic/utils";
 
 export type ClipsPageState = {
@@ -10,7 +10,7 @@ export type ClipsPageState = {
   url?: string;
   sourceKey?: string;
   previewUrl?: string;
-  videoInfo: ClipModel["previewResponse"];
+  videoInfo: PreviewModel["response"];
   clipRange: [number, number];
   subtitles: boolean;
   bgMusic: boolean;

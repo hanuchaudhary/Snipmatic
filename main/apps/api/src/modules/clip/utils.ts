@@ -1,4 +1,4 @@
-import type { ClipModel } from "@snipmatic/utils";
+import type { PresignedUrlModel } from "@snipmatic/utils";
 import { status } from "elysia";
 
 export const ALLOWED_EXTENSIONS = new Set([
@@ -21,7 +21,7 @@ export const sanitizeFilename = (filename: string) => {
   ) {
     throw status(
       400,
-      "Invalid filename" satisfies ClipModel["invalidFilename"]
+      "Invalid filename" satisfies PresignedUrlModel["invalidFilename"]
     );
   }
 
@@ -30,7 +30,7 @@ export const sanitizeFilename = (filename: string) => {
   if (!ALLOWED_EXTENSIONS.has(extension)) {
     throw status(
       400,
-      "Invalid filename" satisfies ClipModel["invalidFilename"]
+      "Invalid filename" satisfies PresignedUrlModel["invalidFilename"]
     );
   }
 

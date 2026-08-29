@@ -1,4 +1,4 @@
-import { ClipModel } from "@snipmatic/utils";
+import { PreviewModel } from "@snipmatic/utils";
 import { create } from "youtube-dl-exec";
 
 //prod have a path TODO:
@@ -18,7 +18,7 @@ export const getVideoInfo = async (url: string) => {
       duration: info.duration,
       videoLanguage: info.language || "",
       videoQuality: info.format_id, // TODO
-    } as ClipModel["previewResponse"];
+    } as PreviewModel["response"];
     console.log("Ytdl inflo:", data);
     return data;
   } catch (error) {

@@ -123,7 +123,7 @@ export const AttachClipSection = ({
     setIsOpen(true);
 
     if (!videoTemplateId) {
-      onVideoTemplateChange(MOCK_ATTACH_CLIPS[0]?.name);
+      onVideoTemplateChange(MOCK_ATTACH_CLIPS[0]?.key);
     }
   };
 
@@ -165,16 +165,16 @@ export const AttachClipSection = ({
           <p className="text-xs text-muted-foreground">Choose clip</p>
           <div className="grid grid-cols-2 gap-2">
             {MOCK_ATTACH_CLIPS.map((clip) => {
-              const isSelected = attachedClipId === clip.name;
+              const isSelected = attachedClipId === clip.key;
               return (
                 <button
-                  key={clip.name}
+                  key={clip.key}
                   type="button"
                   onClick={() => {
                     if (!videoTemplateId) {
-                      onVideoTemplateChange(MOCK_ATTACH_CLIPS[0]?.name);
+                      onVideoTemplateChange(MOCK_ATTACH_CLIPS[0]?.key);
                     }
-                    onAttachedClipChange(clip.name);
+                    onAttachedClipChange(clip.key);
                   }}
                   className={cn(
                     "overflow-hidden text-left transition-colors",
@@ -186,7 +186,7 @@ export const AttachClipSection = ({
                   <div className={cn("aspect-video", isSelected && "border-foreground border")}>
                     <img
                       src={clip.previewUrl}
-                      alt={clip.name}
+                      alt={clip.key}
                       className="h-full w-full object-cover"
                     />
                   </div>

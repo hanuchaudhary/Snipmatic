@@ -12,7 +12,8 @@ class ClipType(str, Enum):
     AI = "AI"
     MANUAL = "MANUAL"
 
-class ClipStatus(str, Enum):
+
+class JobStatus(str, Enum):
     QUEUED = "QUEUED"
     DOWNLOADING = "DOWNLOADING"
     PREPROCESSING = "PREPROCESSING"
@@ -27,6 +28,20 @@ class ClipStatus(str, Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 
+
+class ClipStatus(str, Enum):
+    QUEUED = "QUEUED"
+    GENERATING_SUBTITLES = "GENERATING_SUBTITLES"
+    RENDERING = "RENDERING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class LayoutType(str, Enum):
+    SINGLE = "SINGLE"
+    SPLIT_VERTICAL = "SPLIT_VERTICAL"
+
+
 class AspectRatio(str, Enum):
     RATIO_16_9 = "16:9"
     RATIO_9_16 = "9:16"
@@ -37,18 +52,38 @@ class AspectRatio(str, Enum):
 class JobPayload(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
+    id: str
     userId: str
-    jobId: str
     source: VideoSource
     sourceKey: str
+    searchFrom: float | None = None
+    searchTo: float | None = None
+    title: str | None = None
+    thumbnail: str | None = None
+    aspectRatio: AspectRatio | None = None
+    bgMusicKey: str | None = None
+    bgMusicIntensity: float | None = None
+    subtitleStyleKey: str | None = None
+    prompt: str | None = None
+    clipType: ClipType
+
+
+class ClipPayload(BaseModel):
+    id: str
+    jobId: str
+    status: ClipStatus
     from_: float = Field(alias="from")
     to: float
-    duration: float
-    title: str
-    thumbnail: str
-    aspectRatio: AspectRatio
-    bgMusicKey: str
-    subtitlesKey: str
-    layoutKey: str
-    prompt: str
-    clipType: ClipType
+    aspectRatio: str | None = None
+    subtitleStyleKey: str | None = None
+    bgMusicKey: str | None = None
+    bgMusicIntensity: float | None = None
+    subtitlesKey: str | None = None
+    layoutType: LayoutType = LayoutType.SINGLE
+    secondaryVideoKey: str | None = None
+    outputKey: str | None = None
+    thumbnail: str | None = None
+    duration: float | None = None
+    score: float | None = None
+    title: str | None = None
+    error: str | None = None

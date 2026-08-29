@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -140,6 +134,14 @@ enum Status {
   FAILED
 }
 
+enum ClipStatus {
+  QUEUED
+  GENERATING_SUBTITLES
+  RENDERING
+  COMPLETED
+  FAILED
+}
+
 enum VideoSource {
   YOUTUBE
   UPLOAD
@@ -150,45 +152,82 @@ enum ClipType {
   MANUAL
 }
 
+enum LayoutType {
+  SINGLE
+  SPLIT_VERTICAL
+}
+
 model Job {
   id String @id @default(cuid())
 
-  status Status @default(QUEUED)
-
-  progress Int? @default(0)
-
-  from     Float?
-  to       Float?
-  duration Float?
-
-  prompt String?
+  status   Status @default(QUEUED)
+  progress Int?   @default(0)
 
   clipType ClipType @default(AI)
 
   source    VideoSource
-  sourceKey String // either s3 key or youtube url
+  sourceKey String
 
   title     String?
   thumbnail String?
 
-  finalKeys String[]
+  prompt String?
 
-  aspectRatio  String?
-  bgMusicKey   String?
-  subtitlesKey String?
-  layoutKey    String?
+  searchFrom Float?
+  searchTo   Float?
+
+  aspectRatio      String?
+  subtitleStyleKey String?
+  bgMusicKey       String?
+  bgMusicIntensity Float?  @default(0.3)
 
   creditUsage Int
-
-  error String?
+  error       String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clips  Clip[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId, createdAt])
+  @@index([status])
+}
+
+model Clip {
+  id String @id @default(cuid())
+
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId String
+
+  status ClipStatus @default(QUEUED)
+
+  from Float
+  to   Float
+
+  aspectRatio      String?
+  subtitleStyleKey String?
+  bgMusicKey       String?
+  bgMusicIntensity Float?
+
+  subtitlesKey String?
+
+  layoutType        LayoutType @default(SINGLE)
+  secondaryVideoKey String?
+
+  outputKey String?
+  thumbnail String?
+  duration  Float?
+
+  score Float?
+  title String?
+  error String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([jobId])
   @@index([status])
 }
 

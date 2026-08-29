@@ -15,9 +15,17 @@ class FFMPEG:
     def __init__(self):
         self.ffmpeg = ffmpeg
 
-    def extract_audio(self, video_path: str, audio_path: str, from_: float, to: float):
+    def extract_audio(self, video_path: str, audio_path: str, from_: float | None = None, to: float | None = None):
         try:
-            self.ffmpeg.input(video_path).output(audio_path).ss(from_).t(to).run()
+            input_kwargs = {}
+            output_kwargs = {}
+            if from_ is not None:
+                input_kwargs["ss"] = from_
+            if to is not None and from_ is not None:
+                output_kwargs["t"] = to - from_
+            elif to is not None:
+                output_kwargs["t"] = to
+            self.ffmpeg.input(video_path, **input_kwargs).output(audio_path, **output_kwargs).run()
         except ffmpeg.Error as e:
             print(f"Error extracting audio: {e.stderr.decode('utf-8')}")
             raise e

@@ -56,19 +56,22 @@ export const PLANS = {
 export const CREDIT_RATES = {
   processingPerMinute: 1,
   subtitlesPerMinute: 0.5,
-  templateMultiplier: 1.2,
+  bgMusicPerMinute: 0.5,
+  splitLayoutPerMinute: 1,
 } as const;
 
 export type CalculateClipCreditsInput = {
   durationSeconds: number;
   subtitles?: boolean;
-  templateId?: string;
+  bgMusic?: boolean;
+  splitLayout?: boolean;
 };
 
 export function calculateClipCredits({
   durationSeconds,
   subtitles = false,
-  templateId, // TODO: replace mf!
+  bgMusic = false,
+  splitLayout = false,
 }: CalculateClipCreditsInput) {
   const minutes = Math.ceil(Math.max(0, durationSeconds) / 60);
   let credits = minutes * CREDIT_RATES.processingPerMinute;
@@ -77,8 +80,12 @@ export function calculateClipCredits({
     credits += minutes * CREDIT_RATES.subtitlesPerMinute;
   }
 
-  if (templateId) {
-    credits = Math.ceil(credits * CREDIT_RATES.templateMultiplier);
+  if (bgMusic) {
+    credits += minutes * CREDIT_RATES.bgMusicPerMinute;
+  }
+
+  if (splitLayout) {
+    credits += minutes * CREDIT_RATES.splitLayoutPerMinute;
   }
 
   return credits;

@@ -107,7 +107,7 @@ export function LoginPage() {
               Hey, welcome!
             </h1>
             <p className="text-base text-muted-foreground">
-              Log in to your StillUp account.
+              Log in to your Snipmatic Account
             </p>
           </div>
         </div>

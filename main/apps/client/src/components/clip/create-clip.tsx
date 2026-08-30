@@ -14,6 +14,7 @@ import z from "zod";
 
 import { useVideoUpload } from "@/hooks/use-video-upload";
 import { PaymentApi } from "@/lib/api/payment";
+import { consumePendingYoutubeUrl } from "@/lib/pending-clip-url";
 import { cn } from "@/lib/utils";
 import { useClipStore } from "@/store/clip.store";
 import type { ClipsPageState } from "@/types/clip-navigation";
@@ -29,6 +30,8 @@ import {
 import { Input } from "../ui/input";
 import { VideoInfo } from "./video-info";
 import { TooltipButton } from "../ui/tooltip-button";
+import BorderBeam from "border-beam";
+import { useTheme } from "../provider/theme-provider";
 
 const formSchema = z.object({
   url: youtubeUrlSchema,
@@ -37,6 +40,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export const CreateClip = () => {
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -64,6 +68,16 @@ export const CreateClip = () => {
       .then(setCredits)
       .catch(() => undefined);
   }, []);
+
+  React.useEffect(() => {
+    const pending = consumePendingYoutubeUrl();
+    if (!pending) {
+      return;
+    }
+
+    setUrl(pending);
+    form.setValue("url", pending);
+  }, [form, setUrl]);
 
   React.useEffect(() => {
     if (!isClipsPage || !pageState?.videoInfo) {
@@ -284,18 +298,30 @@ export const CreateClip = () => {
                     className="absolute top-1/2 -translate-y-1/2 left-0 md:w-8 w-5"
                   />
                   <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value}
-                      onChange={(e) => {
-                        field.onChange(e.target.value);
-                        setUrl(e.target.value);
-                      }}
-                      disabled={Boolean(showVideoDetails) || isBusy}
-                      placeholder="Paste a YouTube link or upload a video"
-                      autoFocus
-                      className="w-full border-0 rounded-none focus-visible:ring-0 focus:ring-0 focus-visible:outline-0 bg-transparent! md:text-[1.4rem]! text-lg mask-r-from-80% font-light md:pl-10! pl-6! border-b md:py-6! py-4"
-                    />
+                    <BorderBeam
+                      size="line"
+                      colorVariant="colorful"
+                      duration={3.1}
+                      active={
+                        isGettingInfo || isUploading || isCreatingClip
+                      }
+                      borderRadius={0}
+                      theme={theme === "light" ? "light" : "dark"}
+                      className="w-full"
+                    >
+                      <Input
+                        {...field}
+                        value={field.value}
+                        onChange={(e) => {
+                          field.onChange(e.target.value);
+                          setUrl(e.target.value);
+                        }}
+                        disabled={Boolean(showVideoDetails) || isBusy}
+                        placeholder="Paste a YouTube link or upload a video"
+                        autoFocus
+                        className="w-full border-0 rounded-none focus-visible:ring-0 focus:ring-0 focus-visible:outline-0 bg-transparent! md:text-[1.4rem]! text-lg mask-r-from-80% font-light md:pl-10! pl-6! border-b md:py-6! py-4"
+                      />
+                    </BorderBeam>
                   </FormControl>
 
                   {showVideoDetails ? (

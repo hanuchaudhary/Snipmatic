@@ -15,11 +15,11 @@ load_dotenv()
 payload = JobPayload(
     id="123",
     userId="123",
-    clipType=ClipType.MANUAL,
-    sourceKey="https://youtu.be/BbG1qc_Hnb4",
+    clipType=ClipType.AI,
+    sourceKey="https://youtu.be/ngPkbaZliaU",
     source=VideoSource.YOUTUBE,
-    searchFrom=0,
-    searchTo=10,
+    searchFrom=None,
+    searchTo=None,
     prompt="",
 )
 

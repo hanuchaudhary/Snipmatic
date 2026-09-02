@@ -10,10 +10,14 @@
     "cssVariables": true,
     "prefix": ""
   },
+<<<<<<<< HEAD:main/apps/client/components.json
   "iconLibrary": "hugeicons",
   "rtl": false,
   "menuColor": "default",
   "menuAccent": "subtle",
+========
+  "iconLibrary": "lucide",
+>>>>>>>> origin/main:client/components.json
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
@@ -22,6 +26,10 @@
     "hooks": "@/hooks"
   },
   "registries": {
+<<<<<<<< HEAD:main/apps/client/components.json
     "@unlumen-ui": "https://ui.unlumen.com/r/{name}.json"
+========
+    "@reui": "https://reui.io/r/{name}.json"
+>>>>>>>> origin/main:client/components.json
   }
 }

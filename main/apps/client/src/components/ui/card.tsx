@@ -12,7 +12,11 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
+<<<<<<<< HEAD:main/apps/client/src/components/ui/card.tsx
         "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-lg bg-card py-(--card-spacing) text-xs/relaxed text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] *:[img:first-child]:rounded-t-lg *:[img:last-child]:rounded-b-lg",
+========
+        "dark:bg-neutral-950 bg-white dark:border-neutral-700 backdrop-blur-2xl text-card-foreground flex flex-col gap-6 rounded-4xl border-2 py-6 shadow-sm",
+>>>>>>>> origin/main:client/src/components/ui/card.tsx
         className
       )}
       {...props}

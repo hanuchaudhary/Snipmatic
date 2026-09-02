@@ -1,0 +1,35 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "base-mira",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/index.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+<<<<<<<< HEAD:main/apps/client/components.json
+  "iconLibrary": "hugeicons",
+  "rtl": false,
+  "menuColor": "default",
+  "menuAccent": "subtle",
+========
+  "iconLibrary": "lucide",
+>>>>>>>> origin/main:client/components.json
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {
+<<<<<<<< HEAD:main/apps/client/components.json
+    "@unlumen-ui": "https://ui.unlumen.com/r/{name}.json"
+========
+    "@reui": "https://reui.io/r/{name}.json"
+>>>>>>>> origin/main:client/components.json
+  }
+}

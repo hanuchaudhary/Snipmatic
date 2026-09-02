@@ -1,0 +1,28 @@
+{
+  "name": "@snipmatic/utils",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    },
+    "./types": {
+      "import": "./src/types/index.ts",
+      "types": "./src/types/index.ts"
+    },
+    "./models": {
+      "import": "./src/models/index.ts",
+      "types": "./src/models/index.ts"
+    }
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}

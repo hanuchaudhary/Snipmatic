@@ -1,8 +1,2 @@
-venv/ 
-.venv/
-# Environment files
-**/.env
-# But keep template files
-!**/.env.template
-node_modules/
-__pycache__/
+/bin
+__pycache__

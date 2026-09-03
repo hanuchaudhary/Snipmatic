@@ -1,22 +1,14 @@
 import { cn } from "@/lib/utils";
 import { IconMoonFilled, IconSunFilled } from "@tabler/icons-react";
 import { motion } from "motion/react";
-<<<<<<<< HEAD:main/apps/client/src/components/theme-switch.tsx
 import { useTheme } from "./provider/theme-provider";
-========
-import { useTheme } from "next-themes";
->>>>>>>> origin/main:client/src/components/ThemeToggle.tsx
 
 const themes = [
   { key: "light", icon: IconSunFilled, label: "Light theme" },
   { key: "dark", icon: IconMoonFilled, label: "Dark theme" },
 ];
 
-<<<<<<<< HEAD:main/apps/client/src/components/theme-switch.tsx
 export const ThemeSwitch = () => {
-========
-export const ThemeToggle = () => {
->>>>>>>> origin/main:client/src/components/ThemeToggle.tsx
   const { theme, setTheme } = useTheme();
   return (
     <div

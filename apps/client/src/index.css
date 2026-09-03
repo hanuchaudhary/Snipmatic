@@ -162,3 +162,21 @@ input:-webkit-autofill:active {
 .corner {
   corner-shape: bevel;
 }
+
+@keyframes ferris-spin {
+  to {
+    transform: rotate(-1turn);
+  }
+}
+
+.ferris-spin {
+  transform-origin: center;
+  animation: ferris-spin 42s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ferris-spin {
+    animation: none;
+  }
+}

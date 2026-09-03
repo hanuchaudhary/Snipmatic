@@ -26,6 +26,7 @@ import {
   MotionNavigationMenuList,
   MotionNavigationMenuTrigger,
 } from "@/components/unlumen-ui/motion-navigation-menu";
+import { cn } from "@/lib/utils";
 
 const listHighlightClassName = "bg-white/10 rounded-lg";
 const contentHighlightClassName =
@@ -171,7 +172,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="absolute w-full left-1/2 -translate-x-1/2 md:my-4 top-0 z-60 max-w-7xl mx-auto md:backdrop-blur-none backdrop-blur-sm">
+      <header className={cn("absolute w-full left-1/2 -translate-x-1/2 md:my-4 top-0 z-60 mx-auto md:backdrop-blur-none backdrop-blur-sm", !isLanding ? "max-w-7xl" : "px-10")}>
         <div className="md:px-8 px-4 py-2 grid grid-cols-[1fr_auto_1fr] items-center">
           <div className="flex items-center gap-4 justify-self-start">
             {(isLanding || !session?.user) && (

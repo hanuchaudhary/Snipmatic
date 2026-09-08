@@ -3,10 +3,10 @@ import { z } from "zod";
 import { CLIP_MODES } from "../lib/clip-config";
 
 export const aspectRatioIdSchema = z.enum(["16:9", "9:16", "1:1", "4:5"]);
-export const clipTypeSchema = z.enum(CLIP_MODES);
+export const processingTypeSchema = z.enum(CLIP_MODES);
 export const videoSourceSchema = z.enum(["YOUTUBE", "UPLOAD"]);
 
-export const jobStatusSchema = z.enum([
+export const projectStatusSchema = z.enum([
   "QUEUED",
   "DOWNLOADING",
   "PREPROCESSING",
@@ -16,8 +16,6 @@ export const jobStatusSchema = z.enum([
   "TRACKING",
   "ANALYZING",
   "FINDING_CLIPS",
-  "GENERATING_SUBTITLES",
-  "GENERATING_CLIPS",
   "COMPLETED",
   "FAILED",
 ]);
@@ -30,49 +28,54 @@ export const clipStatusSchema = z.enum([
   "FAILED",
 ]);
 
-export const jobListStatusSchema = z.enum(["PROCESSING", "COMPLETED"]);
+export const projectListStatusSchema = z.enum(["PROCESSING", "COMPLETED"]);
 
 export const clipSchema = z.object({
   id: z.string(),
-  jobId: z.string(),
-  status: clipStatusSchema,
+  projectId: z.string(),
   from: z.number(),
   to: z.number(),
+  duration: z.number().nullable(),
+  processingType: processingTypeSchema,
+  score: z.number().nullable(),
+  title: z.string().nullable(),
+  status: clipStatusSchema,
+  progress: z.number(),
+  error: z.string().nullable(),
   aspectRatio: z.string().nullable(),
+  subtitlesEnabled: z.boolean(),
   subtitleStyleKey: z.string().nullable(),
   subtitlesKey: z.string().nullable(),
   outputKey: z.string().nullable(),
-  thumbnail: z.string().nullable(),
-  duration: z.number().nullable(),
-  score: z.number().nullable(),
-  title: z.string().nullable(),
-  error: z.string().nullable(),
+  thumbnailKey: z.string().nullable(),
+  settings: z.any().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
 
-export const jobSchema = z.object({
+export const projectSchema = z.object({
   id: z.string(),
-  status: jobStatusSchema,
-  progress: z.number().nullable(),
-  clipType: clipTypeSchema,
-  source: videoSourceSchema,
-  sourceKey: z.string(),
-  title: z.string().nullable(),
-  thumbnail: z.string().nullable(),
-  prompt: z.string().nullable(),
-  searchFrom: z.number().nullable(),
-  searchTo: z.number().nullable(),
-  aspectRatio: z.string().nullable(),
-  subtitleStyleKey: z.string().nullable(),
-  creditUsage: z.number(),
-  error: z.string().nullable(),
   userId: z.string(),
+  title: z.string().nullable(),
+  source: videoSourceSchema,
+  sourceUrl: z.string().nullable(),
+  sourceKey: z.string().nullable(),
+  duration: z.number().nullable(),
+  thumbnailKey: z.string().nullable(),
+  status: projectStatusSchema,
+  progress: z.number(),
+  error: z.string().nullable(),
+  prompt: z.string().nullable(),
+  fromDuration: z.number().nullable(),
+  toDuration: z.number().nullable(),
+  transcriptKey: z.string().nullable(),
+  audioKey: z.string().nullable(),
+  proxyKey: z.string().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
 
-export const jobWithClipsSchema = jobSchema.extend({
+export const projectWithClipsSchema = projectSchema.extend({
   clips: z.array(clipSchema),
 });
 
@@ -165,17 +168,18 @@ export type PresignedUrlModel = ModelTypes<typeof PresignedUrlModel>;
 
 export const ProcessModel = {
   body: z.object({
-    thumbnail: z.string().optional(),
+    thumbnailKey: z.string().optional(),
     title: z.string().optional(),
 
     source: videoSourceSchema,
-    sourceKey: z.string(),
+    sourceUrl: z.string().optional(),
+    sourceKey: z.string().optional(),
 
-    searchFrom: z.number().optional(),
-    searchTo: z.number().optional(),
+    fromDuration: z.number().optional(),
+    toDuration: z.number().optional(),
     duration: z.number(),
 
-    clipType: clipTypeSchema,
+    processingType: processingTypeSchema,
     prompt: z.string().optional(),
 
     aspectRatio: aspectRatioIdSchema,
@@ -183,7 +187,7 @@ export const ProcessModel = {
     subtitleStyleKey: z.string().optional(),
   }),
   response: z.object({
-    job: jobSchema,
+    project: projectSchema,
   }),
   error: z.literal("Error processing clip"),
   insufficientCredits: z.literal("Insufficient credits"),
@@ -191,28 +195,34 @@ export const ProcessModel = {
 
 export type ProcessModel = ModelTypes<typeof ProcessModel>;
 
-export const JobModel = {
+export const ProjectModel = {
   params: z.object({
     id: z.string(),
   }),
-  notFound: z.literal("Job not found"),
+  notFound: z.literal("Project not found"),
   response: z.object({
-    job: jobWithClipsSchema,
+    project: projectWithClipsSchema,
   }),
   listQuery: z.object({
-    status: jobListStatusSchema,
+    status: projectListStatusSchema,
   }),
   listResponse: z.object({
-    jobs: z.array(jobWithClipsSchema),
+    projects: z.array(projectWithClipsSchema),
   }),
   updateBody: z.object({
-    status: jobStatusSchema.optional(),
+    status: projectStatusSchema.optional(),
     progress: z.number().int().min(0).max(100).optional(),
     error: z.string().nullable().optional(),
+    transcriptKey: z.string().nullable().optional(),
+    audioKey: z.string().nullable().optional(),
+    proxyKey: z.string().nullable().optional(),
+    thumbnailKey: z.string().nullable().optional(),
+    title: z.string().nullable().optional(),
+    duration: z.number().nullable().optional(),
   }),
 } as const;
 
-export type JobModel = ModelTypes<typeof JobModel>;
+export type ProjectModel = ModelTypes<typeof ProjectModel>;
 
 export const ClipModel = {
   params: z.object({
@@ -224,17 +234,21 @@ export const ClipModel = {
   }),
   updateBody: z.object({
     status: clipStatusSchema.optional(),
+    progress: z.number().int().min(0).max(100).optional(),
     from: z.number().optional(),
     to: z.number().optional(),
-    aspectRatio: z.string().nullable().optional(),
-    subtitleStyleKey: z.string().nullable().optional(),
-    subtitlesKey: z.string().nullable().optional(),
-    outputKey: z.string().nullable().optional(),
-    thumbnail: z.string().nullable().optional(),
     duration: z.number().nullable().optional(),
+    processingType: processingTypeSchema.optional(),
     score: z.number().nullable().optional(),
     title: z.string().nullable().optional(),
     error: z.string().nullable().optional(),
+    aspectRatio: z.string().nullable().optional(),
+    subtitlesEnabled: z.boolean().optional(),
+    subtitleStyleKey: z.string().nullable().optional(),
+    subtitlesKey: z.string().nullable().optional(),
+    outputKey: z.string().nullable().optional(),
+    thumbnailKey: z.string().nullable().optional(),
+    settings: z.any().nullable().optional(),
   }),
 } as const;
 

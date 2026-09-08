@@ -1,9 +1,9 @@
 import {
   ClipModel,
-  JobModel,
   PresignedUrlModel,
   PreviewModel,
   ProcessModel,
+  ProjectModel,
 } from "@snipmatic/utils/types";
 import { Elysia } from "elysia";
 
@@ -70,9 +70,9 @@ export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
     },
     {
       auth: true,
-      query: JobModel.listQuery,
+      query: ProjectModel.listQuery,
       response: {
-        200: JobModel.listResponse,
+        200: ProjectModel.listResponse,
       },
     }
   )
@@ -99,25 +99,25 @@ export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
     },
     {
       auth: true,
-      params: JobModel.params,
+      params: ProjectModel.params,
       response: {
-        200: JobModel.response,
-        404: JobModel.notFound,
+        200: ProjectModel.response,
+        404: ProjectModel.notFound,
       },
     }
   )
   .patch(
     "/:id",
     async ({ params, body }) => {
-      const response = await ClipService.updateJob(params.id, body);
+      const response = await ClipService.updateProject(params.id, body);
       return response;
     },
     {
-      params: JobModel.params,
-      body: JobModel.updateBody,
+      params: ProjectModel.params,
+      body: ProjectModel.updateBody,
       response: {
-        200: JobModel.response,
-        404: JobModel.notFound,
+        200: ProjectModel.response,
+        404: ProjectModel.notFound,
       },
     }
   );

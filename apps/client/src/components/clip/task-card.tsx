@@ -110,7 +110,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
               {task.title}
             </div>
             <div className="text-xs text-muted-foreground text-left">
-              {task.clipType === "AI" ? "AI Generated" : "Manual Clip"}
+              {task.processingType === "AI" ? "AI Generated" : "Manual Clip"}
             </div>
           </div>
         </div>
@@ -126,7 +126,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Badge variant="secondary">{task.status}</Badge>
                 <span>•</span>
-                <span>{task.clipType}</span>
+                <span>{task.processingType}</span>
                 <span>•</span>
                 <span>{"1080p"}</span>
               </div>

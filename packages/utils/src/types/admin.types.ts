@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const adminRoleSchema = z.enum(["USER", "ADMIN"]);
 export const adminPlanTierSchema = z.enum(["STARTER", "INFLUENCER", "STUDIO"]);
-export const adminJobStatusSchema = z.enum([
+export const adminProjectStatusSchema = z.enum([
   "QUEUED",
   "DOWNLOADING",
   "PREPROCESSING",
@@ -12,12 +12,10 @@ export const adminJobStatusSchema = z.enum([
   "TRACKING",
   "ANALYZING",
   "FINDING_CLIPS",
-  "GENERATING_SUBTITLES",
-  "GENERATING_CLIPS",
   "COMPLETED",
   "FAILED",
 ]);
-export const adminClipTypeSchema = z.enum(["AI", "MANUAL"]);
+export const adminProcessingTypeSchema = z.enum(["AI", "MANUAL"]);
 export const adminVideoSourceSchema = z.enum(["YOUTUBE", "UPLOAD"]);
 
 export const AdminModel = {
@@ -39,7 +37,7 @@ export const AdminModel = {
       creditsGranted: z.number(),
       creditsUsed: z.number(),
     }),
-    jobs: z.object({
+    projects: z.object({
       total: z.number(),
       completed: z.number(),
       failed: z.number(),
@@ -47,7 +45,7 @@ export const AdminModel = {
       creditsConsumed: z.number(),
       byStatus: z.array(
         z.object({
-          status: adminJobStatusSchema,
+          status: adminProjectStatusSchema,
           count: z.number(),
         })
       ),
@@ -57,9 +55,9 @@ export const AdminModel = {
           count: z.number(),
         })
       ),
-      byClipType: z.array(
+      byProcessingType: z.array(
         z.object({
-          clipType: adminClipTypeSchema,
+          processingType: adminProcessingTypeSchema,
           count: z.number(),
         })
       ),
@@ -67,7 +65,7 @@ export const AdminModel = {
     activity: z.array(
       z.object({
         date: z.string(),
-        jobs: z.number(),
+        projects: z.number(),
         users: z.number(),
       })
     ),
@@ -85,11 +83,11 @@ export const AdminModel = {
     q: z.string().optional(),
   }),
 
-  jobsQuery: z.object({
+  projectsQuery: z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(50).default(20),
     q: z.string().optional(),
-    status: adminJobStatusSchema.optional(),
+    status: adminProjectStatusSchema.optional(),
   }),
 
   usersResponse: z.object({
@@ -106,24 +104,23 @@ export const AdminModel = {
         createdAt: z.coerce.date(),
         planTier: adminPlanTierSchema.nullable(),
         creditsBalance: z.number(),
-        jobCount: z.number(),
+        projectCount: z.number(),
       })
     ),
   }),
 
-  jobsResponse: z.object({
+  projectsResponse: z.object({
     total: z.number(),
     page: z.number(),
     limit: z.number(),
-    jobs: z.array(
+    projects: z.array(
       z.object({
         id: z.string(),
-        status: adminJobStatusSchema,
-        progress: z.number().nullable(),
+        status: adminProjectStatusSchema,
+        progress: z.number(),
         title: z.string().nullable(),
         source: adminVideoSourceSchema,
-        clipType: adminClipTypeSchema,
-        creditUsage: z.number(),
+        clipCount: z.number(),
         error: z.string().nullable(),
         createdAt: z.coerce.date(),
         user: z.object({

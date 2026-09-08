@@ -1,6 +1,6 @@
 import {
   type PlanTier,
-  type Status,
+  type ProjectStatus,
   prisma,
 } from "@snipmatic/db";
 import type { AdminModel } from "@snipmatic/utils/types";
@@ -18,16 +18,16 @@ const startOfDaysAgo = (days: number) => {
 
 const fillActivity = (
   since: Date,
-  jobs: { createdAt: Date }[],
+  projects: { createdAt: Date }[],
   users: { createdAt: Date }[]
 ) => {
   const days: AdminModel["overviewResponse"]["activity"] = [];
-  const jobCounts = new Map<string, number>();
+  const projectCounts = new Map<string, number>();
   const userCounts = new Map<string, number>();
 
-  for (const job of jobs) {
-    const key = toDay(job.createdAt);
-    jobCounts.set(key, (jobCounts.get(key) ?? 0) + 1);
+  for (const project of projects) {
+    const key = toDay(project.createdAt);
+    projectCounts.set(key, (projectCounts.get(key) ?? 0) + 1);
   }
 
   for (const user of users) {
@@ -41,7 +41,7 @@ const fillActivity = (
     const key = toDay(date);
     days.push({
       date: key,
-      jobs: jobCounts.get(key) ?? 0,
+      projects: projectCounts.get(key) ?? 0,
       users: userCounts.get(key) ?? 0,
     });
   }
@@ -66,11 +66,12 @@ export abstract class AdminService {
       billingByPlan,
       creditsInCirculation,
       creditTotals,
-      jobTotals,
-      jobsByStatus,
-      jobsBySource,
-      jobsByClipType,
-      recentJobs,
+      projectTotals,
+      creditsConsumed,
+      projectsByStatus,
+      projectsBySource,
+      clipsByProcessingType,
+      recentProjects,
       recentUsers,
     ] = await Promise.all([
       prisma.user.count(),
@@ -88,23 +89,25 @@ export abstract class AdminService {
         by: ["type"],
         _sum: { amount: true },
       }),
-      prisma.job.aggregate({
+      prisma.project.aggregate({
         _count: { _all: true },
-        _sum: { creditUsage: true },
       }),
-      prisma.job.groupBy({
+      prisma.creditUsage.aggregate({
+        _sum: { amount: true },
+      }),
+      prisma.project.groupBy({
         by: ["status"],
         _count: { _all: true },
       }),
-      prisma.job.groupBy({
+      prisma.project.groupBy({
         by: ["source"],
         _count: { _all: true },
       }),
-      prisma.job.groupBy({
-        by: ["clipType"],
+      prisma.clip.groupBy({
+        by: ["processingType"],
         _count: { _all: true },
       }),
-      prisma.job.findMany({
+      prisma.project.findMany({
         where: { createdAt: { gte: activitySince } },
         select: { createdAt: true },
       }),
@@ -114,12 +117,12 @@ export abstract class AdminService {
       }),
     ]);
 
-    const statusCounts = new Map<Status, number>(
-      jobsByStatus.map((row) => [row.status, row._count._all])
+    const statusCounts = new Map<ProjectStatus, number>(
+      projectsByStatus.map((row) => [row.status, row._count._all])
     );
     const completed = statusCounts.get("COMPLETED") ?? 0;
     const failed = statusCounts.get("FAILED") ?? 0;
-    const totalJobs = jobTotals._count._all;
+    const totalProjects = projectTotals._count._all;
 
     const granted =
       creditTotals.find((row) => row.type === "SUBSCRIPTION_GRANT")?._sum
@@ -143,26 +146,26 @@ export abstract class AdminService {
         creditsGranted: granted,
         creditsUsed: Math.abs(usedRaw),
       },
-      jobs: {
-        total: totalJobs,
+      projects: {
+        total: totalProjects,
         completed,
         failed,
-        processing: totalJobs - completed - failed,
-        creditsConsumed: jobTotals._sum.creditUsage ?? 0,
-        byStatus: jobsByStatus.map((row) => ({
+        processing: totalProjects - completed - failed,
+        creditsConsumed: creditsConsumed._sum.amount ?? 0,
+        byStatus: projectsByStatus.map((row) => ({
           status: row.status,
           count: row._count._all,
         })),
-        bySource: jobsBySource.map((row) => ({
+        bySource: projectsBySource.map((row) => ({
           source: row.source,
           count: row._count._all,
         })),
-        byClipType: jobsByClipType.map((row) => ({
-          clipType: row.clipType,
+        byProcessingType: clipsByProcessingType.map((row) => ({
+          processingType: row.processingType,
           count: row._count._all,
         })),
       },
-      activity: fillActivity(activitySince, recentJobs, recentUsers),
+      activity: fillActivity(activitySince, recentProjects, recentUsers),
     };
   }
 
@@ -196,7 +199,7 @@ export abstract class AdminService {
             },
           },
           _count: {
-            select: { jobs: true },
+            select: { projects: true },
           },
         },
       }),
@@ -215,14 +218,14 @@ export abstract class AdminService {
         createdAt: user.createdAt,
         planTier: user.billing?.planTier ?? null,
         creditsBalance: user.billing?.creditsBalance ?? 0,
-        jobCount: user._count.jobs,
+        projectCount: user._count.projects,
       })),
     };
   }
 
-  static async jobs(
-    query: AdminModel["jobsQuery"]
-  ): Promise<AdminModel["jobsResponse"]> {
+  static async projects(
+    query: AdminModel["projectsQuery"]
+  ): Promise<AdminModel["projectsResponse"]> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const q = query.q?.trim();
@@ -247,9 +250,9 @@ export abstract class AdminService {
         : {}),
     };
 
-    const [total, jobs] = await Promise.all([
-      prisma.job.count({ where }),
-      prisma.job.findMany({
+    const [total, projects] = await Promise.all([
+      prisma.project.count({ where }),
+      prisma.project.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
@@ -260,10 +263,11 @@ export abstract class AdminService {
           progress: true,
           title: true,
           source: true,
-          clipType: true,
-          creditUsage: true,
           error: true,
           createdAt: true,
+          _count: {
+            select: { clips: true },
+          },
           user: {
             select: {
               id: true,
@@ -279,7 +283,17 @@ export abstract class AdminService {
       total,
       page,
       limit,
-      jobs,
+      projects: projects.map((project) => ({
+        id: project.id,
+        status: project.status,
+        progress: project.progress,
+        title: project.title,
+        source: project.source,
+        clipCount: project._count.clips,
+        error: project.error,
+        createdAt: project.createdAt,
+        user: project.user,
+      })),
     };
   }
 }

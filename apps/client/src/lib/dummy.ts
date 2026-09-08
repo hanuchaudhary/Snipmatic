@@ -2,7 +2,7 @@ export interface Task {
   taskId: string;
   title: string;
   status: "COMPLETED" | "PROCESSING" | "FAILED";
-  clipType: "AI" | "Manual";
+  processingType: "AI" | "MANUAL";
   progress?: number;
   youtubeUrl: string;
   thumbnailUrl?: string;
@@ -27,7 +27,7 @@ export const dummyTasks: Task[] = [
     taskId: "task-1",
     title: "The Ultimate Guide to React in 2024",
     status: "COMPLETED",
-    clipType: "AI",
+    processingType: "AI",
     progress: 100,
     youtubeUrl: "/placeholder.png",
     thumbnailUrl: "/placeholder.png",
@@ -53,7 +53,7 @@ export const dummyTasks: Task[] = [
     taskId: "task-2",
     title: "Top 10 AI Tools You Must Try",
     status: "PROCESSING",
-    clipType: "AI",
+    processingType: "AI",
     progress: 65,
     youtubeUrl: "/placeholder.png",
     createdAt: new Date().toISOString(),
@@ -63,7 +63,7 @@ export const dummyTasks: Task[] = [
     taskId: "task-3",
     title: "Failed Processing Example",
     status: "FAILED",
-    clipType: "Manual",
+    processingType: "MANUAL",
     progress: 30,
     youtubeUrl: "/placeholder.png",
     createdAt: new Date(Date.now() - 3600000).toISOString(),

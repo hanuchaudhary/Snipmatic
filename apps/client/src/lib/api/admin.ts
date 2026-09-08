@@ -12,8 +12,8 @@ export abstract class AdminApi {
     return res.data as AdminModel["usersResponse"];
   }
 
-  static async jobs(params: AdminModel["jobsQuery"]) {
-    const res = await api.get("/admin/jobs", { params });
-    return res.data as AdminModel["jobsResponse"];
+  static async projects(params: AdminModel["projectsQuery"]) {
+    const res = await api.get("/admin/projects", { params });
+    return res.data as AdminModel["projectsResponse"];
   }
 }

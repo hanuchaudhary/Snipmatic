@@ -36,7 +36,7 @@ model User {
   updatedAt     DateTime     @updatedAt
   sessions      Session[]
   accounts      Account[]
-  jobs          Job[]
+  projects      Project[]
   billing       UserBilling?
 }
 
@@ -147,42 +147,56 @@ enum VideoSource {
   UPLOAD
 }
 
-enum ClipType {
+enum ProcessingType {
   AI
   MANUAL
 }
 
-model Job {
+enum ProjectStatus {
+  QUEUED
+  DOWNLOADING
+  PREPROCESSING
+  TRANSCRIBING
+  DIARIZING
+  DETECTING_FACES
+  TRACKING
+  ANALYZING
+  FINDING_CLIPS
+  COMPLETED
+  FAILED
+}
+
+model Project {
   id String @id @default(cuid())
-
-  status   Status @default(QUEUED)
-  progress Int?   @default(0)
-
-  clipType ClipType @default(AI)
-
-  source    VideoSource
-  sourceKey String
-
-  title     String?
-  thumbnail String?
-
-  prompt String?
-
-  searchFrom Float?
-  searchTo   Float?
-
-  aspectRatio      String?
-  subtitleStyleKey String?
-
-  creditUsage Int
-  error       String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clips  Clip[]
+
+  title String?
+
+  source    VideoSource
+  sourceUrl String?
+  sourceKey String?
+
+  duration     Float?
+  thumbnailKey String?
+
+  status   ProjectStatus @default(QUEUED)
+  progress Int           @default(0)
+  error    String?
+
+  prompt       String?
+  fromDuration Float?
+  toDuration   Float?
+
+  transcriptKey String?
+  audioKey      String?
+  proxyKey      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  clips Clip[]
 
   @@index([userId, createdAt])
   @@index([status])
@@ -191,31 +205,38 @@ model Job {
 model Clip {
   id String @id @default(cuid())
 
-  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  jobId String
-
-  status ClipStatus @default(QUEUED)
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   from Float
   to   Float
 
+  duration Float?
+
+  processingType ProcessingType
+
+  score Float?
+
+  title String?
+
+  status   ClipStatus @default(QUEUED)
+  progress Int        @default(0)
+  error    String?
+
   aspectRatio      String?
+  subtitlesEnabled Boolean @default(true)
   subtitleStyleKey String?
 
   subtitlesKey String?
+  outputKey    String?
+  thumbnailKey String?
 
-  outputKey String?
-  thumbnail String?
-  duration  Float?
-
-  score Float?
-  title String?
-  error String?
+  settings Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([jobId])
+  @@index([projectId, createdAt])
   @@index([status])
 }
 

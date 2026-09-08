@@ -1,9 +1,9 @@
 import type {
   ClipModel,
-  JobModel,
   PresignedUrlModel,
   PreviewModel,
   ProcessModel,
+  ProjectModel,
 } from "@snipmatic/utils";
 import { api } from "../axios";
 
@@ -25,12 +25,12 @@ export abstract class ClipApi {
 
   static async get(id: string) {
     const res = await api.get(`/clip/${id}`);
-    return res.data as JobModel["response"];
+    return res.data as ProjectModel["response"];
   }
 
-  static async list(status: JobModel["listQuery"]["status"]) {
+  static async list(status: ProjectModel["listQuery"]["status"]) {
     const res = await api.get("/clip", { params: { status } });
-    return res.data as JobModel["listResponse"];
+    return res.data as ProjectModel["listResponse"];
   }
 
   static async updateClip(id: string, body: ClipModel["updateBody"]) {

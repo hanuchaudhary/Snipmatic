@@ -1,11 +1,11 @@
-import { type Status, prisma } from "@snipmatic/db";
+import { type ProjectStatus, prisma } from "@snipmatic/db";
 import { calculateClipCredits } from "@snipmatic/utils";
 import type {
   ClipModel,
-  JobModel,
   PresignedUrlModel,
   PreviewModel,
   ProcessModel,
+  ProjectModel,
 } from "@snipmatic/utils/types";
 import { status } from "elysia";
 
@@ -14,7 +14,7 @@ import { getVideoInfo } from "../../config/yt-dlp";
 import { inngest } from "../../inngest";
 import { sanitizeFilename } from "./utils";
 
-const PROCESSING_STATUSES: Status[] = [
+const PROCESSING_STATUSES: ProjectStatus[] = [
   "QUEUED",
   "DOWNLOADING",
   "PREPROCESSING",
@@ -24,8 +24,6 @@ const PROCESSING_STATUSES: Status[] = [
   "TRACKING",
   "ANALYZING",
   "FINDING_CLIPS",
-  "GENERATING_SUBTITLES",
-  "GENERATING_CLIPS",
 ];
 
 export abstract class ClipService {
@@ -86,34 +84,34 @@ export abstract class ClipService {
     }
 
     const res = await prisma.$transaction(async (tx) => {
-      const job = await tx.job.create({
+      const project = await tx.project.create({
         data: {
-          creditUsage: estimatedCredits,
           source: payload.source,
+          sourceUrl: payload.sourceUrl,
           sourceKey: payload.sourceKey,
-          searchFrom: payload.searchFrom,
-          searchTo: payload.searchTo,
+          fromDuration: payload.fromDuration,
+          toDuration: payload.toDuration,
+          duration: payload.duration,
           title: payload.title,
-          thumbnail: payload.thumbnail,
+          thumbnailKey: payload.thumbnailKey,
           userId: payload.userId,
-          aspectRatio: payload.aspectRatio,
-          clipType: payload.clipType,
           prompt: payload.prompt,
-          subtitleStyleKey: payload.subtitleStyleKey,
         },
       });
 
-      if (payload.clipType === "MANUAL") {
+      if (payload.processingType === "MANUAL") {
         await tx.clip.create({
           data: {
-            jobId: job.id,
-            from: payload.searchFrom ?? 0,
-            to: payload.searchTo ?? payload.duration,
+            projectId: project.id,
+            processingType: "MANUAL",
+            from: payload.fromDuration ?? 0,
+            to: payload.toDuration ?? payload.duration,
             duration: payload.duration,
             aspectRatio: payload.aspectRatio,
             subtitleStyleKey: payload.subtitleStyleKey,
+            subtitlesEnabled: Boolean(payload.subtitleStyleKey),
             title: payload.title,
-            thumbnail: payload.thumbnail,
+            thumbnailKey: payload.thumbnailKey,
           },
         });
       }
@@ -137,33 +135,37 @@ export abstract class ClipService {
         data: {
           amount: estimatedCredits,
           userId: payload.userId,
-          jobId: job.id,
+          jobId: project.id,
           metadata: {
             source: payload.source,
+            sourceUrl: payload.sourceUrl,
             sourceKey: payload.sourceKey,
-            searchFrom: payload.searchFrom,
-            searchTo: payload.searchTo,
+            fromDuration: payload.fromDuration,
+            toDuration: payload.toDuration,
             title: payload.title,
-            thumbnail: payload.thumbnail,
+            thumbnailKey: payload.thumbnailKey,
           },
         },
       });
 
-      return { job };
+      return { project };
     });
 
     await inngest.send({
       name: "process-video",
       data: {
-        job: res.job,
+        project: res.project,
+        processingType: payload.processingType,
+        aspectRatio: payload.aspectRatio,
+        subtitleStyleKey: payload.subtitleStyleKey,
       },
     });
 
-    return { job: res.job } satisfies ProcessModel["response"];
+    return { project: res.project } satisfies ProcessModel["response"];
   }
 
   static async get(id: string, userId: string) {
-    const job = await prisma.job.findFirst({
+    const project = await prisma.project.findFirst({
       where: {
         id,
         userId,
@@ -173,15 +175,18 @@ export abstract class ClipService {
       },
     });
 
-    if (!job) {
-      throw status(404, "Job not found" satisfies JobModel["notFound"]);
+    if (!project) {
+      throw status(404, "Project not found" satisfies ProjectModel["notFound"]);
     }
 
-    return { job } satisfies JobModel["response"];
+    return { project } satisfies ProjectModel["response"];
   }
 
-  static async list(userId: string, filter: JobModel["listQuery"]["status"]) {
-    const jobs = await prisma.job.findMany({
+  static async list(
+    userId: string,
+    filter: ProjectModel["listQuery"]["status"]
+  ) {
+    const projects = await prisma.project.findMany({
       where: {
         userId,
         status:
@@ -197,20 +202,20 @@ export abstract class ClipService {
       },
     });
 
-    return { jobs } satisfies JobModel["listResponse"];
+    return { projects } satisfies ProjectModel["listResponse"];
   }
 
-  static async updateJob(id: string, data: JobModel["updateBody"]) {
-    const existing = await prisma.job.findUnique({
+  static async updateProject(id: string, data: ProjectModel["updateBody"]) {
+    const existing = await prisma.project.findUnique({
       where: { id },
       select: { id: true },
     });
 
     if (!existing) {
-      throw status(404, "Job not found" satisfies JobModel["notFound"]);
+      throw status(404, "Project not found" satisfies ProjectModel["notFound"]);
     }
 
-    const job = await prisma.job.update({
+    const project = await prisma.project.update({
       where: { id },
       data,
       include: {
@@ -218,7 +223,7 @@ export abstract class ClipService {
       },
     });
 
-    return { job } satisfies JobModel["response"];
+    return { project } satisfies ProjectModel["response"];
   }
 
   static async updateClip(id: string, data: ClipModel["updateBody"]) {

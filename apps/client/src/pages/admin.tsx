@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const tabs = [
   { key: "USERS", label: "Users" },
-  { key: "JOBS", label: "Jobs" },
+  { key: "PROJECTS", label: "Projects" },
 ] as const;
 
 type Tab = (typeof tabs)[number]["key"];
@@ -115,7 +115,7 @@ export function AdminPage() {
     null
   );
   const [users, setUsers] = useState<AdminModel["usersResponse"] | null>(null);
-  const [jobs, setJobs] = useState<AdminModel["jobsResponse"] | null>(null);
+  const [projects, setProjects] = useState<AdminModel["projectsResponse"] | null>(null);
   const [tab, setTab] = useState<Tab>("USERS");
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
@@ -158,7 +158,7 @@ export function AdminPage() {
     const params = { page, limit: 20, q: query || undefined };
 
     const request =
-      tab === "USERS" ? AdminApi.users(params) : AdminApi.jobs(params);
+      tab === "USERS" ? AdminApi.users(params) : AdminApi.projects(params);
 
     request
       .then((data) => {
@@ -166,7 +166,7 @@ export function AdminPage() {
         if (tab === "USERS") {
           setUsers(data as AdminModel["usersResponse"]);
         } else {
-          setJobs(data as AdminModel["jobsResponse"]);
+          setProjects(data as AdminModel["projectsResponse"]);
         }
       })
       .catch(() => {
@@ -185,12 +185,12 @@ export function AdminPage() {
     if (!overview) return 1;
     return Math.max(
       1,
-      ...overview.activity.map((day) => Math.max(day.jobs, day.users))
+      ...overview.activity.map((day) => Math.max(day.projects, day.users))
     );
   }, [overview]);
 
-  const listTotal = tab === "USERS" ? users?.total ?? 0 : jobs?.total ?? 0;
-  const listLimit = tab === "USERS" ? users?.limit ?? 20 : jobs?.limit ?? 20;
+  const listTotal = tab === "USERS" ? users?.total ?? 0 : projects?.total ?? 0;
+  const listLimit = tab === "USERS" ? users?.limit ?? 20 : projects?.limit ?? 20;
   const pageCount = Math.max(1, Math.ceil(listTotal / listLimit));
 
   return (
@@ -218,9 +218,9 @@ export function AdminPage() {
             hint={`${formatNumber(overview.users.last7d)} in 7d · ${formatNumber(overview.users.last30d)} in 30d`}
           />
           <StatCard
-            label="Jobs"
-            value={formatNumber(overview.jobs.total)}
-            hint={`${formatNumber(overview.jobs.processing)} processing`}
+            label="Projects"
+            value={formatNumber(overview.projects.total)}
+            hint={`${formatNumber(overview.projects.processing)} processing`}
           />
           <StatCard
             label="Credits held"
@@ -229,8 +229,8 @@ export function AdminPage() {
           />
           <StatCard
             label="Completed"
-            value={formatNumber(overview.jobs.completed)}
-            hint={`${formatNumber(overview.jobs.failed)} failed`}
+            value={formatNumber(overview.projects.completed)}
+            hint={`${formatNumber(overview.projects.failed)} failed`}
           />
         </div>
       )}
@@ -246,13 +246,13 @@ export function AdminPage() {
                 <div
                   key={day.date}
                   className="flex-1 flex items-end gap-0.5 h-full"
-                  title={`${day.date}: ${day.jobs} jobs, ${day.users} users`}
+                  title={`${day.date}: ${day.projects} projects, ${day.users} users`}
                 >
                   <div
                     className="flex-1 rounded-t-sm bg-primary/80"
                     style={{
-                      height: `${(day.jobs / maxActivity) * 100}%`,
-                      minHeight: day.jobs > 0 ? 4 : 0,
+                      height: `${(day.projects / maxActivity) * 100}%`,
+                      minHeight: day.projects > 0 ? 4 : 0,
                     }}
                   />
                   <div
@@ -268,7 +268,7 @@ export function AdminPage() {
             <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-primary/80" />
-                Jobs
+                Projects
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-muted-foreground/30" />
@@ -290,14 +290,14 @@ export function AdminPage() {
           />
           <BreakdownList
             title="Sources"
-            items={overview.jobs.bySource.map((item) => ({
+            items={overview.projects.bySource.map((item) => ({
               label: item.source === "YOUTUBE" ? "YouTube" : "Upload",
               count: item.count,
             }))}
           />
           <BreakdownList
-            title="Job status"
-            items={overview.jobs.byStatus.map((item) => ({
+            title="Project status"
+            items={overview.projects.byStatus.map((item) => ({
               label: item.status.toLowerCase().replaceAll("_", " "),
               count: item.count,
             }))}
@@ -345,7 +345,7 @@ export function AdminPage() {
           })}
         </div>
         <span className="text-sm text-muted-foreground">
-          {formatNumber(listTotal)} {tab === "USERS" ? "users" : "jobs"}
+          {formatNumber(listTotal)} {tab === "USERS" ? "users" : "projects"}
         </span>
       </div>
 
@@ -384,7 +384,7 @@ export function AdminPage() {
                       {planLabel[user.planTier ?? ""] ?? "No plan"}
                     </Badge>
                     <span className="text-xs text-muted-foreground hidden md:inline">
-                      {user.jobCount} jobs · {formatNumber(user.creditsBalance)}{" "}
+                      {user.projectCount} projects · {formatNumber(user.creditsBalance)}{" "}
                       credits
                     </span>
                   </div>
@@ -399,25 +399,25 @@ export function AdminPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {jobs?.jobs.length ? (
-            jobs.jobs.map((job) => (
-              <Card key={job.id} size="sm">
+          {projects?.projects.length ? (
+            projects.projects.map((project) => (
+              <Card key={project.id} size="sm">
                 <CardContent className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {job.title || "Untitled job"}
+                      {project.title || "Untitled project"}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {job.user.name} · {job.user.email} · {formatDate(job.createdAt)}
+                      {project.user.name} · {project.user.email} · {formatDate(project.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={statusVariant(job.status)}>
-                      {job.status.toLowerCase()}
+                    <Badge variant={statusVariant(project.status)}>
+                      {project.status.toLowerCase()}
                     </Badge>
                     <span className="text-xs text-muted-foreground hidden md:inline">
-                      {job.source === "YOUTUBE" ? "YouTube" : "Upload"} ·{" "}
-                      {formatNumber(job.creditUsage)} credits
+                      {project.source === "YOUTUBE" ? "YouTube" : "Upload"} ·{" "}
+                      {formatNumber(project.clipCount)} clips
                     </span>
                   </div>
                 </CardContent>
@@ -425,7 +425,7 @@ export function AdminPage() {
             ))
           ) : (
             <p className="text-center text-muted-foreground py-12">
-              No jobs found.
+              No projects found.
             </p>
           )}
         </div>

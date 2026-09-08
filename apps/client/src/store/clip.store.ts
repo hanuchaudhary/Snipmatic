@@ -229,14 +229,15 @@ export const useClipStore = create<ClipState & ClipActions>((set, get) => ({
       const duration = state.getProcessingDuration();
 
       const payload: ProcessModel["body"] = {
-        thumbnail: state.videoInfo.thumbnail || undefined,
+        thumbnailKey: state.videoInfo.thumbnail || undefined,
         title: state.videoInfo.title,
         source: state.sourceKey ? "UPLOAD" : "YOUTUBE",
-        sourceKey: state.sourceKey ?? state.url,
-        searchFrom: state.clipRange[0],
-        searchTo: state.clipRange[1],
+        sourceUrl: state.sourceKey ? undefined : state.url,
+        sourceKey: state.sourceKey,
+        fromDuration: state.clipRange[0],
+        toDuration: state.clipRange[1],
         duration,
-        clipType: state.clipMode,
+        processingType: state.clipMode,
         subtitleStyleKey:
           state.clipMode === "AI" && state.subtitles
             ? state.subtitleTemplateId

@@ -32,15 +32,15 @@ export const admin = new Elysia({ prefix: "/admin", tags: ["Admin"] })
     }
   )
   .get(
-    "/jobs",
+    "/projects",
     async ({ query }) => {
-      return AdminService.jobs(query);
+      return AdminService.projects(query);
     },
     {
       admin: true,
-      query: AdminModel.jobsQuery,
+      query: AdminModel.projectsQuery,
       response: {
-        200: AdminModel.jobsResponse,
+        200: AdminModel.projectsResponse,
       },
     }
   );

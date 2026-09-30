@@ -3,7 +3,7 @@ from app.pipeline.transcribe import transcribe
 from app.utils.ai import AI
 from app.utils.config import DOWNLOAD_PATH, PROCESS_PATH
 from app.utils.ffmpeg import FFMPEG
-from app.utils.types import JobPayload
+from app.utils.types import AspectRatio, JobPayload
 from app.utils.types import ClipType, VideoSource
 from app.utils.youtube import download_video
 from dotenv import load_dotenv
@@ -14,12 +14,16 @@ payload = JobPayload(
     id="123",
     userId="123",
     clipType=ClipType.AI,
+    subtitleStyleKey = "default",
     sourceKey="https://youtu.be/ngPkbaZliaU",
     source=VideoSource.YOUTUBE,
     searchFrom=None,
     searchTo=None,
     prompt="",
+    aspectRatio=AspectRatio.RATIO_9_16,
 )
+
+FONT_PATH = "/assets/fonts/Anton.ttf"
 
 def main():
     job_id = payload.id
@@ -38,7 +42,7 @@ def main():
     ai = AI()
     moments = ai.identify_moments(transcript, payload.prompt or "")
 
-    ass_paths = create_subtitles(transcript, moments, DOWNLOAD_PATH)
+    ass_paths = create_subtitles(transcript, moments, DOWNLOAD_PATH, font_path=FONT_PATH)
 
     clips_path = f"{PROCESS_PATH}/clips"
     metadata = {

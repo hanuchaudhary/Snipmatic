@@ -7,11 +7,11 @@ const ytdlp = create("/opt/homebrew/bin/yt-dlp");
 export const getVideoInfo = async (url: string) => {
   try {
     const info = await ytdlp(url, {
-      cookiesFromBrowser: "chrome", // TODO need to be fixed
       dumpSingleJson: true,
       noWarnings: true,
       skipDownload: true,
-    } as any);
+      cookies: process.env.YTDLP_COOKIES,
+    });
     const data = {
       title: info.title,
       thumbnail: info.thumbnail,

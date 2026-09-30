@@ -65,7 +65,7 @@ export function FerrisWheel() {
     >
       <div
         className="absolute top-1/2 left-[calc(100%+12vw)] size-(--wheel) -translate-x-1/2 -translate-y-1/2 max-md:left-[calc(100%+18vw)]"
-        style={{ "--wheel": "min(185vh, 96rem)" } as CSSProperties}
+        style={{ "--wheel": "min(185vh, 106rem)" } as CSSProperties}
       >
         <div className="ferris-spin relative size-full">
           {CLIP_STILLS.map((still, index) => {

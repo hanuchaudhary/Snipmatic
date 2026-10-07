@@ -8,7 +8,6 @@ import { LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { FullWidthDivider } from "@/components/full-width-divider";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,24 +94,23 @@ export default function ResetPassword() {
 
   if (tokenError) {
     return (
-      <div className="relative w-full overflow-hidden px-4 md:h-screen">
-        <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center border-x *:px-6">
+      <div className="relative flex min-h-screen w-full items-center justify-center">
+        <div className="relative mx-auto flex w-full max-w-lg flex-col justify-center px-6">
           <div className="flex flex-col space-y-2">
-            <Link aria-label="Home" to="/" className="w-fit -ml-2">
+            <Link aria-label="Home" to="/" className="w-fit">
               <Logo />
             </Link>
-            <div className="space-y-1">
-              <h1 className="font-semibold text-xl tracking-wide text-destructive">
+            <div className="space-y-2">
+              <h1 className="heading text-destructive">
                 Invalid reset link
               </h1>
-              <p className="text-base text-muted-foreground">
+              <p className="subheading">
                 This password reset link is invalid or has expired.
               </p>
             </div>
           </div>
 
-          <div className="relative my-6 flex size-full flex-col gap-3 py-8">
-            <FullWidthDivider position="top" />
+          <div className="relative my-8 flex w-full flex-col gap-3 py-8">
             <Button
               onClick={() => navigate("/forgot-password")}
               className="w-full"
@@ -123,7 +121,6 @@ export default function ResetPassword() {
             <Button variant="outline" className="w-full">
               <Link to="/login">Back to sign in</Link>
             </Button>
-            <FullWidthDivider position="bottom" />
           </div>
 
           <p className="text-center text-muted-foreground text-sm">
@@ -149,27 +146,25 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="relative w-full overflow-hidden px-4 md:h-screen">
-      <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center border-x *:px-6">
+    <div className="relative flex min-h-screen w-full items-center justify-center">
+      <div className="relative mx-auto flex w-full max-w-lg flex-col justify-center px-6">
         {!passwordReset ? (
           <>
-            <div className="flex flex-col space-y-6">
+            <div className="flex flex-col space-y-2">
               <Link aria-label="Home" to="/" className="w-fit">
-                <Logo className="h-5" />
+                <Logo />
               </Link>
-              <div className="space-y-1">
-                <h1 className="font-semibold text-xl tracking-wide">
+              <div className="space-y-2">
+                <h1 className="heading">
                   Reset password
                 </h1>
-                <p className="text-base text-muted-foreground">
+                <p className="subheading">
                   Enter your new password below.
                 </p>
               </div>
             </div>
 
-            <div className="relative my-6 flex size-full flex-col gap-4 py-8">
-              <FullWidthDivider position="top" />
-
+            <div className="relative my-8 flex w-full flex-col gap-4 py-8">
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
@@ -224,7 +219,6 @@ export default function ResetPassword() {
                   <Button
                     type="submit"
                     className="w-full"
-
                     disabled={isLoading || !token}
                   >
                     {isLoading ? "Resetting..." : "Reset password"}
@@ -240,33 +234,29 @@ export default function ResetPassword() {
                   Back to sign in
                 </Link>
               </div>
-
-              <FullWidthDivider position="bottom" />
             </div>
           </>
         ) : (
           <>
-            <div className="flex flex-col space-y-6">
+            <div className="flex flex-col space-y-2">
               <Link aria-label="Home" to="/" className="w-fit">
-                <Logo className="h-5" />
+                <Logo />
               </Link>
-              <div className="space-y-1 text-center">
+              <div className="space-y-2 text-center">
                 <IconCircleCheckFilled className="mx-auto h-12 w-12 text-emerald-500" />
-                <h1 className="font-semibold text-xl tracking-wide">
+                <h1 className="heading">
                   Password reset successful
                 </h1>
-                <p className="text-base text-muted-foreground">
+                <p className="subheading">
                   You will be redirected to sign in in a few seconds.
                 </p>
               </div>
             </div>
 
-            <div className="relative my-6 flex size-full flex-col gap-3 py-8">
-              <FullWidthDivider position="top" />
+            <div className="relative my-8 flex w-full flex-col gap-3 py-8">
               <Button onClick={() => navigate("/login")} className="w-full">
                 Go to sign in
               </Button>
-              <FullWidthDivider position="bottom" />
             </div>
           </>
         )}

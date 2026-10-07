@@ -62,7 +62,7 @@ export function SocialAuth({ mode = "signin" }: SocialAuthProps) {
   const label = mode === "signup" ? "Sign up" : "Continue";
 
   return (
-    <div className="flex flex-col gap-2 border-y">
+    <div className="flex flex-col gap-2 border rounded-full">
       <button
         type="button"
         disabled={loadingProvider !== null}

@@ -29,7 +29,7 @@ export abstract class PaymentService {
     return prisma.userBilling.create({
       data: {
         userId,
-        planTier: DbPlanTier.STARTER,
+        planTier: DbPlanTier.FREE,
         creditsBalance: 0,
       },
     });
@@ -37,7 +37,7 @@ export abstract class PaymentService {
 
   static async getCredits(userId: string) {
     const billing = await this.getOrCreateBilling(userId);
-
+    console.log(billing);
     return {
       balance: billing.creditsBalance,
       planTier: planTierFromDb(billing.planTier),
@@ -315,7 +315,7 @@ export abstract class PaymentService {
       where: { id: billing.id },
       data: {
         stripeSubscriptionId: null,
-        planTier: DbPlanTier.STARTER,
+        planTier: DbPlanTier.FREE,
       },
     });
   }

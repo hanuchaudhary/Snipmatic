@@ -1,14 +1,14 @@
-export const PLAN_TIERS = ["influencer", "studio"] as const;
+export const PLAN_TIERS = ["free", "clip", "studio"] as const;
 
 export type PlanTier = (typeof PLAN_TIERS)[number];
 
 export const PLANS = {
-  influencer: {
-    name: "Influencer",
-    monthlyCredits: 500,
-    price: 49,
+  clip: {
+    name: "Clip",
+    monthlyCredits: 200,
+    price: 9,
     features: [
-      "500 credits per month",
+      "200 credits per month",
       "Up to 500 minutes of processing",
       "Subtitles support",
       "Template access",
@@ -18,17 +18,24 @@ export const PLANS = {
   },
   studio: {
     name: "Studio",
-    monthlyCredits: 2000,
-    price: 149,
+    monthlyCredits: 500,
+    price: 19,
     features: [
-      "2,000 credits per month",
-      "Up to 2,000 minutes of processing",
+      "500 credits per month",
+      "Up to 500 minutes of processing",
       "All templates",
       "Subtitles support",
       "Priority support",
       "Team-ready workflows",
     ],
     highlighted: true,
+  },
+  free: {
+    name: "Free",
+    monthlyCredits: 0,
+    price: 0,
+    features: [],
+    highlighted: false,
   },
 } as const satisfies Record<
   PlanTier,

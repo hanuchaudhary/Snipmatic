@@ -50,7 +50,7 @@ export default function PricingSection() {
         </div>
       </div>
       <div className="grid gap-4 grid-cols-2 mt-20">
-        {PLAN_TIERS.map((tier) => {
+        {PLAN_TIERS.filter((tier) => tier !== "free").map((tier) => {
           const plan = PLANS[tier];
           const isLoading = loadingTier === tier;
 

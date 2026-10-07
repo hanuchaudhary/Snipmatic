@@ -10,9 +10,11 @@
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
     "db:deploy": "turbo run db:deploy",
-    "db:studio": "turbo run db:studio"
+    "db:studio": "turbo run db:studio",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "prettier": "^3.7.4",
     "turbo": "^2.10.9",
     "typescript": "5.9.2"

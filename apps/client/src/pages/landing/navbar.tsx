@@ -1,362 +1,238 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router";
-
-import {
-  ArrowUpRight,
-  Captions,
-  Clapperboard,
-  Menu,
-  ScanFace,
-  Scissors,
-  Share2,
-  Sparkles,
-  Wand2,
-  X,
-} from "lucide-react";
+import { Link, NavLink } from "react-router";
+import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
-import { ThemeSwitch } from "@/components/theme-switch";
 import { useSession } from "@/lib/auth/auth.client";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
-import {
-  MotionNavigationMenu,
-  MotionNavigationMenuContent,
-  MotionNavigationMenuItem,
-  MotionNavigationMenuLink,
-  MotionNavigationMenuList,
-  MotionNavigationMenuTrigger,
-} from "@/components/unlumen-ui/motion-navigation-menu";
 import { cn } from "@/lib/utils";
-
-const listHighlightClassName = "bg-white/10 rounded-lg";
-const contentHighlightClassName =
-  "bg-primary/10 rounded-lg ring-1 ring-primary/15";
-
-const PRODUCTS = [
-  {
-    href: "/signup",
-    title: "Clip studio",
-    description: "Cut long videos into shorts that actually travel.",
-    icon: Clapperboard,
-  },
-  {
-    href: "/signup",
-    title: "Captions",
-    description: "Burn-in captions with word-level timing.",
-    icon: Captions,
-  },
-  {
-    href: "/signup",
-    title: "Exports",
-    description: "TikTok, Reels, Shorts — one pass, every ratio.",
-    icon: Share2,
-  },
-];
 
 const FEATURES = [
   {
-    href: "/signup",
-    title: "Viral detection",
-    description: "Surface the moments that hook.",
-    icon: Sparkles,
+    title: "Viral Detection",
+    description: "Find the moments most likely to perform.",
   },
   {
-    href: "/signup",
-    title: "Smart tracking",
-    description: "Keep faces and subjects in frame.",
-    icon: ScanFace,
+    title: "AI Editing",
+    description: "Automatically cut and structure your clips.",
   },
   {
-    href: "/signup",
-    title: "AI editing",
-    description: "Cut, pace, and polish without a timeline.",
-    icon: Wand2,
+    title: "Smart Captions",
+    description: "Generate accurate word-level captions.",
+  },
+  {
+    title: "Face Tracking",
+    description: "Keep speakers and subjects in frame.",
+  },
+  {
+    title: "Auto Reframe",
+    description: "Turn long videos into vertical content.",
+  },
+  {
+    title: "Multi Platform",
+    description: "Export for Shorts, Reels and TikTok.",
   },
 ];
 
-function LandingNavMenu() {
-  return (
-    <MotionNavigationMenu
-      className="hidden md:flex"
-      viewportClassName="bg-background/85 border-white/10 shadow-none backdrop-blur-xl"
-      springStiffness={350}
-      springDamping={32}
-    >
-      <MotionNavigationMenuList highlightClassName={listHighlightClassName}>
-        <MotionNavigationMenuItem value="product">
-          <MotionNavigationMenuTrigger className="text-muted-foreground">
-            Product
-          </MotionNavigationMenuTrigger>
-          <MotionNavigationMenuContent
-            highlightClassName={contentHighlightClassName}
-          >
-            <div className="grid w-[500px] grid-cols-[1fr_1.25fr] gap-2">
-              <MotionNavigationMenuLink
-                href="/signup"
-                className="bg-background/70 min-h-44 justify-between rounded-lg p-4"
-              >
-                <span className="bg-background flex size-9 items-center justify-center rounded-lg border">
-                  <Scissors className="size-4" />
-                </span>
-                <span className="space-y-1">
-                  <span className="block text-sm font-medium">Studio</span>
-                  <span className="text-muted-foreground block text-xs">
-                    Drop a podcast or long take. Walk away with clips.
-                  </span>
-                </span>
-              </MotionNavigationMenuLink>
-              <div className="grid grid-cols-1 gap-0.5">
-                {PRODUCTS.map((product) => (
-                  <MotionNavigationMenuLink key={product.title} href={product.href}>
-                    <span className="flex items-center justify-between gap-2 text-sm font-medium">
-                      <span className="flex items-center gap-2">
-                        <product.icon className="size-4" />
-                        {product.title}
-                      </span>
-                      <ArrowUpRight className="size-3" />
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {product.description}
-                    </span>
-                  </MotionNavigationMenuLink>
-                ))}
-              </div>
-            </div>
-          </MotionNavigationMenuContent>
-        </MotionNavigationMenuItem>
-
-        <MotionNavigationMenuItem value="features">
-          <MotionNavigationMenuTrigger className="text-muted-foreground">
-            Features
-          </MotionNavigationMenuTrigger>
-          <MotionNavigationMenuContent
-            highlightClassName={contentHighlightClassName}
-          >
-            <div className="grid w-[360px] gap-0.5">
-              {FEATURES.map((feature) => (
-                <MotionNavigationMenuLink key={feature.title} href={feature.href}>
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    <feature.icon className="size-4" />
-                    {feature.title}
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {feature.description}
-                  </span>
-                </MotionNavigationMenuLink>
-              ))}
-            </div>
-          </MotionNavigationMenuContent>
-        </MotionNavigationMenuItem>
-
-        <MotionNavigationMenuItem>
-          <MotionNavigationMenuLink
-            href="/pricing"
-            className="px-4 py-2 text-sm font-medium text-muted-foreground"
-          >
-            Pricing
-          </MotionNavigationMenuLink>
-        </MotionNavigationMenuItem>
-      </MotionNavigationMenuList>
-    </MotionNavigationMenu>
-  );
-}
-
 export function Navbar() {
   const { data: session } = useSession();
-  const pathname = useLocation().pathname;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const isLanding = pathname === "/";
+  const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
 
-  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  const links = [
+    { label: "Pricing", href: "/pricing" },
+  ];
 
   return (
     <>
-      <header className={cn("absolute w-full left-1/2 -translate-x-1/2 md:my-4 top-0 z-60 mx-auto md:backdrop-blur-none backdrop-blur-sm", !isLanding ? "max-w-7xl" : "px-10")}>
-        <div className="md:px-8 px-4 py-2 grid grid-cols-[1fr_auto_1fr] items-center">
-          <div className="flex items-center gap-4 justify-self-start">
-            {(isLanding || !session?.user) && (
-              <Link
-                className="flex items-center justify-center"
-                to={session?.user ? "/dashboard" : "/"}
-              >
-                <img src="/logo.png" className="h-8" alt="Snipmatic Logo" />
-                <span>Snipmatic</span>
-              </Link>
-            )}
-          </div>
+      <header
+        className={cn(
+          "fixed left-0 right-0 top-0 z-50 bg-background pt-6",
+          isFeaturesOpen && "border-b"
+        )}
+      >
+        <div className="max-w-7xl mx-auto">
 
-          {isLanding ? <LandingNavMenu /> : <div />}
-
-          <div className="hidden md:flex items-center gap-2 justify-self-end">
-            <ThemeSwitch />
-            {session?.user ? (
-              isLanding ? (
-                <Link to="/dashboard" className="px-4 text-xs">
-                  Dashboard
+          <motion.div
+            className="overflow-hidden"
+            initial={false}
+            animate={{
+              height: isFeaturesOpen ? "auto" : 64,
+            }}
+            transition={{
+              duration: 0.25,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
+            <div className="flex items-center justify-between px-6 md:px-0">
+              <div className="flex items-center justify-center gap-16">
+                <Link
+                  to={session?.user ? "/dashboard" : "/"}
+                  className="flex items-center"
+                >
+                  <img
+                    src="/logo.png"
+                    className="h-9"
+                    alt="Snipmatic Logo"
+                  />
                 </Link>
-              ) : null
-            ) : (
-              <Link
-                to="/login"
-                className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
-              >
-                Sign in
-              </Link>
-            )}
-            {session?.user && <ProfileDropdown />}
-          </div>
 
-          <div className="md:hidden justify-self-end col-start-3">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleMobileMenu}
-              className="p-2 hover:bg-accent rounded-lg transition-colors"
-              aria-label="Toggle mobile menu"
-            >
-              <AnimatePresence mode="wait">
-                {isMobileMenuOpen ? (
-                  <motion.div
-                    key="close"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                <nav className="hidden items-center gap-7 md:flex">
+                  <Link
+                    onMouseEnter={() => setIsFeaturesOpen(true)}
+                    onMouseLeave={() => setIsFeaturesOpen(false)}
+                    to="#features"
+                    className={cn(
+                      "subheading transition-colors hover:text-foreground! text-base!",
+                    )}
                   >
-                    <X size={24} />
-                  </motion.div>
+                    Features
+                  </Link>
+
+                  {links.map((link) => (
+                    <NavLink
+                      key={link.href}
+                      to={link.href}
+                      className={({ isActive }) => cn("subheading transition-colors hover:text-foreground! text-base!", isActive && "text-primary")}
+                    >
+                      {link.label}
+                    </NavLink>
+                  ))}
+                </nav>
+
+              </div>
+              <div className="hidden items-center md:flex">
+                {session?.user ? (
+                  <ProfileDropdown />
                 ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                  <NavLink
+                    to="/login"
+                    className={({ isActive }) => cn("rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-background", isActive && "text-primary")}
                   >
-                    <Menu size={24} />
-                  </motion.div>
+                    Sign in
+                  </NavLink>
                 )}
-              </AnimatePresence>
-            </motion.button>
-          </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen((open) => !open)}
+                className="rounded-md p-2 hover:bg-accent md:hidden"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="size-5" />
+                ) : (
+                  <Menu className="size-5" />
+                )}
+              </button>
+            </div>
+
+            <AnimatePresence initial={false}>
+              {isFeaturesOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="hidden md:block"
+                >
+                  <div className="grid grid-cols-2 gap-x-20 px-8 py-10">
+                    <div>
+                      <p className="mb-6 text-sm text-muted-foreground">
+                        Explore Features
+                      </p>
+
+                      <div className="space-y-6">
+                        {FEATURES.slice(0, 3).map((feature) => (
+                          <Link
+                            key={feature.title}
+                            to="#features"
+                            className="block"
+                          >
+                            <div className="text-2xl tracking-tight">
+                              {feature.title}
+                            </div>
+                            <div className="mt-1 text-sm text-muted-foreground">
+                              {feature.description}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="mb-6 text-sm text-muted-foreground">
+                        More Features
+                      </p>
+
+                      <div className="space-y-5">
+                        {FEATURES.slice(3).map((feature) => (
+                          <NavLink
+                            end
+                            key={feature.title}
+                            to="#features"
+                            className={({ isActive }) => cn("block text-lg transition-colors hover:text-muted-foreground", isActive && "text-primary")}
+                          >
+                            {feature.title}
+                          </NavLink>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </div>
       </header>
 
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
-              onClick={closeMobileMenu}
-            />
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-40 bg-background pt-16 md:hidden">
+          <div className="flex h-full flex-col border-t">
+            <nav className="flex flex-1 flex-col p-6">
+              <Link
+                to="/features"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="border-b py-4 text-lg"
+              >
+                Features
+              </Link>
 
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 w-[76vw] rounded-l-3xl h-full bg-background border-l shadow-xl z-50 md:hidden"
-            >
-              <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between p-4 border-b">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="border-b py-4 text-lg"
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              <div className="mt-auto">
+                {session?.user ? (
                   <Link
-                    className="flex items-center gap-2"
-                    to="/"
-                    onClick={closeMobileMenu}
+                    to="/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-medium text-background"
                   >
-                    <img src="/logo.png" className="h-8" alt="Snipmatic Logo" />
-                    <span className="text-lg font-semibold">Snipmatic</span>
+                    Dashboard
                   </Link>
-                  <button
-                    onClick={closeMobileMenu}
-                    className="p-2 hover:bg-accent rounded-lg transition-colors"
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-medium text-background"
                   >
-                    <X size={20} />
-                  </button>
-                </div>
-
-                <nav className="flex-1 p-4 overflow-y-auto">
-                  <div className="space-y-6 mt-2">
-                    <div className="space-y-1">
-                      <p className="px-3 text-[11px] font-medium tracking-widest uppercase text-muted-foreground">
-                        Product
-                      </p>
-                      {PRODUCTS.map((product) => (
-                        <Link
-                          key={product.title}
-                          to={product.href}
-                          onClick={closeMobileMenu}
-                          className="block rounded-md px-3 py-2 text-sm hover:bg-accent"
-                        >
-                          {product.title}
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="space-y-1">
-                      <p className="px-3 text-[11px] font-medium tracking-widest uppercase text-muted-foreground">
-                        Features
-                      </p>
-                      {FEATURES.map((feature) => (
-                        <Link
-                          key={feature.title}
-                          to={feature.href}
-                          onClick={closeMobileMenu}
-                          className="block rounded-md px-3 py-2 text-sm hover:bg-accent"
-                        >
-                          {feature.title}
-                        </Link>
-                      ))}
-                    </div>
-                    <Link
-                      to="/pricing"
-                      onClick={closeMobileMenu}
-                      className="block rounded-md px-3 py-2 text-sm hover:bg-accent"
-                    >
-                      Pricing
-                    </Link>
-                    <div className="space-y-2 pt-2">
-                      {session?.user ? (
-                        <Link
-                          to="/dashboard"
-                          onClick={closeMobileMenu}
-                          className="block rounded-md bg-primary px-3 py-2 text-sm text-background text-center"
-                        >
-                          Dashboard
-                        </Link>
-                      ) : (
-                        <>
-                          <Link
-                            to="/login"
-                            onClick={closeMobileMenu}
-                            className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-primary"
-                          >
-                            Sign in
-                          </Link>
-                          <Link
-                            to="/signup"
-                            onClick={closeMobileMenu}
-                            className="block rounded-md bg-primary px-3 py-2 text-center text-sm font-bold text-background"
-                          >
-                            Start free
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </nav>
-
-                <div className="p-4 flex items-center justify-between border-t border-border">
-                  <ThemeSwitch />
-                </div>
+                    Sign in
+                  </Link>
+                )}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </nav>
+          </div>
+        </div>
+      )}
     </>
   );
 }

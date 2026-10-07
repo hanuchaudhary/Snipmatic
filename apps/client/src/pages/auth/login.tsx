@@ -7,7 +7,6 @@ import { AtSignIcon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { FullWidthDivider } from "@/components/full-width-divider";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,29 +95,27 @@ export function LoginPage() {
   };
 
   return (
-    <div className="relative w-full overflow-hidden font-geist px-4 md:h-screen">
-      <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center border-x *:px-6">
-        <div className="flex flex-col space-y-2">
+    <div className="relative w-full overflow-hidden md:h-screen">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center border-x">
+        <div className="flex flex-col space-y-2 px-4">
           <Link aria-label="Home" to="/" className="w-fit -ml-2">
             <Logo />
           </Link>
           <div className="space-y-1">
-            <h1 className="font-heading text-2xl tracking-wide">
+            <h1 className="heading">
               Hey, welcome!
             </h1>
-            <p className="text-base text-muted-foreground">
-              Log in to your Snipmatic Account
+            <p className="subheading text-[1.2rem]!">
+              Log in to your account
             </p>
           </div>
         </div>
 
         <div className="relative my-6 flex size-full flex-col gap-4 py-8">
-          <FullWidthDivider position="top" />
-
           <SocialAuth mode="signin" />
 
           <div className="flex items-center gap-3 justify-center">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase">
+            <span className="subheading text-[1.2rem]! text-muted-foreground!">
               or
             </span>
           </div>
@@ -190,7 +187,6 @@ export function LoginPage() {
             </form>
           </Form>
 
-          <FullWidthDivider position="bottom" />
         </div>
         <div className="text-center text-sm text-muted-foreground">
           Don't have an account?{" "}

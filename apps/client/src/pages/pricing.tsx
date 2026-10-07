@@ -5,9 +5,15 @@ import { toast } from "sonner";
 import PricingSection from "@/components/pricing-section";
 import { Button } from "@/components/ui/button";
 import { PaymentApi } from "@/lib/api/payment";
+import { Navbar } from "./landing/navbar";
 
 export function PricingPage() {
-  return <PricingSection />;
+  return <main className="relative z-20 w-full">
+    <Navbar />
+    <div className="max-w-7xl mx-auto py-20">
+      <PricingSection />
+    </div>
+  </main>;
 }
 
 export function PricingSuccessPage() {

@@ -74,8 +74,27 @@ const CLIENTS: HeroCarouselItem[] = [
 
 export function ClientsSection() {
   return (
-    <section className="relative h-[min(88svh,52rem)] px-20">
-      <HeroCarousel items={CLIENTS} defaultIndex={0} autoplay autoplayDelay={4500} />
+    <section className="relative py-20 max-w-7xl mx-auto">
+      <div className="grid grid-cols-2">
+        <h2 className="heading">
+          Clients showcase
+        </h2>
+        <div>
+          <div className="heading">
+            <span>
+              100+
+            </span>
+            <br />
+            <span className="text-muted-foreground">
+              clients
+            </span>
+          </div>
+          <p className="subheading text-[1.2rem]! mt-4">
+            We're proud to work with some of the best brands in the world.
+          </p>
+        </div>
+      </div>
+      <HeroCarousel className="mt-20" items={CLIENTS} defaultIndex={0} autoplay autoplayDelay={4500} />
     </section>
   )
 }

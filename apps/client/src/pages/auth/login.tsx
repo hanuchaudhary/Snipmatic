@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate } from "react-router";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AtSignIcon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -17,15 +16,9 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import { SessionPageLoader } from "@/components/ui/session-page-loader";
 import { SocialAuth } from "@/components/ui/social-auth";
 import { signIn, useSession } from "@/lib/auth/auth.client";
-import { Navbar } from "../landing/navbar";
 import { AuthLayout } from "./layout";
 import { Input } from "@/components/ui/input";
 

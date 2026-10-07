@@ -11,7 +11,7 @@ export function Dashboard() {
     "PROCESSING"
   );
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, _] = useState(false);
 
   const processingTasks = tasks.filter(
     (task) => !["COMPLETED", "FAILED"].includes(task.status.toUpperCase())

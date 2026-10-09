@@ -163,20 +163,10 @@ input:-webkit-autofill:active {
   corner-shape: bevel;
 }
 
-@keyframes ferris-spin {
-  to {
-    transform: rotate(-1turn);
-  }
+.subheading{
+  @apply text-neutral-400/90 font-light text-[1.4rem] text-pretty max-w-2xl leading-tight tracking-tight;
 }
 
-.ferris-spin {
-  transform-origin: center;
-  animation: ferris-spin 42s linear infinite;
-  will-change: transform;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ferris-spin {
-    animation: none;
-  }
+.heading{
+  @apply text-foreground font-light text-[2.25rem] text-balance max-w-2xl leading-tight tracking-tighter;
 }

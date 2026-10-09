@@ -21,6 +21,7 @@ const buttonVariants = cva(
           "hover:bg-none hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         box: "border rounded-none py-2 px-5 font-semibold text-muted-foreground bg-secondary/40 hover:bg-secondary/50 dark:bg-secondary/30 dark:hover:bg-secondary/40 ", 
+        rounded: "rounded-full bg-primary text-primary-foreground",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

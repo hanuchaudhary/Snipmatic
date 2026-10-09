@@ -120,7 +120,8 @@ export function HeroCarousel({
   if (!active) return null
 
   const lines = active.title.split("\n")
-  const accent = active.accent ?? "#8a8a8a"
+  // const accent = active.accent ?? "#8a8a8a"
+  const accent = "#000000"
 
   return (
     <div
@@ -129,7 +130,7 @@ export function HeroCarousel({
       aria-roledescription="carousel"
       aria-label="Client edits"
       className={cn(
-        "relative h-full min-h-[24rem] w-full overflow-hidden bg-black text-white select-none",
+        "relative h-full min-h-96 w-full overflow-hidden bg-black text-white select-none",
         className
       )}
     >
@@ -167,7 +168,7 @@ export function HeroCarousel({
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/45" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/45" />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-[0.22] mix-blend-overlay"
@@ -186,14 +187,14 @@ export function HeroCarousel({
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.h2
             key={index}
-            className="font-semibold leading-[0.88] tracking-[-0.03em]"
+            className="heading"
             style={{ fontSize: Math.max(24, Math.round(box.h * TITLE)) }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.18 } }}
           >
             {lines.map((line, i) => (
-              <span key={i} className="block overflow-hidden">
+              <span key={i} className={cn("block overflow-hidden", i === 0 ? "text-primary" : "text-muted-foreground")}>
                 <motion.span
                   className="block"
                   initial={{ y: "110%" }}

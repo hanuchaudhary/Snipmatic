@@ -47,13 +47,13 @@ export const Router = () => {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
             </Route>
 
             <Route element={<ProtectedRoute />}>
                 <Route element={<DashboardLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/clips" element={<ClipsPage />} />
-                    <Route path="/pricing" element={<PricingPage />} />
                     <Route path="/pricing/success" element={<PricingSuccessPage />} />
                     <Route path="/pricing/cancel" element={<PricingCancelPage />} />
                     <Route element={<AdminProtectedRoute />}>

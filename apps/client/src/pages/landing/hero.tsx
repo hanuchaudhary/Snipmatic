@@ -10,8 +10,36 @@ import { setPendingYoutubeUrl } from "@/lib/pending-clip-url";
 import { useClipStore } from "@/store/clip.store";
 
 import { BorderBeam } from "../../components/landing/border-beam-input";
-import { FerrisWheel } from "../../components/landing/ferris-wheel";
 import { Button } from "@/components/ui/button";
+const FEATURED_VIDEOS = [
+  {
+    id: "1",
+    title: "The billing stack for intelligence era",
+    url: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjBuMG0xZGw2bTZkYWkybjl3M3g0bnRlN3poNm9mZjRwNnlwcGI4OCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xUA7aZDG3JgiJV5oKQ/giphy.gif",
+  },
+
+  {
+    id: "2",
+    title: "The billing stack for intelligence era",
+    url: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHpjaWlyZHl1NjJ1Y2NicjFldXZkeWZ3bHRkNDJpYjVqZXBxbmIybCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PhnJmUaxgZJWKLGZmW/giphy.gif"
+  },
+
+  {
+    id: "3",
+    title: "The billing stack for intelligence era",
+    url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjJkeWppNjZldHEyNjl4OXh6b3R5cmdwNmx0enB3YjBndDh1aHRwcCZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/26vIdt7XgRFb9rejm/giphy.gif"
+  },
+  {
+    id: "3",
+    title: "The billing stack for intelligence era",
+    url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHE5dG44OHNzdGRxY2Vvb2lta2FoZ3l6YmgyanoyMnNpaGZycWwxbSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/451shsqh5nJ9UqDElR/giphy.gif"
+  },
+  {
+    id: "3",
+    title: "The billing stack for intelligence era",
+    url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHE5dG44OHNzdGRxY2Vvb2lta2FoZ3l6YmgyanoyMnNpaGZycWwxbSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/4aCi2Ov0wtYpG/giphy.gif"
+  },
+];
 
 function ClipLinkBar() {
   const navigate = useNavigate();
@@ -62,7 +90,7 @@ function ClipLinkBar() {
             onChange={(e) => setValue(e.target.value)}
             placeholder="Paste a YouTube link"
             autoComplete="off"
-            className="min-w-0 flex-1 bg-transparent text-[20px] leading-[18px] text-foreground outline-none placeholder:text-muted-foreground/55"
+            className="min-w-0 flex-1 bg-transparent subheading text-foreground outline-none placeholder:text-muted-foreground/55"
           />
         </div>
       </BorderBeam>
@@ -79,16 +107,15 @@ function ClipLinkBar() {
 export function HeroSection() {
   return (
     <main className="relative overflow-hidden">
-      <div className="relative flex min-h-svh w-full items-center px-6 md:px-20">
+      <div className="relative flex min-h-[calc(100vh-16rem)] w-full items-center px-6 md:p-0 max-w-7xl mx-auto">
         <div className="relative z-10 w-full max-w-xl">
-          <h1 className="text-[clamp(1.5rem,2.5vw,2.25rem)] leading-tight tracking-tight text-balance">
+          <h1 className="heading">
             Paste a YouTube link.
             <br /> <span className="text-muted-foreground">
-
               Get clips you can post today.
             </span>
           </h1>
-          <p className="mt-8 text-muted-foreground text-base text-pretty max-w-2xl">
+          <p className="mt-8 subheading">
             Snipmatic finds the highlights, crops them for TikTok, Reels, and
             Shorts, and burns in captions. No editor. No timeline.
           </p>
@@ -96,8 +123,34 @@ export function HeroSection() {
             <ClipLinkBar />
           </div>
         </div>
-        <FerrisWheel />
       </div>
-    </main>
+      <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-hidden relative py-10">
+        <div
+          className="absolute h-3 top-0 left-0 w-full"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(90deg, transparent 0, transparent 26px, #555 26px, #555 27px)",
+            backgroundPosition: "61px 0",
+            backgroundSize: "27.5px 100%",
+          }}
+        />
+        <div
+          className="absolute h-3 bottom-0 left-0 w-full"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(90deg, transparent 0, transparent 26px, #555 26px, #555 27px)",
+            backgroundPosition: "61px 0",
+            backgroundSize: "27.5px 100%",
+          }}
+        />
+        {
+          FEATURED_VIDEOS.map((video) => (
+            <div key={video.id} className="h-130 aspect-9/16 border">
+              <img src={video.url} alt={video.title} width={100} height={100} className="w-full h-full object-cover" />
+            </div>
+          ))
+        }
+      </div>
+    </main >
   );
 }

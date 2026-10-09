@@ -8,8 +8,8 @@ datasource db {
 }
 
 enum PlanTier {
-  STARTER
-  INFLUENCER
+  FREE
+  CLIP
   STUDIO
 }
 
@@ -85,7 +85,7 @@ model UserBilling {
   userId               String              @unique
   stripeCustomerId     String?             @unique
   stripeSubscriptionId String?             @unique
-  planTier             PlanTier            @default(STARTER)
+  planTier             PlanTier            @default(FREE)
   creditsBalance       Int                 @default(30)
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt

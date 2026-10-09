@@ -1,7 +1,5 @@
-"use client"
-
-import { useTheme } from "next-themes"
-import { Toaster as Sonner, ToasterProps } from "sonner"
+import { Toaster as Sonner, type ToasterProps } from "sonner"
+import { useTheme } from "../provider/theme-provider"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()

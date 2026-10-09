@@ -3,10 +3,10 @@ import type { PlanTier } from "@snipmatic/utils";
 
 export const planTierToDb = (planTier: PlanTier): DbPlanTier => {
   switch (planTier) {
-    case "starter":
-      return DbPlanTier.STARTER;
-    case "influencer":
-      return DbPlanTier.INFLUENCER;
+    case "free":
+      return DbPlanTier.FREE;
+    case "clip":
+      return DbPlanTier.CLIP;
     case "studio":
       return DbPlanTier.STUDIO;
   }
@@ -14,10 +14,10 @@ export const planTierToDb = (planTier: PlanTier): DbPlanTier => {
 
 export const planTierFromDb = (planTier: DbPlanTier): PlanTier => {
   switch (planTier) {
-    case DbPlanTier.STARTER:
-      return "starter";
-    case DbPlanTier.INFLUENCER:
-      return "influencer";
+    case DbPlanTier.FREE:
+      return "free";
+    case DbPlanTier.CLIP:
+      return "clip";
     case DbPlanTier.STUDIO:
       return "studio";
   }

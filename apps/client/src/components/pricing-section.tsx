@@ -1,9 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import { IconLoader2 } from "@tabler/icons-react";
+import { IconCheckFilled, IconLoader2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth/auth.client";
 import { PaymentApi } from "@/lib/api/payment";
 import { PLAN_TIERS, PLANS, type PlanTier } from "@snipmatic/utils";
@@ -36,14 +35,22 @@ export default function PricingSection() {
   };
 
   return (
-    <div className="w-full px-8 pt-16 pb-20">
-      <h2 className="md:text-2xl">Pricing</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Monthly plans. Credits refresh each billing cycle.
-      </p>
-
-      <div className="mt-10 grid gap-4 md:grid-cols-3">
-        {PLAN_TIERS.map((tier) => {
+    <div className="w-full py-20">
+      <div className="grid grid-cols-2">
+        <h2 className="heading">Pricing</h2>
+        <div>
+          <p className="heading">
+            <span>Monthly plans.</span>
+            <br />
+            <span className="text-muted-foreground">Credits refresh each billing cycle.</span>
+          </p>
+          <p className="subheading text-[1.2rem]! mt-4">
+            Choose the plan that's right for you and get started today with 100 credits. Credits refresh each billing cycle.
+          </p>
+        </div>
+      </div>
+      <div className="grid gap-4 grid-cols-2 mt-20">
+        {PLAN_TIERS.filter((tier) => tier !== "free").map((tier) => {
           const plan = PLANS[tier];
           const isLoading = loadingTier === tier;
 
@@ -51,33 +58,34 @@ export default function PricingSection() {
             <div
               key={tier}
               className={cn(
-                "flex flex-col gap-6 rounded-2xl border p-6",
-                plan.highlighted && "border-foreground/20 bg-muted/30"
+                "flex flex-col gap-6 p-14 min-h-160 border",
+                plan.highlighted && "bg-secondary/20 border-secondary/20"
               )}
             >
               <div>
-                <p className="text-sm text-muted-foreground">{plan.name}</p>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-light">${plan.price}</span>
-                  <span className="text-sm text-muted-foreground">/month</span>
+                <p className="subheading text-[1.2rem]! text-primary!">{plan.name}</p>
+                <div className="mt-6 flex items-baseline gap-1 heading">
+                  <span className="text-4xl font-light">${plan.price}</span>
+                  <span className="text-[1.2rem]! text-muted-foreground!">/month</span>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 subheading text-[1.2rem]! text-primary!">
                   {plan.monthlyCredits.toLocaleString()} credits
                 </p>
               </div>
 
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <ul className="space-y-3 mt-6 subheading text-[1.2rem]! text-primary!">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex gap-2">
-                    <span className="text-foreground/40">·</span>
+                    <div className="size-7 flex items-center justify-center bg-emerald-800/30 rounded-full">
+                      <IconCheckFilled className="w-4 h-4 text-emerald-500!" />
+                    </div>
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <Button
-                className="mt-auto w-full rounded-full"
-                variant={plan.highlighted ? "default" : "secondary"}
+              <button
+                className="mt-auto w-full rounded-full bg-primary px-6 py-3 text-primary-foreground"
                 onClick={() => handleCheckout(tier)}
                 disabled={isLoading}
               >
@@ -89,7 +97,7 @@ export default function PricingSection() {
                 ) : (
                   "Subscribe"
                 )}
-              </Button>
+              </button>
             </div>
           );
         })}

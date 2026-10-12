@@ -164,9 +164,9 @@ input:-webkit-autofill:active {
 }
 
 .subheading{
-  @apply text-neutral-400/90 font-light text-[1.4rem] text-pretty max-w-2xl leading-tight tracking-tight;
+  @apply text-neutral-400/90 font-light md:text-[1.4rem] text-[1.125rem] text-pretty max-w-2xl leading-tight tracking-tight;
 }
 
 .heading{
-  @apply text-foreground font-light text-[2.25rem] text-balance max-w-2xl leading-tight tracking-tighter;
+  @apply text-foreground font-light md:text-[2.25rem] text-[2rem] text-balance max-w-2xl leading-tight tracking-tighter;
 }

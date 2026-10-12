@@ -1,27 +1,15 @@
 import cors from "@elysiajs/cors";
 import openapi from "@elysiajs/openapi";
-import { Elysia, t } from "elysia";
-import { serve } from "inngest/bun";
+import { Elysia } from "elysia";
 import z from "zod";
 
 import { auth } from "./config/auth";
-import { betterAuth, OpenAPI } from "./config/auth.plugin";
-import { functions, inngest } from "./inngest";
+import { betterAuth, OpenAPI } from "./config/auth.plugin"; 
 import { admin } from "./modules/admin";
 import { clip } from "./modules/clip";
 import { payment } from "./modules/payment";
 
-const handler = serve({
-  client: inngest,
-  functions,
-});
-
-const inngestHandler = new Elysia({tags: ['Inngest']}).all("/api/inngest", ({ request }) =>
-  handler(request)
-);
-
 const app = new Elysia()
-  .use(inngestHandler)
   .use(
     cors({
       origin: ["http://localhost:5173"],

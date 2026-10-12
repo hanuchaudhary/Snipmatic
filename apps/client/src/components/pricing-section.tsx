@@ -35,9 +35,9 @@ export default function PricingSection() {
   };
 
   return (
-    <div className="w-full py-20">
-      <div className="grid grid-cols-2">
-        <h2 className="heading">Pricing</h2>
+    <div className="w-full md:py-20 py-10 md:px-0 px-4">
+      <div className="md:grid grid-cols-2">
+        <h2 className="heading md:text-primary! text-muted-foreground!">Pricing</h2>
         <div>
           <p className="heading">
             <span>Monthly plans.</span>
@@ -49,7 +49,7 @@ export default function PricingSection() {
           </p>
         </div>
       </div>
-      <div className="grid gap-4 grid-cols-2 mt-20">
+      <div className="grid md:grid-cols-2 grid-cols-1 md:gap-4 gap-2 md:mt-20 mt-10">
         {PLAN_TIERS.filter((tier) => tier !== "free").map((tier) => {
           const plan = PLANS[tier];
           const isLoading = loadingTier === tier;

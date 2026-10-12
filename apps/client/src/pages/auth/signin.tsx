@@ -23,7 +23,7 @@ import { AuthLayout } from "./layout";
 import { Input } from "@/components/ui/input";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email(),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -92,20 +92,6 @@ export function LoginPage() {
 
   return (
     <AuthLayout rightMessage="Join the waitlist|and be the first to know when we launch">
-      <div className="flex flex-col space-y-2">
-        <Link aria-label="Home" to="/" className="w-fit">
-          <Logo />
-        </Link>
-        <div className="space-y-2">
-          <h1 className="heading">
-            Hey, welcome!
-          </h1>
-          <p className="subheading">
-            Log in to your account
-          </p>
-        </div>
-      </div>
-
       <div className="relative my-8 flex w-full flex-col gap-4 py-8">
         <SocialAuth mode="signin" />
 

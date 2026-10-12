@@ -18,9 +18,9 @@ export function FeaturesSection() {
     },
   ]
   return (
-    <section className="my-30 max-w-7xl mx-auto">
-      <div className="grid grid-cols-2">
-        <h2 className="heading">Features</h2>
+    <section className="md:my-30 my-20 max-w-7xl mx-auto md:px-0 px-4">
+      <div className="md:grid grid-cols-2">
+        <h2 className="heading md:text-primary! text-muted-foreground!">Features</h2>
         <div >
           <p className="heading">
             <span>
@@ -31,20 +31,20 @@ export function FeaturesSection() {
               Video editing software
             </span>
           </p>
-          <p className="subheading mt-14">
+          <p className="subheading md:mt-14 mt-10">
             Snipmatic finds the highlights, crops them for TikTok, Reels, and
             Shorts, and burns in captions. No editor. No timeline.
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4 mt-20">
+      <div className="grid md:grid-cols-3 grid-cols-1 md:gap-4 gap-2 mt-20">
         {
           features.slice(0, 3).map((feature) => (
             <FeatureCard key={feature.title} title={feature.title} description={feature.description} />
           ))
         }
       </div>
-      <div className="mt-4">
+      <div className="md:mt-4 mt-2">
         {
           features.slice(3).map((feature) => (
             <FeatureCard key={feature.title} title={feature.title} description={feature.description} />

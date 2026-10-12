@@ -78,9 +78,9 @@ function ClipLinkBar() {
         theme={theme === "light" ? "light" : "dark"}
         className="w-full"
       >
-        <div className="relative flex h-18 w-full items-center gap-2.5 overflow-hidden rounded-full bg-background/80 px-6 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_0_50px_0_rgba(255,255,255,0.02)] backdrop-blur-md dark:bg-[#1d1d1d]">
+        <div className="relative flex md:h-18 h-12 w-full items-center gap-2.5 overflow-hidden rounded-full bg-background/80 md:px-6 px-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_0_50px_0_rgba(255,255,255,0.02)] backdrop-blur-md dark:bg-[#1d1d1d]">
           <Link2
-            className="size-7 shrink-0 -rotate-45 text-muted-foreground/50"
+            className="md:size-7 size-5 shrink-0 -rotate-45 text-muted-foreground/50"
             aria-hidden
           />
           <input
@@ -90,13 +90,13 @@ function ClipLinkBar() {
             onChange={(e) => setValue(e.target.value)}
             placeholder="Paste a YouTube link"
             autoComplete="off"
-            className="min-w-0 flex-1 bg-transparent subheading text-foreground outline-none placeholder:text-muted-foreground/55"
+            className="min-w-0 flex-1 bg-transparent md:subheading text-[1rem]! text-foreground outline-none placeholder:text-muted-foreground/55"
           />
         </div>
       </BorderBeam>
       <Button
         type="submit"
-        className="h-15 shrink-0 cursor-pointer rounded-full border border-secondary-foreground/10 bg-primary text-primary-foreground px-6 text-lg absolute right-2"
+        className="md:h-15 h-10 shrink-0 cursor-pointer rounded-full border border-secondary-foreground/10 bg-primary text-primary-foreground md:px-6 px-4 md:text-lg absolute right-1"
       >
         Get clips
       </Button>
@@ -107,7 +107,7 @@ function ClipLinkBar() {
 export function HeroSection() {
   return (
     <main className="relative overflow-hidden">
-      <div className="relative flex min-h-[calc(100vh-16rem)] w-full items-center px-6 md:p-0 max-w-7xl mx-auto">
+      <div className="relative flex md:min-h-[calc(100vh-16rem)] min-h-[calc(100vh-20rem)] w-full items-center px-6 md:p-0 max-w-7xl mx-auto">
         <div className="relative z-10 w-full max-w-xl">
           <h1 className="heading">
             Paste a YouTube link.
@@ -145,7 +145,7 @@ export function HeroSection() {
         />
         {
           FEATURED_VIDEOS.map((video) => (
-            <div key={video.id} className="h-130 aspect-9/16 border">
+            <div key={video.id} className="md:h-130 h-100 aspect-9/16 border">
               <img src={video.url} alt={video.title} width={100} height={100} className="w-full h-full object-cover" />
             </div>
           ))

@@ -11,7 +11,7 @@ export function LandingPage() {
       <Navbar />
       <HeroSection />
       <FeaturesSection />
-      <div className="max-w-7xl mx-auto py-20">
+      <div className="max-w-7xl mx-auto md:py-20 py-10">
         <PricingSection />
       </div>
       <ClientsSection />

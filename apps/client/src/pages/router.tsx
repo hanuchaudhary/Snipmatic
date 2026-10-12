@@ -6,7 +6,7 @@ import { useSession } from "@/lib/auth/auth.client"
 import { SessionPageLoader } from "@/components/ui/session-page-loader"
 
 import ForgotPassword from "./auth/forgot"
-import { LoginPage } from "./auth/login"
+import { LoginPage } from "./auth/signin"
 import ResetPassword from "./auth/reset"
 import { SignupPage } from "./auth/signup"
 import VerifyEmailPage from "./auth/verify-email"

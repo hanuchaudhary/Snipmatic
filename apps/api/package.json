@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch run ./src/index.ts"
+    "dev": "bun --watch run ./src/index.ts",
+    "worker": "bun --watch run ./src/worker.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -22,9 +23,10 @@
     "@snipmatic/db": "workspace:*",
     "@snipmatic/utils": "workspace:*",
     "better-auth": "^1.6.26",
+    "bullmq": "^6.3.13",
     "dotenv": "^17.4.2",
     "elysia": "^1.4.29",
-    "inngest": "^4.18.0",
+    "ioredis": "^6.0.0",
     "modal": "^0.9.0",
     "resend": "^6.18.1",
     "stripe": "^22.5.0",

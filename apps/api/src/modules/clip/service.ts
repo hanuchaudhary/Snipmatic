@@ -1,4 +1,4 @@
-import { type ProjectStatus, prisma } from "@snipmatic/db";
+import { prisma, type ProjectStatus } from "@snipmatic/db";
 import { calculateClipCredits } from "@snipmatic/utils";
 import type {
   ClipModel,
@@ -9,9 +9,9 @@ import type {
 } from "@snipmatic/utils/types";
 import { status } from "elysia";
 
+import { processQueue } from "../../config/redis";
 import { S3Service } from "../../config/s3";
 import { getVideoInfo } from "../../config/yt-dlp";
-import { inngest } from "../../inngest";
 import { sanitizeFilename } from "./utils";
 
 const PROCESSING_STATUSES: ProjectStatus[] = [
@@ -55,9 +55,7 @@ export abstract class ClipService {
     } satisfies PresignedUrlModel["response"];
   }
 
-  static async process(
-    payload: ProcessModel["body"] & { userId: string }
-  ) {
+  static async process(payload: ProcessModel["body"] & { userId: string }) {
     const userCredits = await prisma.user.findUnique({
       where: {
         id: payload.userId,
@@ -151,14 +149,9 @@ export abstract class ClipService {
       return { project };
     });
 
-    await inngest.send({
-      name: "process-video",
-      data: {
-        project: res.project,
-        processingType: payload.processingType,
-        aspectRatio: payload.aspectRatio,
-        subtitleStyleKey: payload.subtitleStyleKey,
-      },
+    await processQueue.add(`${res.project.id}:process`, {
+      // add metadata here TODO
+      projectId: res.project.id,
     });
 
     return { project: res.project } satisfies ProcessModel["response"];

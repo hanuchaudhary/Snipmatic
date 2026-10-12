@@ -74,7 +74,7 @@ const CLIENTS: HeroCarouselItem[] = [
 
 export function ClientsSection() {
   return (
-    <section className="relative py-20 max-w-7xl mx-auto">
+    <section className="relative md:py-20 py-10 md:px-0 px-4 max-w-7xl mx-auto">
       <div className="grid grid-cols-2">
         <h2 className="heading">
           Clients showcase

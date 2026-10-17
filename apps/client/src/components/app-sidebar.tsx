@@ -1,6 +1,14 @@
 import { Link, useLocation } from "react-router";
 
 import {
+  IconChartAreaLineFilled,
+  IconCrownFilled,
+  IconLayoutDashboardFilled,
+  IconUserCircle,
+  IconVideoFilled,
+} from "@tabler/icons-react";
+
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -14,56 +22,58 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useSession } from "@/lib/auth/auth.client";
-import { TooltipButton } from "./ui/tooltip-button";
+
 import { ProfileDropdown } from "./ui/profile-dropdown";
-import { Analytics01Icon, ClapperboardIcon, Crown03Icon, Home04Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { TooltipButton } from "./ui/tooltip-button";
 
 const navItems = [
   {
     to: "/dashboard",
     label: "Dashboard",
-    icon: Home04Icon,
+    icon: IconLayoutDashboardFilled,
   },
   {
     to: "/clips",
     label: "Clips",
-    icon: ClapperboardIcon,
+    icon: IconVideoFilled,
   },
   {
     to: "/pricing",
     label: "Pricing",
-    icon: Crown03Icon,
+    icon: IconCrownFilled,
+  },
+  {
+    to: "/profile",
+    label: "Profile",
+    icon: IconUserCircle,
   },
 ] as const;
 
 export function AppSidebar() {
   const pathname = useLocation().pathname;
-  const { open, setOpen } = useSidebar()
-  const { data } = useSession()
-  const isAdmin = data?.user.role === "ADMIN"
+  const { open, setOpen } = useSidebar();
+  const { data } = useSession();
+  const isAdmin = (data?.user as { role?: string } | undefined)?.role === "ADMIN";
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader>
-        <TooltipButton
-          tooltipText={open ? "Close sidebar" : "Open sidebar"}
-        >
+        <TooltipButton tooltipText={open ? "Close sidebar" : "Open sidebar"}>
           <button
             className="flex items-center cursor-pointer"
             onClick={() => setOpen(!open)}
           >
             <img src="/logo.png" className="size-12" alt="Snipmatic Logo" />
-            <span className="text-lg font-jost group-data-[collapsible=icon]:hidden">Snipmatic</span>
+            <span className="text-lg font-jost group-data-[collapsible=icon]:hidden">
+              Snipmatic
+            </span>
           </button>
         </TooltipButton>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          < SidebarGroupLabel>
-            Create
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Create</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map(({ to, label, icon: Icon }) => (
@@ -73,10 +83,7 @@ export function AppSidebar() {
                     render={<Link to={to} />}
                     isActive={pathname === to}
                   >
-                    <HugeiconsIcon
-                      icon={Icon}
-                      color="currentColor"
-                    />
+                    <Icon />
                     <span>{label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -86,9 +93,7 @@ export function AppSidebar() {
         </SidebarGroup>
         {isAdmin ? (
           <SidebarGroup>
-            <SidebarGroupLabel>
-              Admin
-            </SidebarGroupLabel>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -97,10 +102,7 @@ export function AppSidebar() {
                     render={<Link to="/admin" />}
                     isActive={pathname === "/admin"}
                   >
-                    <HugeiconsIcon
-                      icon={Analytics01Icon}
-                      color="currentColor"
-                    />
+                    <IconChartAreaLineFilled />
                     <span>Overview</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -83,8 +83,8 @@ model Verification {
 model UserBilling {
   id                   String              @id @default(cuid())
   userId               String              @unique
-  stripeCustomerId     String?             @unique
-  stripeSubscriptionId String?             @unique
+  dodoCustomerId             String?        @unique
+  dodoSubscriptionId         String?        @unique
   planTier             PlanTier            @default(FREE)
   creditsBalance       Int                 @default(30)
   createdAt            DateTime            @default(now())
@@ -111,7 +111,7 @@ model CreditTransaction {
   description     String?
   metadata        Json?
   jobId           String?
-  stripeInvoiceId String?               @unique
+  billingEventId  String?               @unique
   createdAt       DateTime              @default(now())
   billing         UserBilling           @relation(fields: [billingId], references: [id], onDelete: Cascade)
 

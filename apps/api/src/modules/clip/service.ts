@@ -146,12 +146,12 @@ export abstract class ClipService {
         },
       });
 
-      return { project };
-    });
+      return { project, estimatedCredits };
+    }); 
 
     await processQueue.add(`${res.project.id}:process`, {
-      // add metadata here TODO
-      projectId: res.project.id,
+      project: res.project,
+      estimatedCredits: res.estimatedCredits,
     });
 
     return { project: res.project } satisfies ProcessModel["response"];

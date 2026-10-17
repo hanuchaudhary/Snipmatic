@@ -1,43 +1,74 @@
-import { useState, type FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import { useNavigate } from "react-router";
+
+import { sanitizeYoutubeUrl, youtubeUrlSchema } from "@snipmatic/utils";
 import { Link2 } from "lucide-react";
 import { toast } from "sonner";
-import { sanitizeYoutubeUrl, youtubeUrlSchema } from "@snipmatic/utils";
 
 import { useTheme } from "@/components/provider/theme-provider";
+import { Button } from "@/components/ui/button";
+import MarqueeAlongSvgPath from "@/components/ui/marquee-along-svg-path";
 import { useSession } from "@/lib/auth/auth.client";
 import { setPendingYoutubeUrl } from "@/lib/pending-clip-url";
 import { useClipStore } from "@/store/clip.store";
 
 import { BorderBeam } from "../../components/landing/border-beam-input";
-import { Button } from "@/components/ui/button";
-const FEATURED_VIDEOS = [
-  {
-    id: "1",
-    title: "The billing stack for intelligence era",
-    url: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjBuMG0xZGw2bTZkYWkybjl3M3g0bnRlN3poNm9mZjRwNnlwcGI4OCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xUA7aZDG3JgiJV5oKQ/giphy.gif",
-  },
 
-  {
-    id: "2",
-    title: "The billing stack for intelligence era",
-    url: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHpjaWlyZHl1NjJ1Y2NicjFldXZkeWZ3bHRkNDJpYjVqZXBxbmIybCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PhnJmUaxgZJWKLGZmW/giphy.gif"
-  },
+const MARQUEE_PATH =
+  "M1 209.434C58.5872 255.935 387.926 325.938 482.583 209.434C600.905 63.8051 525.516 -43.2211 427.332 19.9613C329.149 83.1436 352.902 242.723 515.041 267.302C644.752 286.966 943.56 181.94 995 156.5";
 
+const MARQUEE_IMAGES = [
   {
-    id: "3",
-    title: "The billing stack for intelligence era",
-    url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjJkeWppNjZldHEyNjl4OXh6b3R5cmdwNmx0enB3YjBndDh1aHRwcCZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/26vIdt7XgRFb9rejm/giphy.gif"
+    src: "https://cdn.cosmos.so/b9909337-7a53-48bc-9672-33fbd0f040a1?format=jpeg",
+    link: "https://www.instagram.com/p/DCOl6YTS85e/?igsh=MXNvdHhyczl1djJ6ZA%3D%3D",
   },
   {
-    id: "3",
-    title: "The billing stack for intelligence era",
-    url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHE5dG44OHNzdGRxY2Vvb2lta2FoZ3l6YmgyanoyMnNpaGZycWwxbSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/451shsqh5nJ9UqDElR/giphy.gif"
+    src: "https://cdn.cosmos.so/ecdc9dd7-2862-4c28-abb1-dcc0947390f3?format=jpeg",
+    link: "https://www.instagram.com/p/C4RTJvVpP4R/?igsh=MWZwOTNlYTVodGszMw%3D%3D",
   },
   {
-    id: "3",
-    title: "The billing stack for intelligence era",
-    url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHE5dG44OHNzdGRxY2Vvb2lta2FoZ3l6YmgyanoyMnNpaGZycWwxbSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/4aCi2Ov0wtYpG/giphy.gif"
+    src: "https://cdn.cosmos.so/79de41ec-baa4-4ac0-a9a4-c090005ca640?format=jpeg",
+    link: "https://pangrampangram.com/products/mori",
+  },
+  {
+    src: "https://cdn.cosmos.so/1a18b312-21cd-4484-bce5-9fb7ed1c5e01?format=jpeg",
+    link: "https://www.sergidelgado.com/selected-work/ampersand",
+  },
+  {
+    src: "https://cdn.cosmos.so/d765f64f-7a66-462f-8b2d-3d7bc8d7db55?format=jpeg",
+    link: "https://www.instagram.com/p/C40XmANsoe_/?igsh=MXFlZGx4cmw3ZW1qYw%3D%3D",
+  },
+  {
+    src: "https://cdn.cosmos.so/6b9f08ea-f0c5-471f-a620-71221ff1fb65?format=jpeg",
+    link: "https://abduzeedo.com/super-stylish-type-explorations",
+  },
+  {
+    src: "https://cdn.cosmos.so/40a09525-4b00-4666-86f0-3c45f5d77605?format=jpeg",
+    link: "https://www.instagram.com/p/CrhdrGjr9yK/?igshid=MTc4MmM1YmI2Ng%3D%3D",
+  },
+  {
+    src: "https://cdn.cosmos.so/14f05ab6-b4d0-4605-9007-8a2190a249d0?format=jpeg",
+    link: "https://www.instagram.com/julian.stiber/p/By5RBApiDzE/?img_index=1",
+  },
+  {
+    src: "https://cdn.cosmos.so/d05009a2-a2f8-4a4c-a0de-e1b0379dddb8?format=jpeg",
+    link: "https://www.instagram.com/p/CeT3COysRNN/?img_index=2",
+  },
+  {
+    src: "https://cdn.cosmos.so/ba646e35-efc2-494a-961b-b40f597e6fc9?format=jpeg",
+    link: "https://www.instagram.com/godfreydadich/",
+  },
+  {
+    src: "https://cdn.cosmos.so/e899f9c3-ed48-4899-8c16-fbd5a60705da?format=jpeg",
+    link: "https://www.instagram.com/p/Bty1U6BhTOW/?img_index=5",
+  },
+  {
+    src: "https://cdn.cosmos.so/24e83c11-c607-45cd-88fb-5059960b56a0?format=jpeg",
+    link: "https://www.instagram.com/p/C48dxn1LqhC/?igsh=dmV5ZWR0Z2Y3Zzlt&img_index=3",
+  },
+  {
+    src: "https://cdn.cosmos.so/cd346bce-f415-4ea7-8060-99c5f7c1741a?format=jpeg",
+    link: "https://www.instagram.com/p/C08ZDVyyRhK/?img_index=2&igsh=bHAyZjcxYW1jZDNu",
   },
 ];
 
@@ -107,11 +138,12 @@ function ClipLinkBar() {
 export function HeroSection() {
   return (
     <main className="relative overflow-hidden">
-      <div className="relative flex md:min-h-[calc(100vh-16rem)] min-h-[calc(100vh-20rem)] w-full items-center px-6 md:p-0 max-w-7xl mx-auto">
+      <div className="relative flex min-h-screen w-full items-center px-6 md:p-0 max-w-7xl mx-auto">
         <div className="relative z-10 w-full max-w-xl">
           <h1 className="heading">
             Paste a YouTube link.
-            <br /> <span className="text-muted-foreground">
+            <br />{" "}
+            <span className="text-muted-foreground">
               Get clips you can post today.
             </span>
           </h1>
@@ -124,33 +156,36 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-hidden relative py-10">
-        <div
-          className="absolute h-3 top-0 left-0 w-full"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(90deg, transparent 0, transparent 26px, #555 26px, #555 27px)",
-            backgroundPosition: "61px 0",
-            backgroundSize: "27.5px 100%",
-          }}
-        />
-        <div
-          className="absolute h-3 bottom-0 left-0 w-full"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(90deg, transparent 0, transparent 26px, #555 26px, #555 27px)",
-            backgroundPosition: "61px 0",
-            backgroundSize: "27.5px 100%",
-          }}
-        />
-        {
-          FEATURED_VIDEOS.map((video) => (
-            <div key={video.id} className="md:h-130 h-100 aspect-9/16 border">
-              <img src={video.url} alt={video.title} width={100} height={100} className="w-full h-full object-cover" />
-            </div>
-          ))
-        }
+      <div className="max-w-7xl mx-auto py-10 absolute -bottom-30 left-90">
+        <div className="h-[70vh] min-h-100 w-full">
+          <MarqueeAlongSvgPath
+            path={MARQUEE_PATH}
+            viewBox="0 0 996 330"
+            baseVelocity={8}
+            slowdownOnHover
+            draggable
+            repeat={2}
+            dragSensitivity={0.1}
+            className="w-full h-full scale-160"
+            responsive
+            grabCursor
+          >
+            {MARQUEE_IMAGES.map((img, i) => (
+              <div
+                key={i}
+                className="w-14 h-full hover:scale-150 duration-300 ease-in-out"
+              >
+                <img
+                  src={img.src}
+                  alt={`Example ${i}`}
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                />
+              </div>
+            ))}
+          </MarqueeAlongSvgPath>
+        </div>
       </div>
-    </main >
+    </main>
   );
 }

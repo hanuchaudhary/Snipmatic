@@ -1,68 +1,75 @@
-import { Navigate, Outlet, Route, Routes } from "react-router"
+import { Navigate, Outlet, Route, Routes } from "react-router";
 
-import { AdminProtectedRoute } from "@/components/admin-protected-route"
-import { ProtectedRoute } from "@/components/protected-route"
-import { useSession } from "@/lib/auth/auth.client"
-import { SessionPageLoader } from "@/components/ui/session-page-loader"
+import { AdminProtectedRoute } from "@/components/admin-protected-route";
+import { ProtectedRoute } from "@/components/protected-route";
+import { SessionPageLoader } from "@/components/ui/session-page-loader";
+import { DashboardLayout } from "@/layouts/dashboard-layout";
+import { useSession } from "@/lib/auth/auth.client";
 
-import ForgotPassword from "./auth/forgot"
-import { LoginPage } from "./auth/signin"
-import ResetPassword from "./auth/reset"
-import { SignupPage } from "./auth/signup"
-import VerifyEmailPage from "./auth/verify-email"
-import { DashboardLayout } from "@/layouts/dashboard-layout"
-
-import { AdminPage } from "./admin"
-import { ClipsPage } from "./clips"
-import { Dashboard } from "./dashboard"
-import { Home } from "./home"
+import { AdminPage } from "./admin";
+import ForgotPassword from "./auth/forgot";
+import ResetPassword from "./auth/reset";
+import { LoginPage } from "./auth/signin";
+import { SignupPage } from "./auth/signup";
+import VerifyEmailPage from "./auth/verify-email";
+import { ClipsPage } from "./clips";
+import { Dashboard } from "./dashboard";
+import { Home } from "./home";
+import { FeatureDetailPage } from "./landing/feature-detail";
+import { FeaturesPage } from "./landing/features";
 import {
-    PricingCancelPage,
-    PricingPage,
-    PricingSuccessPage,
-} from "./pricing"
+  PricingCancelPage,
+  PricingErrorPage,
+  PricingPage,
+  PricingSuccessPage,
+} from "./pricing";
+import { ProfilePage } from "./profile";
 
 function GuestRoute() {
-    const { data, isPending } = useSession()
+  const { data, isPending } = useSession();
 
-    if (isPending) {
-        return <SessionPageLoader message="Checking your session..." />
-    }
+  if (isPending) {
+    return <SessionPageLoader message="Checking your session..." />;
+  }
 
-    if (data?.user) {
-        return <Navigate to="/dashboard" replace />
-    }
+  if (data?.user) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
-    return <Outlet />
+  return <Outlet />;
 }
 
 export const Router = () => {
-    return (
-        <Routes>
-            <Route path="/" element={<Home />} />
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/features" element={<FeaturesPage />} />
+      <Route path="/features/:slug" element={<FeatureDetailPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
 
-            <Route element={<GuestRoute />}>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/verify-email" element={<VerifyEmailPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
-            </Route>
+      <Route element={<GuestRoute />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+      </Route>
 
-            <Route element={<ProtectedRoute />}>
-                <Route element={<DashboardLayout />}>
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/clips" element={<ClipsPage />} />
-                    <Route path="/pricing/success" element={<PricingSuccessPage />} />
-                    <Route path="/pricing/cancel" element={<PricingCancelPage />} />
-                    <Route element={<AdminProtectedRoute />}>
-                        <Route path="/admin" element={<AdminPage />} />
-                    </Route>
-                </Route>
-            </Route>
+      <Route element={<ProtectedRoute />}>
+        <Route path="/pricing/success" element={<PricingSuccessPage />} />
+        <Route path="/pricing/cancel" element={<PricingCancelPage />} />
+        <Route path="/pricing/error" element={<PricingErrorPage />} />
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/clips" element={<ClipsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route element={<AdminProtectedRoute />}>
+            <Route path="/admin" element={<AdminPage />} />
+          </Route>
+        </Route>
+      </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-    )
-}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};

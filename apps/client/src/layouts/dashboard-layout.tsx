@@ -1,9 +1,9 @@
 import { Outlet, useLocation } from "react-router";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { DashboardNavbar } from "@/components/dashboard-navbar";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { Navbar } from "@/pages/landing/navbar";
 
 export function DashboardLayout() {
   const pathname = useLocation().pathname;
@@ -13,7 +13,7 @@ export function DashboardLayout() {
       <div className="flex h-full">
         <AppSidebar />
         <SidebarInset className="h-full min-h-0 overflow-y-auto scrollbar-hidden relative">
-          <Navbar />
+          <DashboardNavbar />
           <div
             className={cn(
               "w-full mx-auto",

@@ -10,7 +10,8 @@ export const getVideoInfo = async (url: string) => {
       dumpSingleJson: true,
       noWarnings: true,
       skipDownload: true,
-      cookies: process.env.YTDLP_COOKIES,
+      // cookies: process.env.YTDLP_COOKIES,
+      cookies : "cookies.txt"
     });
     const data = {
       title: info.title,

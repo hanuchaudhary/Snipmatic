@@ -1,5 +1,15 @@
 # Turborepo starter
 
+## Dodo Payments setup
+
+1. Apply the Prisma migration with `bun run db:deploy` and regenerate the client with `bun run db:generate`.
+2. Set `DODO_PAYMENTS_API_KEY` and `DODO_PAYMENTS_ENVIRONMENT=test_mode` in the API environment. Use `live_mode` only with a live key.
+3. From `apps/api`, run `bun run products:create` once for the Clip ($9/month) and Studio ($19/month) subscription products. Copy its `DODO_PRODUCT_CLIP` and `DODO_PRODUCT_STUDIO` output into the API environment. If rerunning, keep those variables set so the script reuses the existing products.
+4. In Dodo, configure the webhook URL as `<API_URL>/payment/dodo/webhook` and subscribe to `subscription.active`, `subscription.renewed`, `subscription.plan_changed`, `subscription.cancelled`, `subscription.expired`, `subscription.on_hold`, and `subscription.paused`. Set `DODO_PAYMENTS_WEBHOOK_KEY` to that endpoint's signing key.
+5. Set `WEB_URL` to the deployed client origin so checkout and billing portal redirects work.
+
+The migration removes the Stripe customer and subscription ID columns. Existing Stripe subscriptions require a separate transition to Dodo before their next renewal; the app does not transfer them automatically.
+
 This Turborepo starter is maintained by the Turborepo core team.
 
 ## Using this example

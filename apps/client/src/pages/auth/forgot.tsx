@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,9 +14,10 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { requestPasswordReset } from "@/lib/auth/auth.client";
-import { AuthLayout } from "./layout";
 import { Input } from "@/components/ui/input";
+import { requestPasswordReset } from "@/lib/auth/auth.client";
+
+import { AuthLayout } from "./layout";
 
 const forgotPasswordSchema = z.object({
   email: z.email(),
@@ -59,10 +59,29 @@ export default function ForgotPassword() {
   };
 
   return (
-    <AuthLayout rightMessage="Forgot your password?|We'll send you a reset link.">
-      {!emailSent ? (
-        <>
-          <div className="relative h-full w-full flex flex-col justify-center items-center">
+    <AuthLayout
+      eyebrow="Account recovery"
+      title="Forgot your"
+      subtitle="password?"
+      description="Enter the email on your account and we'll send a secure link to reset it."
+      points={[
+        "Reset links expire for your security",
+        "We never email your current password",
+        "Your clips stay safe while you reset",
+      ]}
+    >
+      <div className="flex w-full flex-col gap-6">
+        {!emailSent ? (
+          <>
+            <div>
+              <p className="text-2xl font-light tracking-tight">
+                Reset password
+              </p>
+              <p className="mt-2 subheading text-[1.05rem]!">
+                We'll send a reset link to your inbox.
+              </p>
+            </div>
+
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -100,7 +119,7 @@ export default function ForgotPassword() {
               </form>
             </Form>
 
-            <div className="text-center text-sm text-muted-foreground mt-6">
+            <div className="text-center text-sm text-muted-foreground">
               <Link
                 to="/login"
                 className="underline underline-offset-4 hover:text-primary"
@@ -108,42 +127,37 @@ export default function ForgotPassword() {
                 Back to sign in
               </Link>
             </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="flex flex-col space-y-2">
-            <Link aria-label="Home" to="/" className="w-fit">
-              <Logo />
-            </Link>
-            <div className="space-y-2">
-              <h1 className="heading">
+          </>
+        ) : (
+          <>
+            <div>
+              <p className="text-2xl font-light tracking-tight">
                 Check your email
-              </h1>
-              <p className="subheading">
+              </p>
+              <p className="mt-2 subheading text-[1.05rem]!">
                 If an account exists with{" "}
-                <span className="font-medium text-foreground">
+                <span className="text-foreground">
                   {form.getValues("email")}
                 </span>
                 , you will receive a password reset link shortly.
               </p>
             </div>
-          </div>
 
-          <div className="relative my-8 flex w-full flex-col gap-3 py-8">
-            <Button
-              variant="outline"
-              onClick={() => setEmailSent(false)}
-              className="w-full"
-            >
-              Try another email
-            </Button>
-            <Button className="w-full" variant={"rounded"}>
-              <Link to="/login">Back to sign in</Link>
-            </Button>
-          </div>
-        </>
-      )}
+            <div className="flex w-full flex-col gap-3">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setEmailSent(false)}
+              >
+                Try another email
+              </Button>
+              <Button className="w-full" variant={"rounded"} asChild>
+                <Link to="/login">Back to sign in</Link>
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
     </AuthLayout>
   );
 }

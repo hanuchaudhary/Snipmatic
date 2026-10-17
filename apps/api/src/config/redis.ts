@@ -1,7 +1,7 @@
 import { createBunRedisClient, Queue } from "bullmq";
 import { RedisClient } from "bun";
 
-export const PROCESS_QUEUE_NAME = "process:queue";
+export const PROCESS_QUEUE_NAME = "process-queue";
 
 const REDIS_URL = process.env.REDIS_URL;
 if (!REDIS_URL) {

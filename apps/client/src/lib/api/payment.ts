@@ -1,4 +1,5 @@
 import type { PaymentModel } from "@snipmatic/utils";
+
 import { api } from "../axios";
 
 export abstract class PaymentApi {
@@ -10,6 +11,11 @@ export abstract class PaymentApi {
   static async getCredits() {
     const res = await api.get("/payment/credits");
     return res.data as PaymentModel["creditsResponse"];
+  }
+
+  static async getAccount() {
+    const res = await api.get("/payment/account");
+    return res.data as PaymentModel["accountResponse"];
   }
 
   static async createPortal() {

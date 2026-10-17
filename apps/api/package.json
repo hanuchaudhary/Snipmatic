@@ -4,8 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch run ./src/index.ts",
-    "worker": "bun --watch run ./src/worker.ts"
+    "dev": "bun --watch run ./src/index.ts & bun --watch run ./src/worker.ts",
+    "worker": "bun run ./src/worker.ts",
+    "products:create": "bun run ./scripts/create-dodo-products.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -24,12 +25,12 @@
     "@snipmatic/utils": "workspace:*",
     "better-auth": "^1.6.26",
     "bullmq": "^6.3.13",
+    "dodopayments": "^2.55.0",
     "dotenv": "^17.4.2",
     "elysia": "^1.4.29",
     "ioredis": "^6.0.0",
     "modal": "^0.9.0",
     "resend": "^6.18.1",
-    "stripe": "^22.5.0",
     "youtube-dl-exec": "^3.1.12",
     "zod": "^4.4.3"
   }

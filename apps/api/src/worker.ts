@@ -14,6 +14,10 @@ const processWorker = new Worker(
   }
 );
 
+processWorker.on("ready", () => {
+  console.log("Worker Started");
+});
+
 processWorker.on("completed", (job) => {
   console.log(`Job ${job.id} completed`);
 });

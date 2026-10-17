@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,11 +15,12 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { SessionPageLoader } from "@/components/ui/session-page-loader";
 import { SocialAuth } from "@/components/ui/social-auth";
 import { signIn, useSession } from "@/lib/auth/auth.client";
+
 import { AuthLayout } from "./layout";
-import { Input } from "@/components/ui/input";
 
 const loginSchema = z.object({
   email: z.email(),
@@ -91,12 +91,24 @@ export function LoginPage() {
   };
 
   return (
-    <AuthLayout rightMessage="Join the waitlist|and be the first to know when we launch">
-      <div className="relative my-8 flex w-full flex-col gap-4 py-8">
+    <AuthLayout
+      eyebrow="Welcome back"
+      title="Sign in to"
+      subtitle="your clip studio."
+      description="Pick up where you left off and turn long videos into ready-to-post shorts."
+    >
+      <div className="flex w-full flex-col gap-6">
+        <div>
+          <p className="text-2xl font-light tracking-tight">Sign in</p>
+          <p className="mt-2 subheading text-[1.05rem]!">
+            Use your email or continue with Google.
+          </p>
+        </div>
+
         <SocialAuth mode="signin" />
 
         <div className="flex items-center gap-3 justify-center">
-          <span className="subheading text-[1.2rem]! text-muted-foreground!">
+          <span className="subheading text-[1.1rem]! text-muted-foreground!">
             or
           </span>
         </div>
@@ -161,18 +173,17 @@ export function LoginPage() {
             </Button>
           </form>
         </Form>
-      </div>
 
-      <div className="text-center text-sm text-muted-foreground">
-        Don't have an account?{" "}
-        <Link
-          to="/signup"
-          className="underline underline-offset-4 hover:text-primary"
-        >
-          Create one
-        </Link>
+        <div className="text-center text-sm text-muted-foreground">
+          Don't have an account?{" "}
+          <Link
+            to="/signup"
+            className="underline underline-offset-4 hover:text-primary"
+          >
+            Create one
+          </Link>
+        </div>
       </div>
-
     </AuthLayout>
   );
 }

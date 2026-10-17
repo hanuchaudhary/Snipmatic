@@ -4,9 +4,10 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { IconCircleCheckFilled, IconRefreshAlert } from "@tabler/icons-react";
 import { toast } from "sonner";
 
-import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { verifyEmail } from "@/lib/auth/auth.client";
+
+import { AuthLayout } from "./layout";
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
@@ -47,70 +48,85 @@ export default function VerifyEmailPage() {
   const isTokenMissing = !token;
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center">
-      <div className="relative mx-auto flex w-full max-w-lg flex-col justify-center px-6">
+    <AuthLayout
+      eyebrow="Almost there"
+      title={isVerified ? "Email verified," : "Verify your"}
+      subtitle={isVerified ? "you're ready to go." : "email address."}
+      description={
+        isVerified
+          ? "Your account is active. We're taking you to your dashboard."
+          : "Confirm your email address to activate your account and start creating clips."
+      }
+      points={
+        isVerified
+          ? []
+          : [
+              "Verification keeps your account secure",
+              "You can resend the email any time",
+              "Verify once and you're in",
+            ]
+      }
+    >
+      <div className="flex w-full flex-col gap-6">
         {!isVerified ? (
           <>
-            <div className="flex flex-col space-y-2">
-              <Link aria-label="Home" to="/" className="w-fit">
-                <Logo />
-              </Link>
-              <div className="space-y-2">
-                <h1 className="heading">
-                  Verify your email
-                </h1>
-                <p className="subheading">
-                  Confirm your email to activate your account.
-                </p>
-              </div>
+            <div>
+              <p className="text-2xl font-light tracking-tight">Verify email</p>
+              <p className="mt-2 subheading text-[1.05rem]!">
+                Confirm your email to activate your account.
+              </p>
             </div>
 
-            <div className="relative my-8 flex w-full flex-col gap-3 py-8">
+            <div className="flex w-full flex-col gap-3">
               <Button
                 className="w-full"
+                variant={"rounded"}
+                size={"lg"}
                 onClick={handleVerify}
                 disabled={isLoading || isTokenMissing}
               >
                 {isLoading ? "Verifying..." : "Verify email"}
               </Button>
+
               {isTokenMissing ? (
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" asChild>
                   <Link to="/signup">
                     <IconRefreshAlert data-icon="inline-start" />
                     Sign up again
                   </Link>
                 </Button>
               ) : null}
-              <Button variant="outline" className="w-full">
+
+              <Button variant="outline" className="w-full" asChild>
                 <Link to="/login">Back to sign in</Link>
               </Button>
             </div>
           </>
         ) : (
           <>
-            <div className="flex flex-col space-y-2">
-              <Link aria-label="Home" to="/" className="w-fit">
-                <Logo />
-              </Link>
-              <div className="space-y-2 text-center">
-                <IconCircleCheckFilled className="mx-auto h-12 w-12 text-emerald-500" />
-                <h1 className="heading">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <IconCircleCheckFilled className="h-12 w-12 text-emerald-500" />
+              <div>
+                <p className="text-2xl font-light tracking-tight">
                   Email verified
-                </h1>
-                <p className="subheading">
+                </p>
+                <p className="mt-2 subheading text-[1.05rem]!">
                   Redirecting you to your dashboard.
                 </p>
               </div>
             </div>
 
-            <div className="relative my-8 flex w-full flex-col gap-3 py-8">
-              <Button onClick={() => navigate("/dashboard")} className="w-full">
-                Continue to dashboard
-              </Button>
-            </div>
+            <Button
+              onClick={() => navigate("/dashboard")}
+              className="w-full"
+              variant={"rounded"}
+              size={"lg"}
+            >
+              Continue to dashboard
+            </Button>
           </>
         )}
       </div>
-    </div>
+    </AuthLayout>
   );
 }

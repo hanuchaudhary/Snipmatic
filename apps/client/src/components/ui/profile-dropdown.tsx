@@ -39,7 +39,7 @@ export function ProfileDropdown() {
     const { open } = useSidebar()
     const collapsed = !open;
     const navigate = useNavigate()
-    const isAdmin = data?.user.role === "ADMIN"
+    const isAdmin = (data?.user as { role?: string } | undefined)?.role === "ADMIN"
     const initials = data?.user.name
         .split(" ")
         .map((word) => word[0])
@@ -51,7 +51,7 @@ export function ProfileDropdown() {
         navigate("/profile")
     }
     const onSettings = () => {
-        navigate("/setting")
+        navigate("/profile")
     }
     const onLogout = async () => {
         await signOut()

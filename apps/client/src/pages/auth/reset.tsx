@@ -4,7 +4,6 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconCircleCheckFilled, IconRefreshAlert } from "@tabler/icons-react";
-import { LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -16,11 +15,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
+import { LabelInput } from "@/components/ui/label-input";
 import { resetPassword } from "@/lib/auth/auth.client";
 
 import { AuthLayout } from "./layout";
@@ -173,17 +168,7 @@ export default function ResetPassword() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <InputGroup>
-                          <InputGroupInput
-                            aria-label="New password"
-                            placeholder="Enter new password"
-                            type="password"
-                            {...field}
-                          />
-                          <InputGroupAddon align="inline-start">
-                            <LockIcon />
-                          </InputGroupAddon>
-                        </InputGroup>
+                        <LabelInput label="New password" type="password" autoComplete="new-password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -196,17 +181,7 @@ export default function ResetPassword() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <InputGroup>
-                          <InputGroupInput
-                            aria-label="Confirm password"
-                            placeholder="Confirm new password"
-                            type="password"
-                            {...field}
-                          />
-                          <InputGroupAddon align="inline-start">
-                            <LockIcon />
-                          </InputGroupAddon>
-                        </InputGroup>
+                        <LabelInput label="Confirm password" type="password" autoComplete="new-password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

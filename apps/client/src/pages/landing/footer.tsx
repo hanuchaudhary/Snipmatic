@@ -2,6 +2,7 @@ import { Link } from "react-router"
 
 import { useSession } from "@/lib/auth/auth.client"
 import { IconCopyright } from "@tabler/icons-react"
+import { ThemeSwitch } from "@/components/theme-switch"
 
 const PRODUCT = [
   { to: "/signup", label: "Clip studio" },
@@ -23,8 +24,8 @@ export function Footer() {
   return (
     <footer className="relative w-full overflow-hidden max-w-7xl mx-auto min-h-[calc(100svh-10rem)] md:mt-20 mt-10 md:px-0 px-4">
       <div className="border-t py-14">
-        <div className="mx-auto grid gap-10 grid-cols-[1.4fr_1fr_1fr]">
-          <div>
+        <div className="mx-auto grid gap-10 grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr]">
+          <div className="col-span-2 md:col-span-1">
             <Link to="/" className="inline-flex items-center">
               <span className="heading">Snipmatic</span>
             </Link>
@@ -75,11 +76,11 @@ export function Footer() {
         </div>
 
       </div>
-      <div className="flex items-center justify-between gap-4 subheading text-[1.2rem]! text-primary! pt-20 w-full">
+      <div className="flex items-center justify-between gap-4 subheading text-[1.2rem]! text-primary! pt-8 md:pt-20 w-full">
         <span className="flex items-center">
           <IconCopyright className="size-6 text-primary! inline-block mr-1" />
           {year} Snipmatic</span>
-        <span className="subheading text-[1.2rem]! text-primary! text-pretty">Built to ship shorts, not timelines.</span>
+        <div className="flex items-center gap-4"><span className="hidden text-sm text-muted-foreground sm:inline">Built to ship shorts, not timelines.</span><ThemeSwitch /></div>
       </div>
     </footer>
   )

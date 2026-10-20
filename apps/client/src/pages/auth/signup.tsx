@@ -15,7 +15,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { LabelInput } from "@/components/ui/label-input";
 import { SocialAuth } from "@/components/ui/social-auth";
 import { signUp } from "@/lib/auth/auth.client";
 
@@ -169,12 +169,11 @@ export function SignupPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input
+                          <LabelInput
                             autoFocus
-                            aria-label="Email address"
-                            placeholder="kushchaudharyog@gmail.com"
-                            className="border shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent h-10 px-4 text-[1rem]! font-light"
+                            label="Email address"
                             type="email"
+                            autoComplete="email"
                             {...field}
                           />
                         </FormControl>
@@ -188,11 +187,10 @@ export function SignupPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input
-                            aria-label="Password"
-                            placeholder="********"
-                            className="border shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent h-10 px-4 text-[1rem]! font-light"
+                          <LabelInput
+                            label="Password"
                             type="password"
+                            autoComplete="new-password"
                             {...field}
                           />
                         </FormControl>

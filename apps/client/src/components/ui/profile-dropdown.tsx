@@ -51,7 +51,7 @@ export function ProfileDropdown() {
         navigate("/profile")
     }
     const onSettings = () => {
-        navigate("/profile")
+        navigate("/settings")
     }
     const onLogout = async () => {
         await signOut()

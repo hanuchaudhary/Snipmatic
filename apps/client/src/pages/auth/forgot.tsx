@@ -14,7 +14,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { LabelInput } from "@/components/ui/label-input";
 import { requestPasswordReset } from "@/lib/auth/auth.client";
 
 import { AuthLayout } from "./layout";
@@ -93,12 +93,11 @@ export default function ForgotPassword() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input
+                        <LabelInput
                           autoFocus
-                          aria-label="Email address"
-                          className="border shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent h-10 px-4 text-[1rem]! font-light"
-                          placeholder="kushchaudharyog@gmail.com"
+                          label="Email address"
                           type="email"
+                          autoComplete="email"
                           {...field}
                         />
                       </FormControl>

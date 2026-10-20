@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { IconCheckFilled, IconLoader2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -12,6 +13,25 @@ export default function PricingSection() {
   const navigate = useNavigate();
   const { data: session } = useSession();
   const [loadingTier, setLoadingTier] = React.useState<PlanTier | null>(null);
+  const [openingPortal, setOpeningPortal] = React.useState(false);
+  const { data: account, isPending: isAccountPending } = useQuery({
+    queryKey: ["payment-account", session?.user?.id],
+    queryFn: PaymentApi.getAccount,
+    enabled: Boolean(session?.user),
+  });
+  const subscription = account?.billing.subscription;
+  const hasSubscription = Boolean(subscription && subscription.status !== "cancelled" && subscription.status !== "expired");
+
+  const handlePortal = async () => {
+    setOpeningPortal(true);
+    try {
+      const { url } = await PaymentApi.createPortal();
+      window.location.assign(url);
+    } catch {
+      toast.error("Unable to open billing. Please try again.");
+      setOpeningPortal(false);
+    }
+  };
 
   const handleCheckout = async (planTier: PlanTier) => {
     if (!session?.user) {
@@ -53,6 +73,7 @@ export default function PricingSection() {
         {PLAN_TIERS.filter((tier) => tier !== "free").map((tier) => {
           const plan = PLANS[tier];
           const isLoading = loadingTier === tier;
+          const isCurrent = hasSubscription && subscription?.planTier === tier;
 
           return (
             <div
@@ -85,17 +106,19 @@ export default function PricingSection() {
               </ul>
 
               <button
-                className="mt-auto w-full rounded-full bg-primary px-6 py-3 text-primary-foreground"
-                onClick={() => handleCheckout(tier)}
-                disabled={isLoading}
+                className="mt-auto w-full rounded-full bg-primary px-6 py-3 text-primary-foreground flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => hasSubscription ? void handlePortal() : void handleCheckout(tier)}
+                disabled={isLoading || openingPortal || (Boolean(session?.user) && isAccountPending)}
               >
-                {isLoading ? (
-                  <>
+                {Boolean(session?.user) && isAccountPending ? "Checking plan…" : isLoading || openingPortal ? (
+                  <span className="flex items-center justify-center gap-2">
                     <IconLoader2 className="animate-spin" />
-                    Redirecting
-                  </>
+                    {openingPortal ? "Opening billing" : "Redirecting"}
+                  </span>
                 ) : (
-                  "Subscribe"
+                  <span className="flex items-center justify-center gap-2">
+                    {isCurrent ? "Manage current plan" : hasSubscription ? "Change plan in billing" : "Subscribe"}
+                  </span>
                 )}
               </button>
             </div>

@@ -4,7 +4,7 @@ import {
   IconChartAreaLineFilled,
   IconCrownFilled,
   IconLayoutDashboardFilled,
-  IconUserCircle,
+  IconSettingsFilled,
   IconVideoFilled,
 } from "@tabler/icons-react";
 
@@ -43,9 +43,9 @@ const navItems = [
     icon: IconCrownFilled,
   },
   {
-    to: "/profile",
-    label: "Profile",
-    icon: IconUserCircle,
+    to: "/settings",
+    label: "Settings",
+    icon: IconSettingsFilled,
   },
 ] as const;
 
@@ -53,7 +53,8 @@ export function AppSidebar() {
   const pathname = useLocation().pathname;
   const { open, setOpen } = useSidebar();
   const { data } = useSession();
-  const isAdmin = (data?.user as { role?: string } | undefined)?.role === "ADMIN";
+  const isAdmin =
+    (data?.user as { role?: string } | undefined)?.role === "ADMIN";
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">

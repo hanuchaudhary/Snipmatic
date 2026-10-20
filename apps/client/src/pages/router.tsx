@@ -23,7 +23,7 @@ import {
   PricingPage,
   PricingSuccessPage,
 } from "./pricing";
-import { ProfilePage } from "./profile";
+import { SettingsPage } from "./settings";
 
 function GuestRoute() {
   const { data, isPending } = useSession();
@@ -62,7 +62,7 @@ export const Router = () => {
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clips" element={<ClipsPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route element={<AdminProtectedRoute />}>
             <Route path="/admin" element={<AdminPage />} />
           </Route>

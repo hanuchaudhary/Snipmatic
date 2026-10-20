@@ -1,31 +1,18 @@
+import { Link } from "react-router";
+
+import { FeatureArtwork } from "@/components/landing/feature-artwork";
+import { FEATURES } from "@/lib/features";
+
 export function FeaturesSection() {
-  const features = [
-    {
-      title: "AI-powered",
-      description: "Snipmatic finds the highlights, crops them for TikTok, Reels, and Shorts, and burns in captions. No editor. No timeline.",
-    },
-    {
-      title: "Video editing software",
-      description: "Snipmatic finds the highlights, crops them for TikTok, Reels, and Shorts, and burns in captions. No editor. No timeline.",
-    },
-    {
-      title: "Video editing software",
-      description: "Snipmatic finds the highlights, crops them for TikTok, Reels, and Shorts, and burns in captions. No editor. No timeline.",
-    },
-    {
-      title: "Video editing software",
-      description: "Snipmatic finds the highlights, crops them for TikTok, Reels, and Shorts, and burns in captions. No editor. No timeline.",
-    },
-  ]
   return (
     <section className="md:my-30 my-20 max-w-7xl mx-auto md:px-0 px-4">
       <div className="md:grid grid-cols-2">
-        <h2 className="heading md:text-primary! text-muted-foreground!">Features</h2>
-        <div >
+        <h2 className="heading md:text-primary! text-muted-foreground!">
+          Features
+        </h2>
+        <div>
           <p className="heading">
-            <span>
-              AI-powered
-            </span>
+            <span>AI-powered</span>
             <br />
             <span className="text-muted-foreground">
               Video editing software
@@ -38,29 +25,37 @@ export function FeaturesSection() {
         </div>
       </div>
       <div className="grid md:grid-cols-3 grid-cols-1 md:gap-4 gap-2 mt-20">
-        {
-          features.slice(0, 3).map((feature) => (
-            <FeatureCard key={feature.title} title={feature.title} description={feature.description} />
-          ))
-        }
+        {FEATURES.slice(0, 3).map((feature) => (
+          <FeatureCard key={feature.slug} feature={feature} />
+        ))}
       </div>
       <div className="md:mt-4 mt-2">
-        {
-          features.slice(3).map((feature) => (
-            <FeatureCard key={feature.title} title={feature.title} description={feature.description} />
-          ))
-        }
+        <FeatureCard feature={FEATURES[3]} wide />
       </div>
     </section>
-  )
+  );
 }
 
-const FeatureCard = ({ title, description }: { title: string, description: string }) => {
+function FeatureCard({
+  feature,
+  wide = false,
+}: {
+  feature: (typeof FEATURES)[number];
+  wide?: boolean;
+}) {
   return (
-    <div className="relative bg-secondary/20 p-14 hover:bg-secondary/50 transition-all duration-300">
-      <div className="h-70"></div>
-      <h3 className="subheading text-primary!">{title}</h3>
-      <p className="subheading text-[1.2rem]! mt-4">{description}</p>
-    </div>
-  )
+    <Link
+      to={`/features/${feature.slug}`}
+      className="group relative block bg-secondary/20 p-14 transition-all duration-300 hover:bg-secondary/50"
+    >
+      <div className="h-70">
+        <FeatureArtwork
+          slug={feature.slug}
+          className={`h-full grayscale ${wide ? "w-full" : ""}`}
+        />
+      </div>
+      <h3 className="subheading text-primary! mt-10">{feature.title}</h3>
+      <p className="subheading text-[1.2rem]! mt-4">{feature.description}</p>
+    </Link>
+  );
 }

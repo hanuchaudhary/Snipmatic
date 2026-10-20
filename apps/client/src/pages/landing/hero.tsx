@@ -13,9 +13,13 @@ import { setPendingYoutubeUrl } from "@/lib/pending-clip-url";
 import { useClipStore } from "@/store/clip.store";
 
 import { BorderBeam } from "../../components/landing/border-beam-input";
+import GradientASCII from "@/components/landing/gradient-ascii";
 
 const MARQUEE_PATH =
   "M1 209.434C58.5872 255.935 387.926 325.938 482.583 209.434C600.905 63.8051 525.516 -43.2211 427.332 19.9613C329.149 83.1436 352.902 242.723 515.041 267.302C644.752 286.966 943.56 181.94 995 156.5";
+
+const ASCII_COLORS_LIGHT = ["#5e6d9d", "#94a3b8", "#4182a9"];
+const ASCII_COLORS_DARK = ["#2446a8", "#98a7ce", "#38bdf8"];
 
 const MARQUEE_IMAGES = [
   {
@@ -136,8 +140,10 @@ function ClipLinkBar() {
 }
 
 export function HeroSection() {
+  const { theme } = useTheme();
   return (
     <main className="relative overflow-hidden">
+      <GradientASCII colors={theme === "light" ? ASCII_COLORS_LIGHT : ASCII_COLORS_DARK} lightMode={theme === "light"} className="opacity-80 [mask-image:linear-gradient(to_right,transparent_10%,black_85%)]" />
       <div className="relative flex min-h-screen w-full items-center px-6 md:p-0 max-w-7xl mx-auto">
         <div className="relative z-10 w-full max-w-xl">
           <h1 className="heading">

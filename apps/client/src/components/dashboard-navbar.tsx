@@ -2,44 +2,40 @@ import { Link, useLocation } from "react-router";
 
 import { IconCrownFilled } from "@tabler/icons-react";
 
-import { ThemeSwitch } from "@/components/theme-switch";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-const PAGE_TITLES: { match: string; title: string; subtitle: string }[] = [
+const PAGE_TITLES: { match: string; title: string; }[] = [
   {
     match: "/dashboard",
     title: "Dashboard",
-    subtitle: "Create clips and track processing",
   },
   {
     match: "/clips",
     title: "Clips",
-    subtitle: "Everything you have generated",
   },
   {
     match: "/admin",
     title: "Admin",
-    subtitle: "Users and projects overview",
   },
   {
     match: "/profile",
     title: "Profile",
-    subtitle: "Account and subscription details",
+  },
+  {
+    match: "/settings",
+    title: "Settings",
   },
   {
     match: "/pricing/success",
     title: "Subscription",
-    subtitle: "Confirming your plan",
   },
   {
     match: "/pricing/cancel",
     title: "Checkout",
-    subtitle: "Your checkout was cancelled",
   },
   {
     match: "/pricing/error",
     title: "Checkout",
-    subtitle: "Payment needs attention",
   },
 ];
 
@@ -51,7 +47,7 @@ const resolveTitle = (pathname: string) =>
 
 export function DashboardNavbar() {
   const { pathname } = useLocation();
-  const { title, subtitle } = resolveTitle(pathname);
+  const { title } = resolveTitle(pathname);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-4 px-6 bg-background">
@@ -59,9 +55,6 @@ export function DashboardNavbar() {
         <SidebarTrigger className="md:hidden" />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium leading-none">{title}</p>
-          <p className="mt-1 truncate text-xs text-muted-foreground">
-            {subtitle}
-          </p>
         </div>
       </div>
 
@@ -73,7 +66,6 @@ export function DashboardNavbar() {
           <IconCrownFilled className="size-4" />
           Upgrade
         </Link>
-        <ThemeSwitch />
       </div>
     </header>
   );

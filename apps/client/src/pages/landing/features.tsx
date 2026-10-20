@@ -38,9 +38,7 @@ export function FeaturesPage() {
               to={`/features/${feature.slug}`}
               className="group relative flex flex-col bg-secondary/20 hover:bg-secondary/40 transition-all duration-300 border border-transparent hover:border-border p-10"
             >
-              <span className="flex size-12 items-center justify-center rounded-full bg-secondary/60 text-foreground">
-                <feature.icon className="size-6" />
-              </span>
+              <span className="flex size-12 items-center justify-center rounded-full bg-secondary/60 text-foreground"><feature.icon className="size-6" /></span>
 
               <h3 className="subheading text-primary! mt-10">
                 {feature.title}

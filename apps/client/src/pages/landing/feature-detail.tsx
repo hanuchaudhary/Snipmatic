@@ -7,6 +7,7 @@ import {
 } from "@tabler/icons-react";
 
 import { FEATURES, getFeature } from "@/lib/features";
+import { FeatureArtwork } from "@/components/landing/feature-artwork";
 
 import { Footer } from "./footer";
 import { Navbar } from "./navbar";
@@ -48,8 +49,8 @@ export function FeatureDetailPage() {
           <p className="mt-8 subheading">{feature.description}</p>
         </div>
 
-        <div className="relative mt-16 flex items-center justify-center overflow-hidden border bg-secondary/20 md:h-100 h-56">
-          <feature.icon className="md:size-40 size-24 text-primary/80" />
+        <div className="relative mt-16 flex items-center justify-center overflow-hidden border bg-secondary/20 md:h-100 h-56 p-4">
+          <FeatureArtwork slug={feature.slug} className="h-full w-full grayscale" />
         </div>
 
         <div className="md:grid grid-cols-2 gap-16 md:mt-30 mt-20">
@@ -127,9 +128,7 @@ export function FeatureDetailPage() {
                 to={`/features/${item.slug}`}
                 className="group border bg-secondary/20 hover:bg-secondary/40 transition-all duration-300 p-10"
               >
-                <span className="flex size-12 items-center justify-center rounded-full bg-secondary/60 text-foreground">
-                  <item.icon className="size-6" />
-                </span>
+                <span className="flex size-12 items-center justify-center rounded-full bg-secondary/60 text-foreground"><item.icon className="size-6" /></span>
                 <h3 className="subheading text-primary! mt-10">{item.title}</h3>
                 <p className="subheading text-[1.2rem]! mt-4">{item.tagline}</p>
               </Link>

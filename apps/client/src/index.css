@@ -3,6 +3,22 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 
+.lbi { position: relative; padding-top: 10px; width: 100%; }
+.lbi-box { position: relative; height: 54px; width: 100%; border: 1px solid var(--border); border-radius: 17px; background: var(--background); transition: border-color 220ms ease, box-shadow 220ms ease; }
+.lbi[data-focus="true"] .lbi-box { border-color: var(--foreground); box-shadow: 0 0 0 1px var(--foreground); }
+.lbi-label { position: absolute; z-index: 1; left: 17px; top: 50%; transform: translateY(-50%); transform-origin: left center; white-space: pre; color: var(--muted-foreground); font-size: 15px; line-height: 1; cursor: text; pointer-events: none; transition: transform 360ms cubic-bezier(.22,1,.36,1), top 360ms cubic-bezier(.22,1,.36,1), color 220ms ease; }
+.lbi[data-up="true"] .lbi-label { top: 0; transform: translateY(-50%) scale(.78); padding: 0 7px; margin-left: -7px; background: var(--background); color: var(--foreground); }
+.lbi-label span { display: inline-block; }
+.lbi[data-focus="true"] .lbi-label span { animation: lbi-hop 460ms cubic-bezier(.3,.7,.3,1) both; animation-delay: calc(var(--i) * 24ms); }
+.lbi-field { width: 100%; height: 100%; padding: 0 48px 0 17px; border: 0; border-radius: inherit; outline: none; background: transparent; color: var(--foreground); font-size: 15px; }
+.lbi-field[data-flip="1"] { animation: lbi-flip 260ms ease-out; }
+.lbi-field[data-flip="0"] { animation: lbi-flip 260ms ease-out; }
+.lbi-eye { position: absolute; right: 11px; top: 50%; display: grid; height: 32px; width: 32px; place-items: center; transform: translateY(-50%); border-radius: 50%; color: var(--muted-foreground); cursor: pointer; }
+.lbi-eye:hover { color: var(--foreground); background: var(--secondary); }
+@keyframes lbi-hop { 0%,100% { transform: translateY(0); } 38% { transform: translateY(-3px); } }
+@keyframes lbi-flip { from { filter: blur(3px); opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .lbi-label, .lbi-box { transition-duration: 0ms; } .lbi[data-focus="true"] .lbi-label span, .lbi-field { animation: none; } }
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

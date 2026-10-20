@@ -1,169 +1,22 @@
-# Turborepo starter
+# Snipmatic local development
 
-## Dodo Payments setup
+## Requirements
 
-1. Apply the Prisma migration with `bun run db:deploy` and regenerate the client with `bun run db:generate`.
-2. Set `DODO_PAYMENTS_API_KEY` and `DODO_PAYMENTS_ENVIRONMENT=test_mode` in the API environment. Use `live_mode` only with a live key.
-3. From `apps/api`, run `bun run products:create` once for the Clip ($9/month) and Studio ($19/month) subscription products. Copy its `DODO_PRODUCT_CLIP` and `DODO_PRODUCT_STUDIO` output into the API environment. If rerunning, keep those variables set so the script reuses the existing products.
-4. In Dodo, configure the webhook URL as `<API_URL>/payment/dodo/webhook` and subscribe to `subscription.active`, `subscription.renewed`, `subscription.plan_changed`, `subscription.cancelled`, `subscription.expired`, `subscription.on_hold`, and `subscription.paused`. Set `DODO_PAYMENTS_WEBHOOK_KEY` to that endpoint's signing key.
-5. Set `WEB_URL` to the deployed client origin so checkout and billing portal redirects work.
+- Bun 1.3+, Python 3.12, Docker Compose, and FFmpeg with `libass` and `libx264`
+- An Upstash Redis database with its TCP/TLS connection URL (`rediss://...`)
+- AWS S3 credentials and bucket for video storage
+- A Gemini API key for AI clip selection
 
-The migration removes the Stripe customer and subscription ID columns. Existing Stripe subscriptions require a separate transition to Dodo before their next renewal; the app does not transfer them automatically.
+## Start locally
 
-This Turborepo starter is maintained by the Turborepo core team.
+1. Start PostgreSQL: `docker compose up -d postgres`. The Compose Redis service is optional when using Upstash.
+2. Install JavaScript dependencies from the repository root: `bun install`.
+3. Create `apps/api/.env` from `apps/api/.env.example` and `processor/.env` from `processor/.env.example`. Fill in S3 credentials and bucket, `BETTER_AUTH_SECRET`, and `AI_API_KEY`. Set `REDIS_URL` in both to the **same Upstash TCP/TLS URL** from Connect → TCP, beginning with `rediss://`. The Upstash REST URL and token are different credentials and cannot be used as `REDIS_URL` here. The processor's `.env` supplies its AI key; it inherits the API process's Redis and AWS variables.
+4. Set `DATABASE_URL` in `packages/db/.env` using the value from `apps/api/.env.example`. Generate the Prisma client and apply migrations: `bun run db:generate` then `bun run db:deploy`.
+5. Create a Python 3.12 virtual environment at `processor/.venv`, then install packages: `cd processor && python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt && cd ..`. On a machine without `python3.12` on PATH, use its full path.
+6. Start the API and queue worker: `cd apps/api && bun run dev`. In another terminal, start the client: `cd apps/client && bun run dev`.
+7. Open `http://localhost:5173`. API docs are at `http://localhost:8000/docs`.
 
-## Using this example
+The processor publishes progress and completion to Redis; the API worker writes the database updates and acknowledges them. Keep the worker running while processing clips. An account needs credits to submit a clip; for a local test account, open Prisma Studio with `bun run db:studio` and set its `UserBilling.creditsBalance` to a positive value. Email verification links are logged by the API in local development.
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
-```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo build
-bun dlx turbo build
-bun exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-bun exec turbo build --filter=docs
-bun exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-bun exec turbo dev
-bun exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-bun exec turbo dev --filter=web
-bun exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-bun exec turbo login
-bun exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-bun exec turbo link
-bun exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+For cloud processing, configure Modal credentials in the API, and deploy `processor/app/processor.py` with a Modal secret containing `AI_API_KEY`, AWS S3 values, and the same Upstash `REDIS_URL`. [Upstash documents BullMQ over TLS](https://upstash.com/docs/redis/integrations/bullmq) and [Bun supports its `rediss://` URL](https://bun.sh/guides/ecosystem/upstash).

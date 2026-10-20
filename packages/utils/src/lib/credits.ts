@@ -69,7 +69,7 @@ export function calculateClipCredits({
     credits += minutes * CREDIT_RATES.subtitlesPerMinute;
   }
 
-  return credits;
+  return Math.ceil(credits);
 }
 
 export function hasEnoughCredits(balance: number, required: number) {

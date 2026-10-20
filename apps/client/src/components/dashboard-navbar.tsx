@@ -54,7 +54,7 @@ export function DashboardNavbar() {
   const { title, subtitle } = resolveTitle(pathname);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-6 backdrop-blur-md">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-4 px-6 bg-background">
       <div className="flex min-w-0 items-center gap-3">
         <SidebarTrigger className="md:hidden" />
         <div className="min-w-0">

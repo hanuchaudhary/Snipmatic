@@ -170,3 +170,12 @@ input:-webkit-autofill:active {
 .heading{
   @apply text-foreground font-light md:text-[2.25rem] text-[2rem] text-balance max-w-2xl leading-tight tracking-tighter;
 }
+@font-face {
+  font-family: "Anton";
+  src: url("/fonts/Anton.ttf") format("truetype");
+  font-display: swap;
+}
+
+.font-anton {
+  font-family: "Anton", Impact, sans-serif;
+}

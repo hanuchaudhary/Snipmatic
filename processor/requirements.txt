@@ -24,8 +24,8 @@ frozenlist==1.8.0
 fsspec==2026.7.0
 future==1.0.0
 google-auth==2.56.3
-google-genai==2.18.1
 grpclib==0.4.9
+google-genai==2.18.1
 h11==0.16.0
 h2==4.4.1
 hf-xet==1.6.0
@@ -58,6 +58,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.2.3
 PyYAML==6.0.3
 requests==2.34.2
+redis==6.4.0
 rich==15.0.0
 s3transfer==0.19.2
 setuptools==84.0.0

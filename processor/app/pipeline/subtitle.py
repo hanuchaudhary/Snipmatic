@@ -30,7 +30,7 @@ YCbCr Matrix: TV.709
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,{font_path},92,&H00ffffff,&H0000ff4d,&H00000000,&H00000000,0,0,0,0,100,100,1,0,3,7,5.5,2,60,60,280,1
+{styles}
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -68,12 +68,6 @@ def _collect_words(transcript: dict) -> list[dict]:
             words.append({"text": text, "start": start, "end": end})
 
     words.sort(key=lambda w: w["start"])
-    for cur, nxt in zip(words, words[1:]):
-        if cur["end"] > nxt["start"]:
-            cur["end"] = max(cur["start"] + MIN_WORD_S, nxt["start"])
-            if nxt["start"] < cur["end"]:
-                nxt["start"] = cur["end"]
-                nxt["end"] = max(nxt["end"], nxt["start"] + MIN_WORD_S)
     return words
 
 
@@ -115,34 +109,52 @@ def _chunk_words(words: list[dict]) -> list[list[dict]]:
     return chunks
 
 
-def _karaoke_text(chunk: list[dict]) -> str:
-    parts = []
-    for i, word in enumerate(chunk):
-        start_cs = _cs(word["start"])
-        end_cs = _cs(chunk[i + 1]["start"]) if i + 1 < len(chunk) else _cs(word["end"])
-        duration_cs = max(1, end_cs - start_cs)
-        parts.append(f"{{\\k{duration_cs}}}{word['text']}")
-    return " ".join(parts)
+STYLES = {
+    "classic": {"font": "Anton", "size": 92, "base": "&H00FFFFFF", "highlight": "&H0000D4FF", "outline": 7, "shadow": 3, "align": 2, "margin": 280},
+    "minimal-top": {"font": "Arial", "size": 68, "base": "&H00FFFFFF", "highlight": "&H00FFFFFF", "outline": 2, "shadow": 1, "align": 8, "margin": 220},
+    "bold-pop": {"font": "Anton", "size": 104, "base": "&H00FFFFFF", "highlight": "&H004DFF00", "outline": 8, "shadow": 4, "align": 2, "margin": 340},
+}
+STYLE_ALIASES = {"Classic": "classic", "Minimal Top": "minimal-top", "Bold Pop": "bold-pop"}
 
 
-def build_ass(words: list[dict], index: int, font_path: str = None) -> str:
-    lines = [ASS_HEADER.format(index=index, play_res_x=PLAY_RES_X, play_res_y=PLAY_RES_Y, font_path=font_path)]
-    if font_path:
-        lines.append(f"Style: Default,{font_path},92,&H00ffffff,&H0000ff4d,&H00000000,&H00000000,0,0,0,0,100,100,1,0,3,7,5.5,2,60,60,280,1")
-    else:
-        lines.append(f"Style: Default,Arial Black,72,&H00FFFFFF,&H0000FFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,4,0,2,80,80,180,1")
+def _style_line(name: str, style: dict, color: str) -> str:
+    return (
+        f"Style: {name},{style['font']},{style['size']},{color},{color},&H00000000,&H00000000,"
+        f"-1,0,0,0,100,100,1,0,1,{style['outline']},{style['shadow']},"
+        f"{style['align']},60,60,{style['margin']},1"
+    )
+
+
+def build_ass(words: list[dict], index: int, style_key: str = "classic") -> str:
+    style = STYLES.get(STYLE_ALIASES.get(style_key, style_key), STYLES["classic"])
+    styles = "\n".join((
+        _style_line("Base", style, style["base"]),
+        _style_line("Active", style, style["highlight"]),
+    ))
+    lines = [ASS_HEADER.format(index=index, play_res_x=PLAY_RES_X, play_res_y=PLAY_RES_Y, styles=styles)]
     for chunk in _chunk_words(words):
-        start = chunk[0]["start"]
-        end = chunk[-1]["end"]
+        start, end = chunk[0]["start"], chunk[-1]["end"]
         if _cs(end) <= _cs(start):
             continue
-        lines.append(
-            f"Dialogue: 0,{_format_ass_time(start)},{_format_ass_time(end)},Default,,0,0,0,,{_karaoke_text(chunk)}\n"
-        )
+        text = " ".join(word["text"].upper() for word in chunk)
+        lines.append(f"Dialogue: 0,{_format_ass_time(start)},{_format_ass_time(end)},Base,,0,0,0,,{text}\n")
+        for i, word in enumerate(chunk):
+            # The base caption stays visible; only the spoken word is highlighted.
+            # Separate events use Whisper's actual word end, so pauses do not
+            # extend the karaoke highlight into silence.
+            word_start = max(start, word["start"])
+            word_end = min(end, word["end"])
+            if _cs(word_end) <= _cs(word_start):
+                continue
+            active = " ".join(
+                f"{{\\c{style['highlight']}&}}{part['text'].upper()}{{\\rBase}}" if j == i else part["text"].upper()
+                for j, part in enumerate(chunk)
+            )
+            lines.append(f"Dialogue: 1,{_format_ass_time(word_start)},{_format_ass_time(word_end)},Base,,0,0,0,,{active}\n")
     return "".join(lines)
 
 
-def create_subtitles(transcript: dict, moments: list, output_dir: str = DOWNLOAD_PATH, font_path: str = None) -> list[str]:
+def create_subtitles(transcript: dict, moments: list, output_dir: str = DOWNLOAD_PATH, style_key: str = "classic") -> list[str]:
     os.makedirs(output_dir, exist_ok=True)
     all_words = _collect_words(transcript)
     ass_paths = []
@@ -156,7 +168,7 @@ def create_subtitles(transcript: dict, moments: list, output_dir: str = DOWNLOAD
         clip_words = _words_for_clip(all_words, float(start), float(end))
         ass_path = os.path.join(output_dir, f"clip_{i}.ass")
         with open(ass_path, "w", encoding="utf-8") as f:
-            f.write(build_ass(clip_words, i, font_path))
+            f.write(build_ass(clip_words, i, style_key))
         ass_paths.append(ass_path)
         logger.info("Created subtitles for clip %s: %s", i, ass_path)
 
@@ -203,7 +215,7 @@ def burn_ass(video_path: str, ass_path: str, output_path: str, fonts_dir: str | 
         vf += f":fontsdir='{fonts}'"
 
     cmd = [
-        "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+        os.environ.get("FFMPEG_BINARY") or "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
         "-i", str(video_file),
         "-vf", vf,
         "-c:v", "libx264", "-preset", X264_PRESET, "-crf", str(X264_CRF),

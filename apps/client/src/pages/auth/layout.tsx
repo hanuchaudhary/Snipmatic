@@ -4,15 +4,10 @@ import { Navbar } from "../landing/navbar";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
-  /** Small label shown above the left panel heading. */
   eyebrow?: string;
-  /** First (emphasised) line of the left panel heading. */
   title: string;
-  /** Second (muted) line of the left panel heading. */
   subtitle: string;
-  /** Supporting paragraph under the heading. */
   description?: string;
-  /** Optional capability bullets shown at the bottom of the left panel. */
   points?: string[];
 }
 
@@ -54,8 +49,8 @@ export function AuthLayout({
             <ul className="mt-12 space-y-4">
               {points.map((point) => (
                 <li key={point} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-800/30">
-                    <IconCheckFilled className="size-4 text-emerald-500!" />
+                  <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full dark:bg-emerald-800/30 bg-emerald-300">
+                    <IconCheckFilled className="size-4 dark:text-emerald-500! text-emerald-800!" />
                   </span>
                   <span className="subheading text-[1.2rem]! text-primary!">
                     {point}

@@ -1,6 +1,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -42,6 +43,7 @@ type FormValues = z.infer<typeof formSchema>;
 export const CreateClip = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const isClipsPage = location.pathname === "/clips";
@@ -50,7 +52,7 @@ export const CreateClip = () => {
   const { upload, progress, isUploading, abort, reset: resetUpload } =
     useVideoUpload();
 
-  const { url, videoInfo, clipRange, clipMode, subtitles, isGettingInfo, isCreatingClip, setUrl, hydrateFromPageState, setUploadPreview, reset, fetchVideoInfo, processClip, getEstimatedCredits } = useClipStore();
+  const { url, videoInfo, clipRange, isGettingInfo, isCreatingClip, setUrl, hydrateFromPageState, setUploadPreview, reset, fetchVideoInfo, processClip, getEstimatedCredits } = useClipStore();
 
   const [credits, setCredits] = React.useState<
     PaymentModel["creditsResponse"] | null
@@ -91,10 +93,7 @@ export const CreateClip = () => {
     }
   }, [form, hydrateFromPageState, isClipsPage, pageState]);
 
-  const estimatedCredits = React.useMemo(
-    () => getEstimatedCredits(),
-    [clipMode, clipRange, getEstimatedCredits, subtitles, videoInfo]
-  );
+  const estimatedCredits = getEstimatedCredits();
   const showVideoDetails = isClipsPage && Boolean(videoInfo);
   const isBusy = isGettingInfo || isUploading;
 
@@ -221,8 +220,13 @@ export const CreateClip = () => {
         return;
       }
 
-      await processClip();
+      const { project } = await processClip();
+      await queryClient.invalidateQueries({ queryKey: ["clips"] });
       toast.success("Clip processing started.");
+      reset();
+      resetUpload();
+      form.reset({ url: "" });
+      navigate("/dashboard", { state: { projectId: project.id } });
     } catch (error) {
       toast.error(
         error instanceof Error

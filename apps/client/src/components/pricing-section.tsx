@@ -76,7 +76,7 @@ export default function PricingSection() {
               <ul className="space-y-3 mt-6 subheading text-[1.2rem]! text-primary!">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex gap-2">
-                    <div className="size-7 flex items-center justify-center bg-emerald-800/30 rounded-full">
+                    <div className="size-7 flex items-center justify-center dark:bg-emerald-800/30 bg-emerald-300 rounded-full">
                       <IconCheckFilled className="w-4 h-4 text-emerald-500!" />
                     </div>
                     <span>{feature}</span>

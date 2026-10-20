@@ -4,7 +4,8 @@ import { Elysia } from "elysia";
 import z from "zod";
 
 import { auth } from "./config/auth";
-import { betterAuth, OpenAPI } from "./config/auth.plugin"; 
+import { betterAuth, OpenAPI } from "./config/auth.plugin";
+import { webOrigins } from "./config/origins";
 import { admin } from "./modules/admin";
 import { clip } from "./modules/clip";
 import { payment } from "./modules/payment";
@@ -12,7 +13,7 @@ import { payment } from "./modules/payment";
 const app = new Elysia()
   .use(
     cors({
-      origin: ["http://localhost:5173"],
+      origin: webOrigins,
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -26,8 +27,7 @@ const app = new Elysia()
       documentation: {
         info: {
           title: "Snipmatic API",
-          description:
-            "Snipmatic API for viral video content",
+          description: "Snipmatic API for viral video content",
           version: "1.0.0",
         },
 
@@ -53,6 +53,13 @@ const app = new Elysia()
       },
     }).mount(auth.handler)
   )
+  .get("/", () => {
+    return {
+      status: "ok",
+      timestamp: new Date().toLocaleTimeString(),
+      message: "Snipmatic API is running",
+    };
+  })
   .get("/health", () => {
     return {
       status: "ok",

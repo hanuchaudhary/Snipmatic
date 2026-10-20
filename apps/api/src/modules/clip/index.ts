@@ -1,5 +1,4 @@
 import {
-  ClipModel,
   PresignedUrlModel,
   PreviewModel,
   ProcessModel,
@@ -8,6 +7,7 @@ import {
 import { Elysia } from "elysia";
 
 import { withAuth } from "../../config/auth.plugin";
+import { requireProcessorAuth } from "../../config/processor-auth";
 import { ClipService } from "./service";
 
 export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
@@ -76,19 +76,16 @@ export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
       },
     }
   )
-  .patch(
-    "/output/:id",
-    async ({ params, body }) => {
-      const response = await ClipService.updateClip(params.id, body);
-      return response;
+  .post(
+    "/:id/complete",
+    async ({ params, body, request }) => {
+      requireProcessorAuth(request.headers);
+      return ClipService.completeProject(params.id, body);
     },
     {
-      params: ClipModel.params,
-      body: ClipModel.updateBody,
-      response: {
-        200: ClipModel.response,
-        404: ClipModel.notFound,
-      },
+      params: ProjectModel.params,
+      body: ProjectModel.completeBody,
+      response: { 200: ProjectModel.completeResponse },
     }
   )
   .get(
@@ -108,7 +105,8 @@ export const clip = new Elysia({ prefix: "/clip", tags: ["Clip"] })
   )
   .patch(
     "/:id",
-    async ({ params, body }) => {
+    async ({ params, body, request }) => {
+      requireProcessorAuth(request.headers);
       const response = await ClipService.updateProject(params.id, body);
       return response;
     },

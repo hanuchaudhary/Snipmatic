@@ -48,7 +48,7 @@ type ClipActions = {
   }) => void;
   reset: () => void;
   fetchVideoInfo: (url: string) => Promise<void>;
-  processClip: () => Promise<void>;
+  processClip: () => Promise<ProcessModel["response"]>;
   getProcessingDuration: () => number;
   getEstimatedCredits: () => number;
 };
@@ -88,7 +88,7 @@ export const useClipStore = create<ClipState & ClipActions>((set, get) => ({
       subtitles: enabled,
       subtitleTemplateId:
         enabled && !state.subtitleTemplateId
-          ? SUBTITLE_STYLES[0]?.name
+          ? SUBTITLE_STYLES[0]?.key
           : state.subtitleTemplateId,
     })),
 
@@ -174,7 +174,7 @@ export const useClipStore = create<ClipState & ClipActions>((set, get) => ({
   },
 
   getEstimatedCredits: () => {
-    const { videoInfo, clipMode, subtitles } = get();
+    const { videoInfo, subtitles } = get();
 
     if (!videoInfo) {
       return 0;
@@ -182,7 +182,7 @@ export const useClipStore = create<ClipState & ClipActions>((set, get) => ({
 
     return calculateClipCredits({
       durationSeconds: get().getProcessingDuration(),
-      subtitles: clipMode === "AI" ? subtitles : false,
+      subtitles,
     });
   },
 
@@ -220,7 +220,7 @@ export const useClipStore = create<ClipState & ClipActions>((set, get) => ({
     }
 
     if (state.isCreatingClip) {
-      return;
+      throw new Error("Clip processing is already being submitted.");
     }
 
     set({ isCreatingClip: true });
@@ -238,14 +238,13 @@ export const useClipStore = create<ClipState & ClipActions>((set, get) => ({
         toDuration: state.clipRange[1],
         duration,
         processingType: state.clipMode,
-        subtitleStyleKey:
-          state.clipMode === "AI" && state.subtitles
-            ? state.subtitleTemplateId
-            : undefined,
+        subtitleStyleKey: state.subtitles
+          ? state.subtitleTemplateId
+          : undefined,
         aspectRatio: state.aspectRatio,
       };
 
-      await ClipApi.process(payload);
+      return await ClipApi.process(payload);
     } finally {
       set({ isCreatingClip: false });
     }

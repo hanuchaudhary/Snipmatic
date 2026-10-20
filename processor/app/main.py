@@ -1,57 +1,27 @@
-from app.pipeline.subtitle import create_subtitles
-from app.pipeline.transcribe import transcribe
-from app.utils.ai import AI
-from app.utils.config import DOWNLOAD_PATH, PROCESS_PATH
-from app.utils.ffmpeg import FFMPEG
-from app.utils.types import AspectRatio, JobPayload
-from app.utils.types import ClipType, VideoSource
-from app.utils.youtube import download_video
+import argparse
+import json
+import tempfile
+from pathlib import Path
+
 from dotenv import load_dotenv
 
-load_dotenv()
+from app.runner import run_pipeline
+from app.utils.types import JobPayload
 
-payload = JobPayload(
-    id="123",
-    userId="123",
-    clipType=ClipType.AI,
-    subtitleStyleKey = "default",
-    sourceKey="https://youtu.be/ngPkbaZliaU",
-    source=VideoSource.YOUTUBE,
-    searchFrom=None,
-    searchTo=None,
-    prompt="",
-    aspectRatio=AspectRatio.RATIO_9_16,
-)
-
-FONT_PATH = "/assets/fonts/Anton.ttf"
 
 def main():
-    job_id = payload.id
-    clip_type = payload.clipType
-    
-    video_info = download_video(payload.sourceKey, payload.source)
+    load_dotenv()
+    parser = argparse.ArgumentParser(description="Run a processor payload locally")
+    parser.add_argument("payload", type=Path, help="Path to a JSON processor payload")
+    args = parser.parse_args()
 
-    video_path = video_info.get("video_path")
-    audio_path = video_info.get("audio_path")
+    payload = JobPayload.model_validate(
+        json.loads(args.payload.read_text(encoding="utf-8"))
+    )
+    with tempfile.TemporaryDirectory(prefix=f"clip-{payload.projectId}-") as workspace:
+        result = run_pipeline(payload, workspace)
+    print(json.dumps(result))
 
-    ffmpeg = FFMPEG()
-    ffmpeg.extract_audio(video_path, audio_path, payload.searchFrom, payload.searchTo)
-
-    transcript = transcribe(audio_path)
-
-    ai = AI()
-    moments = ai.identify_moments(transcript, payload.prompt or "")
-
-    ass_paths = create_subtitles(transcript, moments, DOWNLOAD_PATH, font_path=FONT_PATH)
-
-    clips_path = f"{PROCESS_PATH}/clips"
-    metadata = {
-        "moments": moments,
-        "aspect_ratio": payload.aspectRatio,
-        "subtitles_key": payload.subtitleStyleKey,
-        "subtitles": ass_paths,
-    }
-    ffmpeg.extract_clips(video_path, clips_path, metadata)
 
 if __name__ == "__main__":
     main()

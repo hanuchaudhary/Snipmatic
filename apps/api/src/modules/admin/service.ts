@@ -1,8 +1,4 @@
-import {
-  type PlanTier,
-  type ProjectStatus,
-  prisma,
-} from "@snipmatic/db";
+import { type PlanTier, prisma, type ProjectStatus } from "@snipmatic/db";
 import type { AdminModel } from "@snipmatic/utils/types";
 
 const ACTIVITY_DAYS = 14;
@@ -70,7 +66,7 @@ export abstract class AdminService {
       creditsConsumed,
       projectsByStatus,
       projectsBySource,
-      clipsByProcessingType,
+      projectsByProcessingType,
       recentProjects,
       recentUsers,
     ] = await Promise.all([
@@ -99,11 +95,11 @@ export abstract class AdminService {
         by: ["status"],
         _count: { _all: true },
       }),
-      prisma.project.groupBy({
+      prisma.projectMetadata.groupBy({
         by: ["source"],
         _count: { _all: true },
       }),
-      prisma.clip.groupBy({
+      prisma.projectConfig.groupBy({
         by: ["processingType"],
         _count: { _all: true },
       }),
@@ -160,7 +156,7 @@ export abstract class AdminService {
           source: row.source,
           count: row._count._all,
         })),
-        byProcessingType: clipsByProcessingType.map((row) => ({
+        byProcessingType: projectsByProcessingType.map((row) => ({
           processingType: row.processingType,
           count: row._count._all,
         })),
@@ -262,7 +258,7 @@ export abstract class AdminService {
           status: true,
           progress: true,
           title: true,
-          source: true,
+          metadata: { select: { source: true } },
           error: true,
           createdAt: true,
           _count: {
@@ -283,17 +279,22 @@ export abstract class AdminService {
       total,
       page,
       limit,
-      projects: projects.map((project) => ({
-        id: project.id,
-        status: project.status,
-        progress: project.progress,
-        title: project.title,
-        source: project.source,
-        clipCount: project._count.clips,
-        error: project.error,
-        createdAt: project.createdAt,
-        user: project.user,
-      })),
+      projects: projects.map((project) => {
+        if (!project.metadata) {
+          throw new Error(`Project ${project.id} is missing metadata`);
+        }
+        return {
+          id: project.id,
+          status: project.status,
+          progress: project.progress,
+          title: project.title,
+          source: project.metadata.source,
+          clipCount: project._count.clips,
+          error: project.error,
+          createdAt: project.createdAt,
+          user: project.user,
+        };
+      }),
     };
   }
 }

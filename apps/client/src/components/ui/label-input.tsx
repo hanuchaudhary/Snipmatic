@@ -15,11 +15,13 @@ type LabelInputProps = Omit<
   "placeholder"
 > & {
   label: string;
+  isDisabled?: boolean
 };
 
 export const LabelInput = forwardRef<HTMLInputElement, LabelInputProps>(
   function LabelInput(
     {
+      isDisabled,
       label,
       type = "text",
       value,
@@ -46,7 +48,7 @@ export const LabelInput = forwardRef<HTMLInputElement, LabelInputProps>(
         data-focus={focused}
       >
         <div className="lbi-box">
-          <label className="lbi-label" htmlFor={id}>
+          <label className={cn("lbi-label", isDisabled && "opacity-50")} htmlFor={id}>
             {[...label].map((letter, index) => (
               <span key={index} style={{ "--i": index } as CSSProperties}>
                 {letter}
@@ -57,7 +59,7 @@ export const LabelInput = forwardRef<HTMLInputElement, LabelInputProps>(
             {...props}
             ref={ref}
             id={id}
-            className="lbi-field"
+            className={cn("lbi-field", isDisabled && "opacity-50")}
             data-flip={flip % 2}
             type={secret ? (show ? "text" : "password") : type}
             value={value}
@@ -73,7 +75,8 @@ export const LabelInput = forwardRef<HTMLInputElement, LabelInputProps>(
           />
           {secret && (
             <button
-              className="lbi-eye"
+              className={cn("lbi-eye", isDisabled && "opacity-50")}
+              disabled={isDisabled}
               type="button"
               aria-label={show ? "Hide password" : "Show password"}
               onPointerDown={(event) => event.preventDefault()}

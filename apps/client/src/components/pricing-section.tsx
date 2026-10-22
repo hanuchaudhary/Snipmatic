@@ -8,6 +8,7 @@ import { useSession } from "@/lib/auth/auth.client";
 import { PaymentApi } from "@/lib/api/payment";
 import { PLAN_TIERS, PLANS, type PlanTier } from "@snipmatic/utils";
 import { cn } from "@/lib/utils";
+import { PlasticButton } from "./ui/plastic-button";
 
 export default function PricingSection() {
   const navigate = useNavigate();
@@ -106,8 +107,9 @@ export default function PricingSection() {
                 ))}
               </ul>
 
-              <button
-                className="mt-auto w-full rounded-full bg-primary px-6 py-3 text-primary-foreground flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              <PlasticButton
+                variant={plan.highlighted ? "emerald" : "primary"}
+                className="mt-auto w-full py-4"
                 onClick={() => hasSubscription ? void handlePortal() : void handleCheckout(tier)}
                 disabled={isLoading || openingPortal || (Boolean(session?.user) && isAccountPending)}
               >
@@ -121,7 +123,7 @@ export default function PricingSection() {
                     {isCurrent ? "Manage current plan" : hasSubscription ? "Change plan in billing" : `Choose ${plan.name}`}
                   </span>
                 )}
-              </button>
+              </PlasticButton>
             </div>
           );
         })}

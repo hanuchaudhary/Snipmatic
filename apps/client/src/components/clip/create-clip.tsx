@@ -33,6 +33,8 @@ import { VideoInfo } from "./video-info";
 import { TooltipButton } from "../ui/tooltip-button";
 import BorderBeam from "border-beam";
 import { useTheme } from "../provider/theme-provider";
+import { PlasticButton } from "../ui/plastic-button";
+import { UploadVideoDialog } from "./upload-video-dialog";
 
 const formSchema = z.object({
   url: youtubeUrlSchema,
@@ -45,7 +47,6 @@ export const CreateClip = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const isClipsPage = location.pathname === "/clips";
   const pageState = location.state as ClipsPageState | null;
 
@@ -57,6 +58,7 @@ export const CreateClip = () => {
   const [credits, setCredits] = React.useState<
     PaymentModel["creditsResponse"] | null
   >(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = React.useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -144,17 +146,10 @@ export const CreateClip = () => {
       return;
     }
 
-    fileInputRef.current?.click();
+    setUploadDialogOpen(true);
   };
 
-  const onFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) {
-      return;
-    }
-
+  const onFileSelected = async (file: File) => {
     try {
       const result = await upload(file);
       const videoInfoPayload = {
@@ -183,16 +178,19 @@ export const CreateClip = () => {
       };
 
       form.reset({ url: "" });
+      setUploadDialogOpen(false);
       navigate("/clips", { state: nextState, replace: isClipsPage });
       toast.success("Video uploaded successfully.");
+      return true;
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
-        return;
+        return false;
       }
 
       toast.error(
         error instanceof Error ? error.message : "Unable to upload video."
       );
+      return false;
     }
   };
 
@@ -203,6 +201,7 @@ export const CreateClip = () => {
 
     reset();
     resetUpload();
+    setUploadDialogOpen(false);
     form.reset({ url: "" });
 
     if (isClipsPage) {
@@ -258,13 +257,6 @@ export const CreateClip = () => {
           </Button>
         </div>
       </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="video/*"
-        className="hidden"
-        onChange={onFileSelected}
-      />
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onGetVideoInfo)}
@@ -278,7 +270,7 @@ export const CreateClip = () => {
                 <h2 className="md:text-2xl">Snipmatic</h2>
                 <div className="relative">
                   <img
-                    src="/youtube-icon.png"
+                    src="/youtube-icon.svg"
                     alt="YouTube Icon"
                     className="absolute top-1/2 -translate-y-1/2 left-0 md:w-8 w-5"
                   />
@@ -320,20 +312,20 @@ export const CreateClip = () => {
                       <IconX />
                     </Button>
                   ) : (
-                    <Button
+                    <PlasticButton
                       className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full md:flex hidden"
                       type="submit"
                       disabled={isBusy}
                     >
                       {isGettingInfo ? (
                         <>
-                          <IconLoader2 className="animate-spin" />
+                          <IconLoader2 className="animate-spin size-4" />
                           Getting Clips
                         </>
                       ) : (
                         "Get Clips"
                       )}
-                    </Button>
+                    </PlasticButton>
                   )}
                 </div>
 
@@ -343,23 +335,6 @@ export const CreateClip = () => {
           />
         </form>
       </Form>
-      {isUploading && (
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Uploading video...</span>
-            <span>{progress}%</span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full bg-primary transition-all duration-200"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <Button type="button" variant="ghost" size="sm" onClick={abort}>
-            Cancel upload
-          </Button>
-        </div>
-      )}
       <div className="flex md:mt-4 mt-3 relative z-20">
         <TooltipButton tooltipText="Upload raw video">
           <Button
@@ -402,6 +377,15 @@ export const CreateClip = () => {
           )}
         </Button>
       </div>
+
+      <UploadVideoDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onFileSelect={onFileSelected}
+        isUploading={isUploading}
+        progress={progress}
+        onCancel={abort}
+      />
 
       {showVideoDetails && (
         <>

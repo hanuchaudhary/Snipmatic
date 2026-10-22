@@ -20,6 +20,7 @@ import { SocialAuth } from "@/components/ui/social-auth";
 import { signUp } from "@/lib/auth/auth.client";
 
 import { AuthLayout } from "./layout";
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 const signupSchema = z.object({
   email: z.email(),
@@ -118,14 +119,13 @@ export function SignupPage() {
                 <span className="text-foreground">{verificationEmail}</span>.
               </p>
               <div className="flex flex-col gap-2">
-                <Button
-                  className="w-full"
-                  variant={"rounded"}
-                  size={"lg"}
+                <PlasticButton
+                    variant="primary"
+                  className="w-full rounded-full py-3"
                   onClick={() => navigate("/login")}
                 >
                   Go to login
-                </Button>
+                </PlasticButton>
                 <Button
                   variant="outline"
                   className="w-full"
@@ -198,15 +198,14 @@ export function SignupPage() {
                       </FormItem>
                     )}
                   />
-                  <Button
-                    className="w-full"
+                  <PlasticButton
                     type="submit"
-                    size={"lg"}
-                    variant={"rounded"}
+                    variant="primary"
+                    className="w-full rounded-full py-3"
                     disabled={isLoading}
                   >
                     {isLoading ? "Creating account..." : "Sign up"}
-                  </Button>
+                  </PlasticButton>
                 </form>
               </Form>
             </motion.div>

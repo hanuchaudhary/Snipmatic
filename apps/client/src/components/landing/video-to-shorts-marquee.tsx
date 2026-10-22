@@ -1,12 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-
-import {
-  IconBrandFacebookFilled,
-  IconBrandInstagram,
-  IconBrandLinkedinFilled,
-  IconBrandTiktokFilled,
-  IconBrandYoutubeFilled,
-} from "@tabler/icons-react";
 import { motion, type Transition, useReducedMotion } from "motion/react";
 
 const CYCLE = 3.6;
@@ -110,7 +102,7 @@ function QueueBatch({
             alt=""
           />
           <span className="absolute left-2 top-2 grid size-7 place-items-center bg-black/70 text-[#ff4545]">
-            <IconBrandYoutubeFilled size={20} />
+            <img src="/youtube-icon.svg" alt="" className="size-full object-contain" />
           </span>
         </motion.div>
       </div>
@@ -173,7 +165,7 @@ function QueueBatch({
                   <span
                     className="absolute left-1 top-1 grid size-5 place-items-center rounded-md md:left-2 md:top-2 md:size-7"
                   >
-                    <img src={Icon} alt="" className="size-full object-contain" />
+                    <img src={Icon} alt="" className="size-full object-cover" />
                   </span>
                   <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-1 pb-1 pt-5 text-white md:px-2 md:pb-2">
                     <span className="font-mono text-[10px] font-bold text-lime-300 md:text-sm">

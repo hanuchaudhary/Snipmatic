@@ -4,10 +4,10 @@ import { Link, NavLink } from "react-router";
 import { IconArrowRight, IconMenu2, IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
 
-import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import { useSession } from "@/lib/auth/auth.client";
 import { FEATURES } from "@/lib/features";
 import { cn } from "@/lib/utils";
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -106,14 +106,17 @@ export function Navbar() {
 
               <div className="hidden items-center gap-3 md:flex">
                 {session?.user ? (
-                  <><Link to="/dashboard" className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground">Dashboard</Link><ProfileDropdown /></>
+                  <Link to="/dashboard">
+                    <PlasticButton variant="primary">
+                      Dashboard
+                    </PlasticButton>
+                  </Link>
                 ) : (
-                  <NavLink
-                    to="/login"
-                    className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-background"
-                  >
-                    Sign in
-                  </NavLink>
+                  <Link to="/login">
+                    <PlasticButton variant="primary">
+                      Sign in
+                    </PlasticButton>
+                  </Link>
                 )}
               </div>
 
@@ -140,9 +143,9 @@ export function Navbar() {
                   transition={{ duration: 0.2 }}
                   onMouseEnter={cancelClose}
                   onMouseLeave={closeFeatures}
-                  className="hidden md:block"
+                  className="hidden md:block ml-25"
                 >
-                  <div className="px-8 py-10">
+                  <div className="py-10">
                     <div className="mb-8 flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">
                         From source video to published post
@@ -223,20 +226,23 @@ export function Navbar() {
 
               <div className="mt-auto pt-6">
                 {session?.user ? (
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-medium text-background"
-                  >
-                    Dashboard
+                  <Link to="/dashboard">
+                    <PlasticButton
+                      variant="primary"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Dashboard
+                    </PlasticButton>
                   </Link>
                 ) : (
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-medium text-background"
-                  >
-                    Sign in
+                  <Link to="/login">
+
+                    <PlasticButton
+                      variant="primary"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Sign in
+                    </PlasticButton>
                   </Link>
                 )}
               </div>

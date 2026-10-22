@@ -3,18 +3,17 @@ import { Link } from "react-router";
 
 import {
   Check,
-  CreditCard,
-  ExternalLink,
-  Palette,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { PaymentApi } from "@/lib/api/payment";
 import { updateUser, useSession } from "@/lib/auth/auth.client";
 import { AVATARS } from "@/lib/avatars";
+import { IconCreditCardFilled, IconExternalLinkFilled, IconPaletteFilled } from "@tabler/icons-react";
+import { LabelInput } from "@/components/ui/label-input";
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 export function SettingsPage() {
   const { data: session } = useSession();
@@ -117,39 +116,36 @@ export function SettingsPage() {
               ))}
             </div>
             <div className="mt-8 grid gap-5 md:grid-cols-2">
-              <label className="block text-sm font-medium">
-                Display name
-                <input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  maxLength={80}
-                  className="mt-2 h-11 w-full rounded-xl border bg-background px-4 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-              </label>
-              <label className="block text-sm font-medium">
-                Email address
-                <input
-                  value={user?.email ?? ""}
-                  readOnly
-                  className="mt-2 h-11 w-full rounded-xl border bg-secondary/30 px-4 text-muted-foreground"
-                />
-              </label>
+              <LabelInput
+                label="Display name"
+                type="text"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                maxLength={80}
+              />
+              <LabelInput
+                label="Email address"
+                type="email"
+                value={user?.email ?? ""}
+                readOnly
+                isDisabled
+                disabled
+              />
             </div>
             <div className="mt-7 flex justify-end">
-              <Button
+              <PlasticButton
                 onClick={() => void save()}
                 disabled={saving || !user}
-                className="rounded-full px-6"
               >
                 {saving ? "Saving…" : "Save changes"}
-              </Button>
+              </PlasticButton>
             </div>
           </div>
         </section>
         <section className="flex flex-wrap items-center justify-between gap-5 py-6 md:py-8">
           <div className="flex items-center gap-4">
             <span className="grid size-11 place-items-center rounded-xl bg-secondary">
-              <Palette size={20} />
+              <IconPaletteFilled size={20} />
             </span>
             <div>
               <h2 className="">Appearance</h2>
@@ -163,7 +159,7 @@ export function SettingsPage() {
         <section className="flex flex-wrap items-center justify-between gap-5">
           <div className="flex items-center gap-4">
             <span className="grid size-11 place-items-center rounded-xl bg-secondary">
-              <CreditCard size={20} />
+              <IconCreditCardFilled size={20} />
             </span>
             <div>
               <h2 className="">Billing and plan</h2>
@@ -173,17 +169,16 @@ export function SettingsPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" asChild className="rounded-full">
+            <PlasticButton variant="white" className="rounded-full">
               <Link to="/pricing">View plans</Link>
-            </Button>
-            <Button
+            </PlasticButton>
+            <PlasticButton variant="primary"
               onClick={() => void openBilling()}
               disabled={openingPortal}
-              className="rounded-full"
             >
               {openingPortal ? "Opening…" : "Manage billing"}
-              <ExternalLink size={15} />
-            </Button>
+              <IconExternalLinkFilled size={15} />
+            </PlasticButton>
           </div>
         </section>
       </div>

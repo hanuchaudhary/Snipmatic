@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -21,6 +20,7 @@ import { SocialAuth } from "@/components/ui/social-auth";
 import { signIn, useSession } from "@/lib/auth/auth.client";
 
 import { AuthLayout } from "./layout";
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 const loginSchema = z.object({
   email: z.email(),
@@ -160,15 +160,14 @@ export function LoginPage() {
               )}
             />
 
-            <Button
-              className="w-full"
+            <PlasticButton
+              variant="primary"
+              className="w-full rounded-full py-3"
               type="submit"
-              size={"lg"}
-              variant={"rounded"}
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign in"}
-            </Button>
+            </PlasticButton>
           </form>
         </Form>
 

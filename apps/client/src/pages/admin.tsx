@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { AdminApi } from "@/lib/api/admin";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +61,7 @@ function StatCard({
     <Card>
       <CardHeader>
         <CardDescriptionLabel>{label}</CardDescriptionLabel>
-        <CardTitle className="font-jost text-2xl">{value}</CardTitle>
+        <CardTitle className="text-2xl font-light">{value}</CardTitle>
       </CardHeader>
       {hint ? (
         <CardContent>
@@ -66,7 +74,7 @@ function StatCard({
 
 function CardDescriptionLabel({ children }: { children: string }) {
   return (
-    <p className="text-xs text-muted-foreground font-jost">{children}</p>
+    <p className="text-xs text-muted-foreground">{children}</p>
   );
 }
 
@@ -194,24 +202,22 @@ export function AdminPage() {
   const pageCount = Math.max(1, Math.ceil(listTotal / listLimit));
 
   return (
-    <div className="w-full px-8 pt-20 pb-16">
-      <div className="flex items-end justify-between mb-6">
-        <div>
-          <h1 className="font-jost text-2xl">Admin</h1>
-          <p className="text-sm text-muted-foreground">
-            Platform data and statistics. Read only.
-          </p>
-        </div>
-      </div>
+    <main className="w-full px-6 pb-16 pt-10 md:px-8 md:pt-16">
+      <header className="mb-10">
+        <h1 className="heading">Admin</h1>
+        <p className="mt-1 subheading">
+          Platform data, account activity, and processing health.
+        </p>
+      </header>
 
       {loadingOverview || !overview ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} className="h-24 rounded-lg" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
           <StatCard
             label="Users"
             value={formatNumber(overview.users.total)}
@@ -241,11 +247,11 @@ export function AdminPage() {
             <CardTitle>Activity · last 14 days</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-end gap-1.5 h-28">
+            <div className="flex h-28 items-end gap-1.5">
               {overview.activity.map((day) => (
                 <div
                   key={day.date}
-                  className="flex-1 flex items-end gap-0.5 h-full"
+                  className="flex h-full flex-1 items-end gap-0.5"
                   title={`${day.date}: ${day.projects} projects, ${day.users} users`}
                 >
                   <div
@@ -280,7 +286,7 @@ export function AdminPage() {
       ) : null}
 
       {overview ? (
-        <div className="grid md:grid-cols-3 gap-3 mb-8">
+        <div className="mb-8 grid gap-3 md:grid-cols-3">
           <BreakdownList
             title="Plans"
             items={overview.billing.byPlan.map((item) => ({
@@ -305,155 +311,172 @@ export function AdminPage() {
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between mb-3 gap-3">
-        <div
-          className={cn(
-            "relative flex md:h-11 h-10 rounded-full bg-secondary p-1 font-jost ring-1 ring-border"
-          )}
-        >
-          {tabs.map(({ key, label }) => {
-            const isActive = tab === key;
-            return (
-              <button
-                type="button"
-                key={key}
-                className="relative rounded-full cursor-pointer"
-                onClick={() => {
-                  setTab(key);
-                  setPage(1);
-                }}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeAdminTab"
-                    className="absolute inset-0 rounded-full bg-primary shadow-[inset_0_0_3px_rgba(255,255,255,1)]"
-                    transition={{ type: "spring", duration: 0.5 }}
-                  />
-                )}
-                <span
-                  className={cn(
-                    "relative m-auto md:px-4 px-2 md:text-sm text-xs",
-                    isActive
-                      ? "text-primary-foreground"
-                      : "text-muted-foreground"
-                  )}
+      <section>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="relative flex h-10 w-fit rounded-full bg-secondary p-1 ring-1 ring-border md:h-11">
+            {tabs.map(({ key, label }) => {
+              const isActive = tab === key;
+              return (
+                <button
+                  type="button"
+                  key={key}
+                  aria-pressed={isActive}
+                  className="relative cursor-pointer rounded-full"
+                  onClick={() => {
+                    setTab(key);
+                    setPage(1);
+                  }}
                 >
-                  {label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <span className="text-sm text-muted-foreground">
-          {formatNumber(listTotal)} {tab === "USERS" ? "users" : "projects"}
-        </span>
-      </div>
+                  {isActive && (
+                    <motion.span
+                      layoutId="activeAdminTab"
+                      className="absolute inset-0 rounded-full bg-primary shadow-[inset_0_0_3px_rgba(255,255,255,1)]"
+                      transition={{ type: "spring", duration: 0.5 }}
+                    />
+                  )}
+                  <span
+                    className={cn(
+                      "relative m-auto px-3 text-xs md:px-4 md:text-sm",
+                      isActive ? "text-primary-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-      <Input
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder={
-          tab === "USERS"
-            ? "Search name or email"
-            : "Search title, name, or email"
-        }
-        className="mb-4 h-9"
-      />
+          <span className="text-sm text-muted-foreground">
+            {formatNumber(listTotal)} {tab === "USERS" ? "users" : "projects"}
+          </span>
+        </div>
 
-      {loadingList ? (
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Skeleton key={index} className="h-16 rounded-lg" />
-          ))}
-        </div>
-      ) : tab === "USERS" ? (
-        <div className="space-y-2">
-          {users?.users.length ? (
-            users.users.map((user) => (
-              <Card key={user.id} size="sm">
-                <CardContent className="flex items-center justify-between gap-3 py-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{user.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant="outline">{user.role}</Badge>
-                    <Badge variant="secondary">
-                      {planLabel[user.planTier ?? ""] ?? "No plan"}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground hidden md:inline">
-                      {user.projectCount} projects · {formatNumber(user.creditsBalance)}{" "}
-                      credits
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <p className="text-center text-muted-foreground py-12">
-              No users found.
-            </p>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {projects?.projects.length ? (
-            projects.projects.map((project) => (
-              <Card key={project.id} size="sm">
-                <CardContent className="flex items-center justify-between gap-3 py-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {project.title || "Untitled project"}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {project.user.name} · {project.user.email} · {formatDate(project.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={statusVariant(project.status)}>
-                      {project.status.toLowerCase()}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground hidden md:inline">
-                      {project.source === "YOUTUBE" ? "YouTube" : "Upload"} ·{" "}
-                      {formatNumber(project.clipCount)} clips
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <p className="text-center text-muted-foreground py-12">
-              No projects found.
-            </p>
-          )}
-        </div>
-      )}
+        <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={
+            tab === "USERS"
+              ? "Search name or email"
+              : "Search title, name, or email"
+          }
+          className="mb-4 h-9"
+        />
 
-      <div className="flex items-center justify-between mt-6">
-        <Button
-          variant="secondary"
-          size="sm"
-          className="rounded-full"
-          disabled={page <= 1}
-          onClick={() => setPage((current) => Math.max(1, current - 1))}
-        >
-          Previous
-        </Button>
-        <span className="text-xs text-muted-foreground">
-          Page {page} of {pageCount}
-        </span>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="rounded-full"
-          disabled={page >= pageCount}
-          onClick={() => setPage((current) => current + 1)}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
+        {loadingList ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-12 rounded-lg" />
+            ))}
+          </div>
+        ) : tab === "USERS" ? (
+          <div className="overflow-hidden rounded-xl border">
+            <Table className="min-w-[720px]">
+              <TableHeader className="bg-secondary/40">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="pl-5 text-muted-foreground">User</TableHead>
+                  <TableHead className="text-muted-foreground">Role</TableHead>
+                  <TableHead className="text-muted-foreground">Plan</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Projects</TableHead>
+                  <TableHead className="pr-5 text-right text-muted-foreground">Credits</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users?.users.length ? (
+                  users.users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="max-w-72 py-3 pl-5">
+                        <p className="truncate text-sm font-medium">{user.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                      </TableCell>
+                      <TableCell><Badge variant="outline">{user.role}</Badge></TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{planLabel[user.planTier ?? ""] ?? "No plan"}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(user.projectCount)}</TableCell>
+                      <TableCell className="pr-5 text-right tabular-nums">{formatNumber(user.creditsBalance)}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                      No users match this search.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border">
+            <Table className="min-w-[860px]">
+              <TableHeader className="bg-secondary/40">
+                <TableRow>
+                  <TableHead className="pl-5 text-muted-foreground">Project</TableHead>
+                  <TableHead className="text-muted-foreground">Owner</TableHead>
+                  <TableHead className="text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-muted-foreground">Source</TableHead>
+                  <TableHead className="text-right text-muted-foreground">Clips</TableHead>
+                  <TableHead className="pr-5 text-right text-muted-foreground">Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projects?.projects.length ? (
+                  projects.projects.map((project) => (
+                    <TableRow key={project.id}>
+                      <TableCell className="max-w-64 py-3 pl-5 font-medium">
+                        <p className="truncate">{project.title || "Untitled project"}</p>
+                      </TableCell>
+                      <TableCell className="max-w-60">
+                        <p className="truncate">{project.user.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{project.user.email}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(project.status)}>
+                          {project.status.toLowerCase().replaceAll("_", " ")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{project.source === "YOUTUBE" ? "YouTube" : "Upload"}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(project.clipCount)}</TableCell>
+                      <TableCell className="pr-5 text-right text-muted-foreground">{formatDate(project.createdAt)}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                      No projects match this search.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        <div className="mt-6 flex items-center justify-between">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="rounded-full"
+            disabled={page <= 1}
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+          >
+            Previous
+          </Button>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            Page {page} of {pageCount}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="rounded-full"
+            disabled={page >= pageCount}
+            onClick={() => setPage((current) => current + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      </section>
+    </main>
   );
 }

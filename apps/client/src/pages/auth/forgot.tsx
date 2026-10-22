@@ -18,6 +18,7 @@ import { LabelInput } from "@/components/ui/label-input";
 import { requestPasswordReset } from "@/lib/auth/auth.client";
 
 import { AuthLayout } from "./layout";
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 const forgotPasswordSchema = z.object({
   email: z.email(),
@@ -106,15 +107,14 @@ export default function ForgotPassword() {
                   )}
                 />
 
-                <Button
-                  className="w-full"
+                <PlasticButton
+                  variant="primary"
+                  className="w-full rounded-full py-3"
                   type="submit"
-                  size={"lg"}
-                  variant={"rounded"}
                   disabled={isLoading}
                 >
                   {isLoading ? "Sending..." : "Send reset link"}
-                </Button>
+                </PlasticButton>
               </form>
             </Form>
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { verifyEmail } from "@/lib/auth/auth.client";
 
 import { AuthLayout } from "./layout";
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
@@ -61,10 +62,10 @@ export default function VerifyEmailPage() {
         isVerified
           ? []
           : [
-              "Verification keeps your account secure",
-              "You can resend the email any time",
-              "Verify once and you're in",
-            ]
+            "Verification keeps your account secure",
+            "You can resend the email any time",
+            "Verify once and you're in",
+          ]
       }
     >
       <div className="flex w-full flex-col gap-6">
@@ -78,15 +79,14 @@ export default function VerifyEmailPage() {
             </div>
 
             <div className="flex w-full flex-col gap-3">
-              <Button
-                className="w-full"
-                variant={"rounded"}
-                size={"lg"}
+              <PlasticButton
+                variant="primary"
+                className="w-full rounded-full py-3"
                 onClick={handleVerify}
                 disabled={isLoading || isTokenMissing}
               >
                 {isLoading ? "Verifying..." : "Verify email"}
-              </Button>
+              </PlasticButton>
 
               {isTokenMissing ? (
                 <Button variant="outline" className="w-full" asChild>

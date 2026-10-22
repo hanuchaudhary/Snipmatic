@@ -19,6 +19,7 @@ import { LabelInput } from "@/components/ui/label-input";
 import { resetPassword } from "@/lib/auth/auth.client";
 
 import { AuthLayout } from "./layout";
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 const resetPasswordSchema = z
   .object({
@@ -108,14 +109,14 @@ export default function ResetPassword() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <Button
+            <PlasticButton
               onClick={() => navigate("/forgot-password")}
-              className="w-full"
-              variant={"rounded"}
+              variant="primary"
+              className="w-full rounded-full py-3"
             >
               <IconRefreshAlert data-icon="inline-start" />
               Request a new reset link
-            </Button>
+            </PlasticButton>
             <Button variant="outline" className="w-full" asChild>
               <Link to="/login">Back to sign in</Link>
             </Button>

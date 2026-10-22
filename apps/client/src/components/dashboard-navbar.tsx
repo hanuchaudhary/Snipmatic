@@ -1,8 +1,7 @@
 import { Link, useLocation } from "react-router";
 
-import { IconCrownFilled } from "@tabler/icons-react";
-
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { PlasticButton } from "./ui/plastic-button";
 
 const PAGE_TITLES: { match: string; title: string; }[] = [
   {
@@ -61,10 +60,10 @@ export function DashboardNavbar() {
       <div className="flex items-center gap-3">
         <Link
           to="/pricing"
-          className="hidden items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground sm:inline-flex"
         >
-          <IconCrownFilled className="size-4" />
-          Upgrade
+          <PlasticButton variant="blue">
+            Upgrade
+          </PlasticButton>
         </Link>
       </div>
     </header>

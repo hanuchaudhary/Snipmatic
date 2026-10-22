@@ -154,6 +154,23 @@
   }
 }
 
+@keyframes feature-progress {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+.feature-progress-ring {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation-name: feature-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature-progress-ring { animation: none; stroke-dashoffset: 0; }
+}
+
 ::view-transition-new(root) {
   animation: theme-reveal 500ms ease-in-out;
 }

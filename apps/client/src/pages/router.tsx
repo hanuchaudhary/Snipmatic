@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes } from "react-router";
+import { Navigate, Outlet, Route, Routes, useParams } from "react-router";
 
 import { AdminProtectedRoute } from "@/components/admin-protected-route";
 import { ProtectedRoute } from "@/components/protected-route";
@@ -15,8 +15,7 @@ import VerifyEmailPage from "./auth/verify-email";
 import { ClipsPage } from "./clips";
 import { Dashboard } from "./dashboard";
 import { Home } from "./home";
-import { FeatureDetailPage } from "./landing/feature-detail";
-import { FeaturesPage } from "./landing/features";
+import { getFeature } from "@/lib/features";
 import {
   PricingCancelPage,
   PricingErrorPage,
@@ -24,6 +23,12 @@ import {
   PricingSuccessPage,
 } from "./pricing";
 import { SettingsPage } from "./settings";
+
+function FeatureRedirect() {
+  const { slug } = useParams();
+  const feature = getFeature(slug);
+  return <Navigate to={feature ? `/#feature-${feature.slug}` : "/#features"} replace />;
+}
 
 function GuestRoute() {
   const { data, isPending } = useSession();
@@ -43,8 +48,8 @@ export const Router = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/features" element={<FeaturesPage />} />
-      <Route path="/features/:slug" element={<FeatureDetailPage />} />
+      <Route path="/features" element={<Navigate to="/#features" replace />} />
+      <Route path="/features/:slug" element={<FeatureRedirect />} />
       <Route path="/pricing" element={<PricingPage />} />
 
       <Route element={<GuestRoute />}>

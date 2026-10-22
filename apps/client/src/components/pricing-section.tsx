@@ -57,15 +57,16 @@ export default function PricingSection() {
   return (
     <div className="w-full md:py-20 py-10 md:px-0 px-4">
       <div className="md:grid grid-cols-2">
-        <h2 className="heading md:text-primary! text-muted-foreground!">Pricing</h2>
+        <h2 className="heading md:text-primary! text-muted-foreground!">Plans</h2>
         <div>
           <p className="heading">
-            <span>Monthly plans.</span>
+            <span>Pick a pace that matches</span>
             <br />
-            <span className="text-muted-foreground">Credits refresh each billing cycle.</span>
+            <span className="text-muted-foreground">how often you publish.</span>
           </p>
           <p className="subheading text-[1.2rem]! mt-4">
-            Choose the plan that's right for you and get started today with 100 credits. Credits refresh each billing cycle.
+            Every plan includes the complete workflow. Processing uses one credit
+            per video minute, with captions adding half a credit per minute.
           </p>
         </div>
       </div>
@@ -117,7 +118,7 @@ export default function PricingSection() {
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    {isCurrent ? "Manage current plan" : hasSubscription ? "Change plan in billing" : "Subscribe"}
+                    {isCurrent ? "Manage current plan" : hasSubscription ? "Change plan in billing" : `Choose ${plan.name}`}
                   </span>
                 )}
               </button>

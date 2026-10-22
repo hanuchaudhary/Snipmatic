@@ -29,6 +29,12 @@ export function Navbar() {
     setIsFeaturesOpen(true);
   };
 
+  const selectFeature = () => {
+    cancelClose();
+    setIsFeaturesOpen(false);
+    setIsMobileMenuOpen(false);
+  };
+
   const closeFeatures = () => {
     cancelClose();
     closeTimeout.current = window.setTimeout(
@@ -72,7 +78,8 @@ export function Navbar() {
                   <Link
                     onMouseEnter={openFeatures}
                     onMouseLeave={closeFeatures}
-                    to="/features"
+                    to="/#features"
+                    onClick={selectFeature}
                     className={cn(
                       "subheading transition-colors hover:text-foreground! text-base!"
                     )}
@@ -138,14 +145,14 @@ export function Navbar() {
                   <div className="px-8 py-10">
                     <div className="mb-8 flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">
-                        Explore Features
+                        From source video to published post
                       </p>
                       <Link
-                        to="/features"
-                        onClick={closeFeatures}
+                        to="/#features"
+                        onClick={selectFeature}
                         className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
                       >
-                        View all features
+                        See the full workflow
                         <IconArrowRight className="size-4" />
                       </Link>
                     </div>
@@ -154,8 +161,8 @@ export function Navbar() {
                       {FEATURES.map((feature) => (
                         <Link
                           key={feature.slug}
-                          to={`/features/${feature.slug}`}
-                          onClick={closeFeatures}
+                          to={`/#feature-${feature.slug}`}
+                          onClick={selectFeature}
                           className="group flex items-start gap-4"
                         >
                           <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary/50 text-foreground transition-colors group-hover:bg-secondary">
@@ -185,7 +192,7 @@ export function Navbar() {
           <div className="flex h-full flex-col border-t">
             <nav className="flex flex-1 flex-col overflow-y-auto p-6">
               <Link
-                to="/features"
+                to="/#features"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="border-b py-4 text-lg"
               >
@@ -195,7 +202,7 @@ export function Navbar() {
               {FEATURES.map((feature) => (
                 <Link
                   key={feature.slug}
-                  to={`/features/${feature.slug}`}
+                  to={`/#feature-${feature.slug}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="border-b py-4 pl-4 text-base text-muted-foreground"
                 >

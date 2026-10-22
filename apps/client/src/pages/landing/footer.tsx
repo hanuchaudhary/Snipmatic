@@ -7,13 +7,13 @@ import { ThemeSwitch } from "@/components/theme-switch"
 const PRODUCT = [
   { to: "/signup", label: "Clip studio" },
   { to: "/signup", label: "Captions" },
-  { to: "/signup", label: "Exports" },
+  { to: "/signup", label: "Publishing" },
   { to: "/pricing", label: "Pricing" },
 ]
 
 const ACCOUNT = [
   { to: "/login", label: "Sign in" },
-  { to: "/signup", label: "Start free" },
+  { to: "/signup", label: "Create clips" },
   { to: "/dashboard", label: "Dashboard" },
 ]
 
@@ -23,15 +23,15 @@ export function Footer() {
 
   return (
     <footer className="relative w-full overflow-hidden max-w-7xl mx-auto min-h-[calc(100svh-10rem)] md:mt-20 mt-10 md:px-0 px-4">
-      <div className="border-t py-14">
+      <div className="py-14">
         <div className="mx-auto grid gap-10 grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr]">
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="inline-flex items-center">
               <span className="heading">Snipmatic</span>
             </Link>
             <p className="mt-4 max-w-sm subheading text-[1.2rem]! text-primary! text-pretty">
-              Paste a YouTube link. Get clips you can post today — highlights,
-              vertical crops, captions already on.
+              Turn one long recording into a polished lineup of clips, then send
+              each one to the channels where your audience already watches.
             </p>
           </div>
 
@@ -80,7 +80,7 @@ export function Footer() {
         <span className="flex items-center">
           <IconCopyright className="size-6 text-primary! inline-block mr-1" />
           {year} Snipmatic</span>
-        <div className="flex items-center gap-4"><span className="hidden text-sm text-muted-foreground sm:inline">Built to ship shorts, not timelines.</span><ThemeSwitch /></div>
+        <div className="flex items-center gap-4"><span className="hidden text-sm text-muted-foreground sm:inline">One link. Your next week of content.</span><ThemeSwitch /></div>
       </div>
     </footer>
   )

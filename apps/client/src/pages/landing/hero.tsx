@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { useTheme } from "@/components/provider/theme-provider";
 import { Button } from "@/components/ui/button";
-import MarqueeAlongSvgPath from "@/components/ui/marquee-along-svg-path";
+import { VideoToShortsMarquee } from "@/components/landing/video-to-shorts-marquee";
 import { useSession } from "@/lib/auth/auth.client";
 import { setPendingYoutubeUrl } from "@/lib/pending-clip-url";
 import { useClipStore } from "@/store/clip.store";
@@ -15,66 +15,8 @@ import { useClipStore } from "@/store/clip.store";
 import { BorderBeam } from "../../components/landing/border-beam-input";
 import GradientASCII from "@/components/landing/gradient-ascii";
 
-const MARQUEE_PATH =
-  "M1 209.434C58.5872 255.935 387.926 325.938 482.583 209.434C600.905 63.8051 525.516 -43.2211 427.332 19.9613C329.149 83.1436 352.902 242.723 515.041 267.302C644.752 286.966 943.56 181.94 995 156.5";
-
 const ASCII_COLORS_LIGHT = ["#5e6d9d", "#94a3b8", "#4182a9"];
 const ASCII_COLORS_DARK = ["#2446a8", "#98a7ce", "#38bdf8"];
-
-const MARQUEE_IMAGES = [
-  {
-    src: "https://cdn.cosmos.so/b9909337-7a53-48bc-9672-33fbd0f040a1?format=jpeg",
-    link: "https://www.instagram.com/p/DCOl6YTS85e/?igsh=MXNvdHhyczl1djJ6ZA%3D%3D",
-  },
-  {
-    src: "https://cdn.cosmos.so/ecdc9dd7-2862-4c28-abb1-dcc0947390f3?format=jpeg",
-    link: "https://www.instagram.com/p/C4RTJvVpP4R/?igsh=MWZwOTNlYTVodGszMw%3D%3D",
-  },
-  {
-    src: "https://cdn.cosmos.so/79de41ec-baa4-4ac0-a9a4-c090005ca640?format=jpeg",
-    link: "https://pangrampangram.com/products/mori",
-  },
-  {
-    src: "https://cdn.cosmos.so/1a18b312-21cd-4484-bce5-9fb7ed1c5e01?format=jpeg",
-    link: "https://www.sergidelgado.com/selected-work/ampersand",
-  },
-  {
-    src: "https://cdn.cosmos.so/d765f64f-7a66-462f-8b2d-3d7bc8d7db55?format=jpeg",
-    link: "https://www.instagram.com/p/C40XmANsoe_/?igsh=MXFlZGx4cmw3ZW1qYw%3D%3D",
-  },
-  {
-    src: "https://cdn.cosmos.so/6b9f08ea-f0c5-471f-a620-71221ff1fb65?format=jpeg",
-    link: "https://abduzeedo.com/super-stylish-type-explorations",
-  },
-  {
-    src: "https://cdn.cosmos.so/40a09525-4b00-4666-86f0-3c45f5d77605?format=jpeg",
-    link: "https://www.instagram.com/p/CrhdrGjr9yK/?igshid=MTc4MmM1YmI2Ng%3D%3D",
-  },
-  {
-    src: "https://cdn.cosmos.so/14f05ab6-b4d0-4605-9007-8a2190a249d0?format=jpeg",
-    link: "https://www.instagram.com/julian.stiber/p/By5RBApiDzE/?img_index=1",
-  },
-  {
-    src: "https://cdn.cosmos.so/d05009a2-a2f8-4a4c-a0de-e1b0379dddb8?format=jpeg",
-    link: "https://www.instagram.com/p/CeT3COysRNN/?img_index=2",
-  },
-  {
-    src: "https://cdn.cosmos.so/ba646e35-efc2-494a-961b-b40f597e6fc9?format=jpeg",
-    link: "https://www.instagram.com/godfreydadich/",
-  },
-  {
-    src: "https://cdn.cosmos.so/e899f9c3-ed48-4899-8c16-fbd5a60705da?format=jpeg",
-    link: "https://www.instagram.com/p/Bty1U6BhTOW/?img_index=5",
-  },
-  {
-    src: "https://cdn.cosmos.so/24e83c11-c607-45cd-88fb-5059960b56a0?format=jpeg",
-    link: "https://www.instagram.com/p/C48dxn1LqhC/?igsh=dmV5ZWR0Z2Y3Zzlt&img_index=3",
-  },
-  {
-    src: "https://cdn.cosmos.so/cd346bce-f415-4ea7-8060-99c5f7c1741a?format=jpeg",
-    link: "https://www.instagram.com/p/C08ZDVyyRhK/?img_index=2&igsh=bHAyZjcxYW1jZDNu",
-  },
-];
 
 function ClipLinkBar() {
   const navigate = useNavigate();
@@ -123,7 +65,8 @@ function ClipLinkBar() {
             inputMode="url"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Paste a YouTube link"
+            placeholder="Paste a YouTube video URL"
+            aria-label="YouTube video link"
             autoComplete="off"
             className="min-w-0 flex-1 bg-transparent md:subheading text-[1rem]! text-foreground outline-none placeholder:text-muted-foreground/55"
           />
@@ -133,7 +76,7 @@ function ClipLinkBar() {
         type="submit"
         className="md:h-15 h-10 shrink-0 cursor-pointer rounded-full border border-secondary-foreground/10 bg-primary text-primary-foreground md:px-6 px-4 md:text-lg absolute right-1"
       >
-        Get clips
+        Make my clips
       </Button>
     </form>
   );
@@ -143,55 +86,51 @@ export function HeroSection() {
   const { theme } = useTheme();
   return (
     <main className="relative overflow-hidden">
-      <GradientASCII colors={theme === "light" ? ASCII_COLORS_LIGHT : ASCII_COLORS_DARK} lightMode={theme === "light"} className="opacity-80 [mask-image:linear-gradient(to_right,transparent_10%,black_85%)]" />
-      <div className="relative flex min-h-screen w-full items-center px-6 md:p-0 max-w-7xl mx-auto">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[65vh] md:h-[95vh]" aria-hidden="true">
+        <GradientASCII
+          className="h-full w-full opacity-70 mask-[linear-gradient(to_right,transparent,black_85%)]"
+          colors={theme === "light" ? ASCII_COLORS_LIGHT : ASCII_COLORS_DARK}
+          shape="pinch"
+          characters=" =+xX0S8#@"
+          cellSize={18}
+          density={0.8}
+          glyphOpacity={0.85}
+          glow={0.2}
+          depthOfField={0}
+          flicker={0.2}
+          softness={0.5}
+          scale={1}
+          flow={0.5}
+          speed={1}
+          gradientOpacity={0.9}
+          grain={0.08}
+          variation={0}
+          mouseInteraction
+          scrambleRadius={0.1}
+          clickEffect="wave"
+          intro
+          lightMode={theme === "light"}
+        />
+      </div>
+      <div className="relative flex min-h-[65vh] w-full items-center px-6 py-24 md:min-h-[75vh] md:p-0 max-w-7xl mx-auto">
         <div className="relative z-10 w-full max-w-xl">
           <h1 className="heading">
-            Paste a YouTube link.
+            One long video.
             <br />{" "}
             <span className="text-muted-foreground">
-              Get clips you can post today.
+              A feed full of standout clips.
             </span>
           </h1>
           <p className="mt-8 subheading">
-            Snipmatic finds the highlights, crops them for TikTok, Reels, and
-            Shorts, and burns in captions. No editor. No timeline.
+            Drop in a YouTube link. Snipmatic finds the strongest moments,
+            reframes them, adds timed captions, and prepares every clip to post.
           </p>
           <div className="mt-8 w-full max-w-3xl">
             <ClipLinkBar />
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto py-10 absolute -bottom-30 left-90">
-        <div className="h-[70vh] min-h-100 w-full">
-          <MarqueeAlongSvgPath
-            path={MARQUEE_PATH}
-            viewBox="0 0 996 330"
-            baseVelocity={8}
-            slowdownOnHover
-            draggable
-            repeat={2}
-            dragSensitivity={0.1}
-            className="w-full h-full scale-160"
-            responsive
-            grabCursor
-          >
-            {MARQUEE_IMAGES.map((img, i) => (
-              <div
-                key={i}
-                className="w-14 h-full hover:scale-150 duration-300 ease-in-out"
-              >
-                <img
-                  src={img.src}
-                  alt={`Example ${i}`}
-                  className="w-full h-full object-cover"
-                  draggable={false}
-                />
-              </div>
-            ))}
-          </MarqueeAlongSvgPath>
-        </div>
-      </div>
+      <VideoToShortsMarquee />
     </main>
   );
 }

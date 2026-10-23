@@ -48,10 +48,10 @@ export function ProfileDropdown() {
         .toUpperCase();
 
     const onProfile = () => {
-        navigate("/profile")
+        navigate("/settings/account")
     }
     const onSettings = () => {
-        navigate("/settings")
+        navigate("/settings/account")
     }
     const onLogout = async () => {
         await signOut()

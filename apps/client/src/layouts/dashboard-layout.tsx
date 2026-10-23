@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Outlet, useLocation } from "react-router";
 
 import { AppSidebar } from "@/components/app-sidebar";
@@ -5,7 +6,7 @@ import { DashboardNavbar } from "@/components/dashboard-navbar";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-export function DashboardLayout() {
+export function DashboardLayout({ children }: { children?: ReactNode }) {
   const pathname = useLocation().pathname;
 
   return (
@@ -20,7 +21,7 @@ export function DashboardLayout() {
               pathname.startsWith("/admin") ? "max-w-5xl" : "max-w-4xl"
             )}
           >
-            <Outlet />
+            {children ?? <Outlet />}
           </div>
         </SidebarInset>
       </div>

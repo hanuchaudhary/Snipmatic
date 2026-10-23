@@ -13,6 +13,7 @@ import { TemplateGrid } from "./template-grid";
 import { Button } from "../ui/button";
 import { TooltipButton } from "../ui/tooltip-button";
 import { Switch } from "../ui/switch";
+import { cn } from "@/lib/utils";
 
 const formatDuration = (seconds: number) => {
   const totalSeconds = Math.max(0, Math.floor(seconds));
@@ -78,7 +79,7 @@ export const VideoInfo = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center gap-4 md:flex-row">
+      <div className={cn("flex flex-col items-center gap-4 md:flex-row", showThumbnail ? "" : "pt-2 underline")}>
         {showThumbnail && (
           <div
             ref={thumbnailStageRef}

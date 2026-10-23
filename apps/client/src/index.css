@@ -213,6 +213,51 @@ input:-webkit-autofill:active {
   font-family: "Anton", Impact, sans-serif;
 }
 
+.wks {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--foreground);
+}
+
+.wks-track {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 4px;
+  height: 52px;
+}
+
+.wks-bar {
+  width: 3px;
+  height: 20px;
+  flex: 1 1 3px;
+  max-width: 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--foreground) 18%, var(--background));
+  transition: background-color 160ms ease, transform 260ms ease;
+}
+
+.wks-bar[data-on] {
+  background: var(--foreground);
+}
+
+.wks-bar[data-on]:nth-child(6n + 1) {
+  transform: scaleY(1.2);
+}
+
+.wks-value {
+  min-width: 4ch;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--foreground) 72%, var(--background));
+}
+
 .upl-dialog {
   --fill-on: var(--foreground);
   --fill-slab: var(--secondary);

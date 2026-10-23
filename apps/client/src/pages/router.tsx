@@ -44,13 +44,31 @@ function GuestRoute() {
   return <Outlet />;
 }
 
+function PricingRoute() {
+  const { data, isPending } = useSession();
+
+  if (isPending) {
+    return <SessionPageLoader message="Loading pricing..." />;
+  }
+
+  if (data?.user) {
+    return (
+      <DashboardLayout>
+        <PricingPage embedded />
+      </DashboardLayout>
+    );
+  }
+
+  return <PricingPage />;
+}
+
 export const Router = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/features" element={<Navigate to="/#features" replace />} />
       <Route path="/features/:slug" element={<FeatureRedirect />} />
-      <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/pricing" element={<PricingRoute />} />
 
       <Route element={<GuestRoute />}>
         <Route path="/login" element={<LoginPage />} />
@@ -67,7 +85,9 @@ export const Router = () => {
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clips" element={<ClipsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
+          <Route path="/settings/account" element={<SettingsPage section="account" />} />
+          <Route path="/settings/billing" element={<SettingsPage section="billing" />} />
           <Route element={<AdminProtectedRoute />}>
             <Route path="/admin" element={<AdminPage />} />
           </Route>

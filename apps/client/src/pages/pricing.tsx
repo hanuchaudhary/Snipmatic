@@ -10,7 +10,15 @@ import { PaymentApi } from "@/lib/api/payment";
 import { Footer } from "./landing/footer";
 import { Navbar } from "./landing/navbar";
 
-export function PricingPage() {
+export function PricingPage({ embedded = false }: { embedded?: boolean }) {
+  if (embedded) {
+    return (
+      <main className="w-full">
+        <PricingSection />
+      </main>
+    );
+  }
+
   return (
     <main className="relative z-20 w-full">
       <Navbar />
@@ -127,7 +135,7 @@ function OutcomePage({
                 </Button>
               )}
               <Button variant="outline" className="rounded-full" asChild>
-                <Link to="/profile">View account</Link>
+                <Link to="/settings/account">View account</Link>
               </Button>
             </div>
           </div>

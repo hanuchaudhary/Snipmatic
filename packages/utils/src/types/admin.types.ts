@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const adminRoleSchema = z.enum(["USER", "ADMIN"]);
-export const adminPlanTierSchema = z.enum(["STARTER", "INFLUENCER", "STUDIO"]);
+export const adminPlanTierSchema = z.enum(["FREE", "CLIP", "STUDIO"]);
 export const adminProjectStatusSchema = z.enum([
   "QUEUED",
   "DOWNLOADING",

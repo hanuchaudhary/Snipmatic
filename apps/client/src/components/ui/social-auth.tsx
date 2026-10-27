@@ -62,17 +62,17 @@ export function SocialAuth({ mode = "signin" }: SocialAuthProps) {
   const label = mode === "signup" ? "Sign up" : "Continue";
 
   return (
-    <div className="flex flex-col gap-2 border rounded-full">
+    <div className="flex flex-col gap-2 border rounded-full overflow-hidden">
       <button
         type="button"
         disabled={loadingProvider !== null}
         onClick={() => handleSocialSignIn("google")}
-        className="subheading text-[1.2rem]! flex w-full items-center justify-center gap-2 bg-transparent px-3 py-4 transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+        className="subheading text-[1.2rem]! flex w-full items-center justify-center gap-2 bg-transparent px-3 py-4 transition-colors hover:bg-muted/50 cursor-pointer disabled:pointer-events-none disabled:opacity-50"
       >
         {loadingProvider === "google" ? (
           <span className="size-6 animate-spin rounded-full border-2 border-border border-t-foreground" />
         ) : (
-          <GoogleIcon className="size-3.5" />
+          <GoogleIcon className="size-5" />
         )}
         {label} with Google
       </button>

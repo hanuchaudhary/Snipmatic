@@ -1,30 +1,19 @@
 import cors from "@elysiajs/cors";
 import openapi from "@elysiajs/openapi";
-import { Elysia, t } from "elysia";
-import { serve } from "inngest/bun";
+import { Elysia } from "elysia";
 import z from "zod";
 
 import { auth } from "./config/auth";
 import { betterAuth, OpenAPI } from "./config/auth.plugin";
-import { functions, inngest } from "./inngest";
+import { webOrigins } from "./config/origins";
 import { admin } from "./modules/admin";
 import { clip } from "./modules/clip";
 import { payment } from "./modules/payment";
 
-const handler = serve({
-  client: inngest,
-  functions,
-});
-
-const inngestHandler = new Elysia({tags: ['Inngest']}).all("/api/inngest", ({ request }) =>
-  handler(request)
-);
-
 const app = new Elysia()
-  .use(inngestHandler)
   .use(
     cors({
-      origin: ["http://localhost:5173"],
+      origin: webOrigins,
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -38,8 +27,7 @@ const app = new Elysia()
       documentation: {
         info: {
           title: "Snipmatic API",
-          description:
-            "Snipmatic API for viral video content",
+          description: "Snipmatic API for viral video content",
           version: "1.0.0",
         },
 
@@ -65,6 +53,13 @@ const app = new Elysia()
       },
     }).mount(auth.handler)
   )
+  .get("/", () => {
+    return {
+      status: "ok",
+      timestamp: new Date().toLocaleTimeString(),
+      message: "Snipmatic API is running",
+    };
+  })
   .get("/health", () => {
     return {
       status: "ok",

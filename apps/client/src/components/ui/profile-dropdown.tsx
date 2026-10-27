@@ -39,7 +39,7 @@ export function ProfileDropdown() {
     const { open } = useSidebar()
     const collapsed = !open;
     const navigate = useNavigate()
-    const isAdmin = data?.user.role === "ADMIN"
+    const isAdmin = (data?.user as { role?: string } | undefined)?.role === "ADMIN"
     const initials = data?.user.name
         .split(" ")
         .map((word) => word[0])
@@ -48,10 +48,10 @@ export function ProfileDropdown() {
         .toUpperCase();
 
     const onProfile = () => {
-        navigate("/profile")
+        navigate("/settings/account")
     }
     const onSettings = () => {
-        navigate("/setting")
+        navigate("/settings/account")
     }
     const onLogout = async () => {
         await signOut()

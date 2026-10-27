@@ -175,8 +175,9 @@ export const useVideoUpload = () => {
         throw new DOMException("Upload aborted", "AbortError");
       }
 
-      const { url, key, publicUrl } = await ClipApi.presignedUrl({
+      const { url, key } = await ClipApi.presignedUrl({
         filename: file.name,
+        contentType: file.type || "application/octet-stream",
       });
 
       if (controller.signal.aborted) {
@@ -194,7 +195,7 @@ export const useVideoUpload = () => {
         key,
         filename: file.name,
         duration,
-        previewUrl: publicUrl,
+        previewUrl,
       } satisfies VideoUploadResult;
     } catch (uploadError) {
       URL.revokeObjectURL(previewUrl);

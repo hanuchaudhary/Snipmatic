@@ -15,7 +15,7 @@ export function AdminProtectedRoute() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (data.user.role !== "ADMIN") {
+  if ((data.user as typeof data.user & { role?: string }).role !== "ADMIN") {
     return <Navigate to="/dashboard" replace />;
   }
 

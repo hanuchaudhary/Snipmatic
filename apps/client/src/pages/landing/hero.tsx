@@ -1,45 +1,22 @@
-import { useState, type FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import { useNavigate } from "react-router";
+
+import { sanitizeYoutubeUrl, youtubeUrlSchema } from "@snipmatic/utils";
 import { Link2 } from "lucide-react";
 import { toast } from "sonner";
-import { sanitizeYoutubeUrl, youtubeUrlSchema } from "@snipmatic/utils";
 
 import { useTheme } from "@/components/provider/theme-provider";
+import { Button } from "@/components/ui/button";
+import { VideoToShortsMarquee } from "@/components/landing/video-to-shorts-marquee";
 import { useSession } from "@/lib/auth/auth.client";
 import { setPendingYoutubeUrl } from "@/lib/pending-clip-url";
 import { useClipStore } from "@/store/clip.store";
 
 import { BorderBeam } from "../../components/landing/border-beam-input";
-import { Button } from "@/components/ui/button";
-const FEATURED_VIDEOS = [
-  {
-    id: "1",
-    title: "The billing stack for intelligence era",
-    url: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjBuMG0xZGw2bTZkYWkybjl3M3g0bnRlN3poNm9mZjRwNnlwcGI4OCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xUA7aZDG3JgiJV5oKQ/giphy.gif",
-  },
+import GradientASCII from "@/components/landing/gradient-ascii";
 
-  {
-    id: "2",
-    title: "The billing stack for intelligence era",
-    url: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHpjaWlyZHl1NjJ1Y2NicjFldXZkeWZ3bHRkNDJpYjVqZXBxbmIybCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PhnJmUaxgZJWKLGZmW/giphy.gif"
-  },
-
-  {
-    id: "3",
-    title: "The billing stack for intelligence era",
-    url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjJkeWppNjZldHEyNjl4OXh6b3R5cmdwNmx0enB3YjBndDh1aHRwcCZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/26vIdt7XgRFb9rejm/giphy.gif"
-  },
-  {
-    id: "3",
-    title: "The billing stack for intelligence era",
-    url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHE5dG44OHNzdGRxY2Vvb2lta2FoZ3l6YmgyanoyMnNpaGZycWwxbSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/451shsqh5nJ9UqDElR/giphy.gif"
-  },
-  {
-    id: "3",
-    title: "The billing stack for intelligence era",
-    url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHE5dG44OHNzdGRxY2Vvb2lta2FoZ3l6YmgyanoyMnNpaGZycWwxbSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/4aCi2Ov0wtYpG/giphy.gif"
-  },
-];
+const ASCII_COLORS_LIGHT = ["#5e6d9d", "#94a3b8", "#4182a9"];
+const ASCII_COLORS_DARK = ["#2446a8", "#98a7ce", "#38bdf8"];
 
 function ClipLinkBar() {
   const navigate = useNavigate();
@@ -78,9 +55,9 @@ function ClipLinkBar() {
         theme={theme === "light" ? "light" : "dark"}
         className="w-full"
       >
-        <div className="relative flex h-18 w-full items-center gap-2.5 overflow-hidden rounded-full bg-background/80 px-6 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_0_50px_0_rgba(255,255,255,0.02)] backdrop-blur-md dark:bg-[#1d1d1d]">
+        <div className="relative flex md:h-18 h-12 w-full items-center gap-2.5 overflow-hidden rounded-full bg-background/80 md:px-6 px-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_0_50px_0_rgba(255,255,255,0.02)] backdrop-blur-md dark:bg-[#1d1d1d]">
           <Link2
-            className="size-7 shrink-0 -rotate-45 text-muted-foreground/50"
+            className="md:size-7 size-5 shrink-0 -rotate-45 text-muted-foreground/50"
             aria-hidden
           />
           <input
@@ -88,69 +65,72 @@ function ClipLinkBar() {
             inputMode="url"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Paste a YouTube link"
+            placeholder="Paste a YouTube video URL"
+            aria-label="YouTube video link"
             autoComplete="off"
-            className="min-w-0 flex-1 bg-transparent subheading text-foreground outline-none placeholder:text-muted-foreground/55"
+            className="min-w-0 flex-1 bg-transparent md:subheading text-[1rem]! text-foreground outline-none placeholder:text-muted-foreground/55"
           />
         </div>
       </BorderBeam>
       <Button
         type="submit"
-        className="h-15 shrink-0 cursor-pointer rounded-full border border-secondary-foreground/10 bg-primary text-primary-foreground px-6 text-lg absolute right-2"
+        className="md:h-15 h-10 shrink-0 cursor-pointer rounded-full border border-secondary-foreground/10 bg-primary text-primary-foreground md:px-6 px-4 md:text-lg absolute right-1"
       >
-        Get clips
+        Make my clips
       </Button>
     </form>
   );
 }
 
 export function HeroSection() {
+  const { theme } = useTheme();
   return (
     <main className="relative overflow-hidden">
-      <div className="relative flex min-h-[calc(100vh-16rem)] w-full items-center px-6 md:p-0 max-w-7xl mx-auto">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[65vh] md:h-[95vh]" aria-hidden="true">
+        <GradientASCII
+          className="h-full w-full opacity-70 mask-[linear-gradient(to_right,transparent,black_85%)]"
+          colors={theme === "light" ? ASCII_COLORS_LIGHT : ASCII_COLORS_DARK}
+          shape="pinch"
+          characters=" =+xX0S8#@"
+          cellSize={18}
+          density={0.8}
+          glyphOpacity={0.85}
+          glow={0.2}
+          depthOfField={0}
+          flicker={0.2}
+          softness={0.5}
+          scale={1}
+          flow={0.5}
+          speed={1}
+          gradientOpacity={0.9}
+          grain={0.08}
+          variation={0}
+          mouseInteraction
+          scrambleRadius={0.1}
+          clickEffect="wave"
+          intro
+          lightMode={theme === "light"}
+        />
+      </div>
+      <div className="relative flex min-h-[65vh] w-full items-center px-6 py-24 md:min-h-[75vh] md:p-0 max-w-7xl mx-auto">
         <div className="relative z-10 w-full max-w-xl">
           <h1 className="heading">
-            Paste a YouTube link.
-            <br /> <span className="text-muted-foreground">
-              Get clips you can post today.
+            One long video.
+            <br />{" "}
+            <span className="text-muted-foreground">
+              A feed full of standout clips.
             </span>
           </h1>
           <p className="mt-8 subheading">
-            Snipmatic finds the highlights, crops them for TikTok, Reels, and
-            Shorts, and burns in captions. No editor. No timeline.
+            Drop in a YouTube link. Snipmatic finds the strongest moments,
+            reframes them, adds timed captions, and prepares every clip to post.
           </p>
           <div className="mt-8 w-full max-w-3xl">
             <ClipLinkBar />
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-hidden relative py-10">
-        <div
-          className="absolute h-3 top-0 left-0 w-full"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(90deg, transparent 0, transparent 26px, #555 26px, #555 27px)",
-            backgroundPosition: "61px 0",
-            backgroundSize: "27.5px 100%",
-          }}
-        />
-        <div
-          className="absolute h-3 bottom-0 left-0 w-full"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(90deg, transparent 0, transparent 26px, #555 26px, #555 27px)",
-            backgroundPosition: "61px 0",
-            backgroundSize: "27.5px 100%",
-          }}
-        />
-        {
-          FEATURED_VIDEOS.map((video) => (
-            <div key={video.id} className="h-130 aspect-9/16 border">
-              <img src={video.url} alt={video.title} width={100} height={100} className="w-full h-full object-cover" />
-            </div>
-          ))
-        }
-      </div>
-    </main >
+      <VideoToShortsMarquee />
+    </main>
   );
 }

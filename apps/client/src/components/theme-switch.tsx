@@ -12,7 +12,8 @@ export const ThemeSwitch = () => {
   const { theme, setTheme } = useTheme();
   return (
     <div
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      role="group"
+      aria-label="Color theme"
       className={cn(
         "cursor-pointer relative z-40 flex h-8 rounded-full dark:bg-background/40 bg-white backdrop-blur-sm p-1 ring-1 ring-border"
       )}
@@ -25,6 +26,8 @@ export const ThemeSwitch = () => {
             key={key}
             className="relative h-6 w-6 rounded-full cursor-pointer"
             aria-label={label}
+            aria-pressed={isActive}
+            onClick={() => setTheme(key as "light" | "dark")}
           >
             {isActive && (
               <motion.span

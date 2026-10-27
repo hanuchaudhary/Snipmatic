@@ -1,47 +1,49 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router";
-import { Menu, X } from "lucide-react";
+
+import { IconArrowRight, IconMenu2, IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { useSession } from "@/lib/auth/auth.client";
-import { ProfileDropdown } from "@/components/ui/profile-dropdown";
+import { FEATURES } from "@/lib/features";
 import { cn } from "@/lib/utils";
-
-const FEATURES = [
-  {
-    title: "Viral Detection",
-    description: "Find the moments most likely to perform.",
-  },
-  {
-    title: "AI Editing",
-    description: "Automatically cut and structure your clips.",
-  },
-  {
-    title: "Smart Captions",
-    description: "Generate accurate word-level captions.",
-  },
-  {
-    title: "Face Tracking",
-    description: "Keep speakers and subjects in frame.",
-  },
-  {
-    title: "Auto Reframe",
-    description: "Turn long videos into vertical content.",
-  },
-  {
-    title: "Multi Platform",
-    description: "Export for Shorts, Reels and TikTok.",
-  },
-];
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 export function Navbar() {
   const { data: session } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
+  const closeTimeout = useRef<number | null>(null);
 
-  const links = [
-    { label: "Pricing", href: "/pricing" },
-  ];
+  const links = [{ label: "Pricing", href: "/pricing" }];
+
+  const cancelClose = () => {
+    if (closeTimeout.current) {
+      window.clearTimeout(closeTimeout.current);
+      closeTimeout.current = null;
+    }
+  };
+
+  const openFeatures = () => {
+    cancelClose();
+    setIsFeaturesOpen(true);
+  };
+
+  const selectFeature = () => {
+    cancelClose();
+    setIsFeaturesOpen(false);
+    setIsMobileMenuOpen(false);
+  };
+
+  const closeFeatures = () => {
+    cancelClose();
+    closeTimeout.current = window.setTimeout(
+      () => setIsFeaturesOpen(false),
+      150
+    );
+  };
+
+  useEffect(() => () => cancelClose(), []);
 
   return (
     <>
@@ -52,7 +54,6 @@ export function Navbar() {
         )}
       >
         <div className="max-w-7xl mx-auto">
-
           <motion.div
             className="overflow-hidden"
             initial={false}
@@ -70,20 +71,17 @@ export function Navbar() {
                   to={session?.user ? "/dashboard" : "/"}
                   className="flex items-center"
                 >
-                  <img
-                    src="/logo.png"
-                    className="h-9"
-                    alt="Snipmatic Logo"
-                  />
+                  <img src="/logo.png" className="h-9" alt="Snipmatic Logo" />
                 </Link>
 
                 <nav className="hidden items-center gap-7 md:flex">
                   <Link
-                    onMouseEnter={() => setIsFeaturesOpen(true)}
-                    onMouseLeave={() => setIsFeaturesOpen(false)}
-                    to="#features"
+                    onMouseEnter={openFeatures}
+                    onMouseLeave={closeFeatures}
+                    to="/#features"
+                    onClick={selectFeature}
                     className={cn(
-                      "subheading transition-colors hover:text-foreground! text-base!",
+                      "subheading transition-colors hover:text-foreground! text-base!"
                     )}
                   >
                     Features
@@ -93,24 +91,32 @@ export function Navbar() {
                     <NavLink
                       key={link.href}
                       to={link.href}
-                      className={({ isActive }) => cn("subheading transition-colors hover:text-foreground! text-base!", isActive && "text-primary")}
+                      className={({ isActive }) =>
+                        cn(
+                          "subheading transition-colors hover:text-foreground! text-base!",
+                          isActive && "text-primary"
+                        )
+                      }
                     >
                       {link.label}
                     </NavLink>
                   ))}
                 </nav>
-
               </div>
-              <div className="hidden items-center md:flex">
+
+              <div className="hidden items-center gap-3 md:flex">
                 {session?.user ? (
-                  <ProfileDropdown />
+                  <Link to="/dashboard">
+                    <PlasticButton variant="primary">
+                      Dashboard
+                    </PlasticButton>
+                  </Link>
                 ) : (
-                  <NavLink
-                    to="/login"
-                    className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-background"
-                  >
-                    Sign in
-                  </NavLink>
+                  <Link to="/login">
+                    <PlasticButton variant="primary">
+                      Sign in
+                    </PlasticButton>
+                  </Link>
                 )}
               </div>
 
@@ -121,9 +127,9 @@ export function Navbar() {
                 aria-label="Toggle menu"
               >
                 {isMobileMenuOpen ? (
-                  <X className="size-5" />
+                  <IconX className="size-5" />
                 ) : (
-                  <Menu className="size-5" />
+                  <IconMenu2 className="size-5" />
                 )}
               </button>
             </div>
@@ -135,49 +141,46 @@ export function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="hidden md:block"
+                  onMouseEnter={cancelClose}
+                  onMouseLeave={closeFeatures}
+                  className="hidden md:block ml-25"
                 >
-                  <div className="grid grid-cols-2 gap-x-20 px-8 py-10">
-                    <div>
-                      <p className="mb-6 text-sm text-muted-foreground">
-                        Explore Features
+                  <div className="py-10">
+                    <div className="mb-8 flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        From source video to published post
                       </p>
-
-                      <div className="space-y-6">
-                        {FEATURES.slice(0, 3).map((feature) => (
-                          <Link
-                            key={feature.title}
-                            to="#features"
-                            className="block"
-                          >
-                            <div className="text-2xl tracking-tight">
-                              {feature.title}
-                            </div>
-                            <div className="mt-1 text-sm text-muted-foreground">
-                              {feature.description}
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
+                      <Link
+                        to="/#features"
+                        onClick={selectFeature}
+                        className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        See the full workflow
+                        <IconArrowRight className="size-4" />
+                      </Link>
                     </div>
 
-                    <div>
-                      <p className="mb-6 text-sm text-muted-foreground">
-                        More Features
-                      </p>
-
-                      <div className="space-y-5">
-                        {FEATURES.slice(3).map((feature) => (
-                          <NavLink
-                            end
-                            key={feature.title}
-                            to="#features"
-                            className={({ isActive }) => cn("block text-lg transition-colors hover:text-muted-foreground", isActive && "text-primary")}
-                          >
-                            {feature.title}
-                          </NavLink>
-                        ))}
-                      </div>
+                    <div className="grid grid-cols-2 gap-x-16 gap-y-8">
+                      {FEATURES.map((feature) => (
+                        <Link
+                          key={feature.slug}
+                          to={`/#feature-${feature.slug}`}
+                          onClick={selectFeature}
+                          className="group flex items-start gap-4"
+                        >
+                          <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary/50 text-foreground transition-colors group-hover:bg-secondary">
+                            <feature.icon className="size-5" />
+                          </span>
+                          <span className="block">
+                            <span className="block text-2xl tracking-tight transition-colors group-hover:text-muted-foreground">
+                              {feature.title}
+                            </span>
+                            <span className="mt-1 block text-sm text-muted-foreground">
+                              {feature.tagline}
+                            </span>
+                          </span>
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 </motion.div>
@@ -190,14 +193,25 @@ export function Navbar() {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-40 bg-background pt-16 md:hidden">
           <div className="flex h-full flex-col border-t">
-            <nav className="flex flex-1 flex-col p-6">
+            <nav className="flex flex-1 flex-col overflow-y-auto p-6">
               <Link
-                to="/features"
+                to="/#features"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="border-b py-4 text-lg"
               >
                 Features
               </Link>
+
+              {FEATURES.map((feature) => (
+                <Link
+                  key={feature.slug}
+                  to={`/#feature-${feature.slug}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="border-b py-4 pl-4 text-base text-muted-foreground"
+                >
+                  {feature.title}
+                </Link>
+              ))}
 
               {links.map((link) => (
                 <Link
@@ -210,22 +224,25 @@ export function Navbar() {
                 </Link>
               ))}
 
-              <div className="mt-auto">
+              <div className="mt-auto pt-6">
                 {session?.user ? (
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-medium text-background"
-                  >
-                    Dashboard
+                  <Link to="/dashboard">
+                    <PlasticButton
+                      variant="primary"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Dashboard
+                    </PlasticButton>
                   </Link>
                 ) : (
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-medium text-background"
-                  >
-                    Sign in
+                  <Link to="/login">
+
+                    <PlasticButton
+                      variant="primary"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Sign in
+                    </PlasticButton>
                   </Link>
                 )}
               </div>

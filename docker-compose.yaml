@@ -9,3 +9,20 @@ services:
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/data
+  redis:
+    image: redis
+    container_name: snipmatic-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local

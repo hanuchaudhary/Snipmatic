@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,15 +15,15 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  SocialAuth
-} from "@/components/ui/social-auth";
+import { LabelInput } from "@/components/ui/label-input";
+import { SocialAuth } from "@/components/ui/social-auth";
 import { signUp } from "@/lib/auth/auth.client";
+
 import { AuthLayout } from "./layout";
-import { Input } from "@/components/ui/input";
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 const signupSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email(),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -85,8 +86,24 @@ export function SignupPage() {
   };
 
   return (
-    <AuthLayout rightMessage="Join the waitlist|and be the first to know when we launch">
-      <div className="relative h-full w-full flex flex-col justify-center items-center">
+    <AuthLayout
+      eyebrow="Get started"
+      title="Create your"
+      subtitle="Snipmatic account."
+      description="Start with free credits and turn your first YouTube link into clips in minutes."
+    >
+      <div className="flex w-full flex-col gap-6">
+        <div>
+          <p className="text-2xl font-light tracking-tight">
+            {verificationEmail ? "Check your inbox" : "Create account"}
+          </p>
+          <p className="mt-2 subheading text-[1.05rem]!">
+            {verificationEmail
+              ? "Confirm your email to activate your account."
+              : "Use your email or continue with Google."}
+          </p>
+        </div>
+
         <AnimatePresence mode="wait" initial={false}>
           {verificationEmail ? (
             <motion.div
@@ -102,9 +119,13 @@ export function SignupPage() {
                 <span className="text-foreground">{verificationEmail}</span>.
               </p>
               <div className="flex flex-col gap-2">
-                <Button className="w-full" variant={"rounded"} size={"lg"} onClick={() => navigate("/login")}>
+                <PlasticButton
+                    variant="primary"
+                  className="w-full rounded-full py-3"
+                  onClick={() => navigate("/login")}
+                >
                   Go to login
-                </Button>
+                </PlasticButton>
                 <Button
                   variant="outline"
                   className="w-full"
@@ -148,12 +169,11 @@ export function SignupPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input
+                          <LabelInput
                             autoFocus
-                            aria-label="Email address"
-                            placeholder="kushchaudharyog@gmail.com"
-                            className="border shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent h-10 px-4 text-[1rem]! font-light"
+                            label="Email address"
                             type="email"
+                            autoComplete="email"
                             {...field}
                           />
                         </FormControl>
@@ -167,11 +187,10 @@ export function SignupPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input
-                            aria-label="Password"
-                            placeholder="********"
-                            className="border shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent h-10 px-4 text-[1rem]! font-light"
+                          <LabelInput
+                            label="Password"
                             type="password"
+                            autoComplete="new-password"
                             {...field}
                           />
                         </FormControl>
@@ -179,33 +198,32 @@ export function SignupPage() {
                       </FormItem>
                     )}
                   />
-                  <Button
-                    className="w-full"
+                  <PlasticButton
                     type="submit"
-                    size={"lg"}
-                    variant={"rounded"}
+                    variant="primary"
+                    className="w-full rounded-full py-3"
                     disabled={isLoading}
                   >
                     {isLoading ? "Creating account..." : "Sign up"}
-                  </Button>
+                  </PlasticButton>
                 </form>
               </Form>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {!verificationEmail && (
-        <div className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="underline underline-offset-4 hover:text-primary"
-          >
-            Sign in
-          </Link>
-        </div>
-      )}
+        {!verificationEmail && (
+          <div className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Sign in
+            </Link>
+          </div>
+        )}
+      </div>
     </AuthLayout>
   );
 }

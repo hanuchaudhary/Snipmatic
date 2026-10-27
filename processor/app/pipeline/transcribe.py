@@ -1,11 +1,20 @@
+import os
+from functools import lru_cache
+
 from faster_whisper import WhisperModel
 
 # model_size = "large-v3"
 model_size = "small"
-model = WhisperModel(model_size, device="cpu", compute_type="int8")
+@lru_cache(maxsize=1)
+def get_model():
+    device = os.environ.get("WHISPER_DEVICE", "cpu")
+    compute_type = os.environ.get(
+        "WHISPER_COMPUTE_TYPE", "float16" if device == "cuda" else "int8"
+    )
+    return WhisperModel(model_size, device=device, compute_type=compute_type)
 
 def transcribe(audio_path: str):
-    segments, info = model.transcribe(
+    segments, info = get_model().transcribe(
         audio_path,
         word_timestamps=True,
         vad_filter=True,

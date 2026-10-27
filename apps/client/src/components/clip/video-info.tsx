@@ -1,7 +1,8 @@
 import React from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 
-import { SUBTITLE_STYLES } from "@snipmatic/utils";
+import { getAspectRatio, SUBTITLE_STYLES } from "@snipmatic/utils";
 
 import { useClipStore } from "@/store/clip.store";
 
@@ -10,8 +11,9 @@ import { ClipModeSwitch } from "./clip-mode-switch";
 import { DurationController } from "./duration-controller";
 import { TemplateGrid } from "./template-grid";
 import { Button } from "../ui/button";
-import { Switch } from "../ui/switch";
 import { TooltipButton } from "../ui/tooltip-button";
+import { Switch } from "../ui/switch";
+import { cn } from "@/lib/utils";
 
 const formatDuration = (seconds: number) => {
   const totalSeconds = Math.max(0, Math.floor(seconds));
@@ -47,37 +49,77 @@ export const VideoInfo = () => {
   const url = useClipStore((state) => state.url);
 
   const [showThumbnail, setShowThumbnail] = React.useState(true);
+  const thumbnailStageRef = React.useRef<HTMLDivElement>(null);
+  const [thumbnailStageWidth, setThumbnailStageWidth] = React.useState(320);
+  const reducedMotion = useReducedMotion();
   const hasYoutubeLink = Boolean(url.trim());
+  const selectedRatio = getAspectRatio(aspectRatio);
+  const ratioValue = selectedRatio.width / selectedRatio.height;
+  const shapeArea = 50_000;
+  const baseWidth = Math.sqrt(shapeArea * ratioValue);
+  const baseHeight = shapeArea / baseWidth;
+  const shapeScale = Math.min(1, thumbnailStageWidth / 320);
+  const thumbnailWidth = baseWidth * shapeScale;
+  const thumbnailHeight = baseHeight * shapeScale;
+
+  React.useEffect(() => {
+    const stage = thumbnailStageRef.current;
+    if (!stage) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setThumbnailStageWidth(entry.contentRect.width);
+    });
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [showThumbnail]);
 
   if (!videoInfo) {
     return null;
   }
 
   return (
-    <div className="mt-6 space-y-4">
-      <div className="flex items-start gap-4">
+    <div className="space-y-4">
+      <div className={cn("flex flex-col items-center gap-4 md:flex-row", showThumbnail ? "" : "pt-2 underline")}>
         {showThumbnail && (
-          <div className="relative aspect-video w-98 shrink-0 overflow-hidden rounded-xl bg-muted">
-            {hasYoutubeLink && videoInfo.thumbnail ? (
-              <img
-                src={videoInfo.thumbnail}
-                alt={videoInfo.title}
-                className="h-full w-full object-cover"
-              />
-            ) : previewUrl ? (
-              <video
-                src={previewUrl}
-                className="h-full w-full object-cover"
-                controls
-                preload="metadata"
-              />
-            ) : videoInfo.thumbnail ? (
-              <img
-                src={videoInfo.thumbnail}
-                alt={videoInfo.title}
-                className="h-full w-full object-cover"
-              />
-            ) : null}
+          <div
+            ref={thumbnailStageRef}
+            className="relative grid aspect-square w-full max-w-80 shrink-0 place-items-center overflow-hidden rounded-2xl"
+          >
+            <motion.div
+              initial={false}
+              animate={{ width: thumbnailWidth, height: thumbnailHeight }}
+              transition={
+                reducedMotion
+                  ? { duration: 0 }
+                  : { duration: 0.52, ease: [0.22, 1, 0.36, 1] }
+              }
+              className="relative overflow-hidden rounded-[20px] bg-muted ring-1 ring-foreground/10"
+            >
+              {hasYoutubeLink && videoInfo.thumbnail ? (
+                <img
+                  src={videoInfo.thumbnail}
+                  alt={videoInfo.title}
+                  className="absolute inset-0 size-full object-cover"
+                />
+              ) : previewUrl ? (
+                <video
+                  src={previewUrl}
+                  className="absolute inset-0 size-full object-cover"
+                  controls
+                  preload="metadata"
+                />
+              ) : videoInfo.thumbnail ? (
+                <img
+                  src={videoInfo.thumbnail}
+                  alt={videoInfo.title}
+                  className="absolute inset-0 size-full object-cover"
+                />
+              ) : null}
+              <span className="pointer-events-none absolute bottom-2 right-2 rounded-full px-2 py-1 bg-primary-foreground text-[9px] text-primary backdrop-blur-sm">
+                {aspectRatio}
+              </span>
+              <span className="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/15" />
+            </motion.div>
           </div>
         )}
 
@@ -131,7 +173,10 @@ export const VideoInfo = () => {
                 Automatically generate subtitles for your clips
               </p>
             </div>
-            <Switch checked={subtitles} onCheckedChange={setSubtitles} />
+            <Switch
+              checked={subtitles}
+              onCheckedChange={setSubtitles}
+            />
           </div>
 
           {subtitles && (

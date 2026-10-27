@@ -1,68 +1,38 @@
 import React, { useEffect, useState } from "react";
 
+import type { ProjectModel } from "@snipmatic/utils";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { type Task } from "@/lib/dummy";
 import { cn } from "@/lib/utils";
 
-import WrapButton from "../ui/wrap-button";
-import MinimalCard, {
-  MinimalCardDescription,
-  MinimalCardImage,
-  MinimalCardTitle,
-} from "./minimal-card";
+type Project = ProjectModel["listResponse"]["projects"][number];
 
 interface TaskCardProps {
-  task: Task;
+  task: Project;
   className?: string;
 }
 
+const formatDuration = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainder = Math.round(seconds % 60);
+  return minutes > 0 ? `${minutes}m ${remainder}s` : `${remainder}s`;
+};
+
 export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
   const [open, setOpen] = useState(false);
-  const isProcessing = !["COMPLETED", "FAILED"].includes(
-    task.status.toUpperCase()
-  );
-
-  const [progress, setProgress] = useState(task.progress || 0);
-  const [displayProgress, setDisplayProgress] = useState(task.progress || 0);
+  const isProcessing = !["COMPLETED", "FAILED"].includes(task.status);
+  const [displayProgress, setDisplayProgress] = useState(task.progress);
 
   useEffect(() => {
-    if (task.progress !== undefined) {
-      const newProgress = Math.max(progress, task.progress);
-      setProgress(newProgress);
-    }
-  }, [task.progress, progress]);
-
-  useEffect(() => {
-    const animationDuration = 1500;
-    const steps = 60;
-    const stepDuration = animationDuration / steps;
-    const progressDiff = progress - displayProgress;
-    const stepIncrement = progressDiff / steps;
-
-    if (progressDiff > 0.1) {
-      let currentStep = 0;
-      const animationInterval = setInterval(() => {
-        currentStep++;
-        if (currentStep <= steps) {
-          setDisplayProgress((prev) => {
-            const newValue = prev + stepIncrement;
-            return Math.max(prev, Math.min(100, newValue));
-          });
-        } else {
-          setDisplayProgress(progress);
-          clearInterval(animationInterval);
-        }
-      }, stepDuration);
-
-      return () => clearInterval(animationInterval);
-    } else if (progressDiff < -0.1) {
-      setDisplayProgress(progress);
-    }
-  }, [progress, displayProgress]);
+    const timeout = window.setTimeout(
+      () => setDisplayProgress(task.progress),
+      0
+    );
+    return () => window.clearTimeout(timeout);
+  }, [task.progress]);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen} >
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger>
         <div
           className={cn(
@@ -72,148 +42,128 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, className }) => {
         >
           <div className="relative w-full aspect-video">
             <img
-              src={
-                task.thumbnailUrl ||
-                (task.youtubeUrl ? task.youtubeUrl : null) ||
-                "/placeholder.png"
-              }
-              alt={task.title}
-              className={`object-cover rounded-3xl ring w-full h-full ${isProcessing ? "opacity-20" : ""
-                }`}
-              onError={(e) => {
-                if (
-                  task.youtubeUrl &&
-                  e.currentTarget.src !== task.youtubeUrl
-                ) {
-                  e.currentTarget.src = task.youtubeUrl;
-                } else {
-                  e.currentTarget.src = "/placeholder.jpg";
-                }
+              src={task.metadata.thumbnailUrl || "/placeholder.png"}
+              alt={task.title || "Video project"}
+              className={cn(
+                "object-cover rounded-3xl ring w-full h-full",
+                isProcessing && "opacity-30"
+              )}
+              onError={(event) => {
+                event.currentTarget.src = "/placeholder.png";
               }}
             />
-            <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-              1 days before expiring
-            </div>
             {isProcessing && (
               <div
-                style={{
-                  width: Math.round(displayProgress) + "%",
-                }}
-                className="absolute flex items-center rounded-3xl transition-all duration-300 ease-out justify-center inset-0 right-2 bg-orange-400/30 h-full w-full text-xl font-semibold px-2 py-1"
+                style={{ width: `${Math.max(0, Math.min(100, displayProgress))}%` }}
+                className="absolute inset-y-0 left-0 flex items-center justify-center rounded-3xl bg-orange-400/30 text-xl font-semibold transition-all duration-500"
               >
-                <span className="">{Math.round(displayProgress)}%</span>
+                <span>{Math.round(displayProgress)}%</span>
               </div>
             )}
           </div>
           <div className="py-3 pl-1">
             <div className="text-sm text-left line-clamp-1">
-              {task.title}
+              {task.title || "Untitled project"}
             </div>
             <div className="text-xs text-muted-foreground text-left">
-              {task.processingType === "AI" ? "AI Generated" : "Manual Clip"}
+              {task.config.processingType === "AI" ? "AI Generated" : "Manual Clip"}
+              {` · ${task.status.toLowerCase().replaceAll("_", " ")}`}
             </div>
           </div>
         </div>
       </SheetTrigger>
 
-      <SheetContent side="bottom" className="max-w-4xl mx-auto p-2 border overflow-hidden font-jost rounded-t-4xl">
-        <div className="p-6 max-h-[80vh] mask-b-from-90% border border-muted bg-secondary dark:bg-secondary/50 overflow-y-auto space-y-6 hide-scrollbar rounded-t-3xl">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold mb-2 max-w-[95%]">
-                {task.title}
-              </h2>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Badge variant="secondary">{task.status}</Badge>
-                <span>•</span>
-                <span>{task.processingType}</span>
-                <span>•</span>
-                <span>{"1080p"}</span>
-              </div>
+      <SheetContent
+        side="bottom"
+        className="max-w-4xl mx-auto p-2 border overflow-hidden font-jost rounded-t-4xl"
+      >
+        <div className="p-6 max-h-[80vh] border border-muted bg-secondary dark:bg-secondary/50 overflow-y-auto space-y-6 hide-scrollbar rounded-t-3xl">
+          <div>
+            <h2 className="text-xl font-semibold mb-2">
+              {task.title || "Untitled project"}
+            </h2>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Badge variant="secondary">{task.status}</Badge>
+              <span>•</span>
+              <span>{task.config.processingType}</span>
+              <span>•</span>
+              <span>{task.config.aspectRatio}</span>
             </div>
-            {task.clipURL && (
-              <WrapButton
-                className=""
-                href={task.clipURL}
-              // onClick={() => {
-              //   downloadFile(
-              //     task.clipURL!,
-              //     `${task.title?.slice(0, 10)}.mp4`
-              //   );
-              // }}
-              >
-                {/* <Globe className="animate-spin h-5 w-5" /> */}
-                Download
-              </WrapButton>
-            )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="dark:bg-muted/50 bg-white p-3 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white dark:bg-muted/50 p-3 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Created</p>
-              <p className="text-sm font-medium">{task.createdAt as string}</p>
+              <p className="text-sm font-medium">
+                {new Date(task.createdAt).toLocaleString()}
+              </p>
             </div>
-            {task.completedAt && (
-              <div className="dark:bg-muted/50 bg-white p-3 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Completed</p>
-                <p className="text-sm font-medium">
-                  {task.completedAt as string}
-                </p>
-              </div>
-            )}
-            <div className="dark:bg-muted/50 bg-white p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Aspect Ratio</p>
-              <p className="text-sm font-medium">{"original"}</p>
+            <div className="bg-white dark:bg-muted/50 p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Selected range</p>
+              <p className="text-sm font-medium">
+                {formatDuration(task.config.duration)}
+              </p>
             </div>
-            <div className="dark:bg-muted/50 bg-white p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Duration</p>
-              <p className="text-sm font-medium">{task.duration as number}</p>
+            <div className="bg-white dark:bg-muted/50 p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Progress</p>
+              <p className="text-sm font-medium">{task.progress}%</p>
             </div>
           </div>
 
-          {task.clipsData?.viral_moments &&
-            task.clipsData.viral_moments.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {task.clipsData.viral_moments.map(
-                  (
-                    moment: {
-                      reason: string;
-                      content: string;
-                      confidence_score: number;
-                    },
-                    index: number
-                  ) => (
-                    <MinimalCard key={index} className="relative">
-                      <MinimalCardImage
-                        src={
-                          task.thumbnailUrl ||
-                          task.youtubeUrl ||
-                          "/placeholder.jpg"
-                        }
-                        alt={`Viral moment thumbnail`}
-                      />
-                      <MinimalCardTitle className="line-clamp-2">
-                        {moment.reason}
-                      </MinimalCardTitle>
-                      <MinimalCardDescription className="line-clamp-3 mask-b-from-0%">
-                        {moment.content}
-                      </MinimalCardDescription>
-                      <div className="absolute top-2 right-2 font-semibold bg-secondary text-primary m-1 text-xs px-2 py-1 rounded-full border">
-                        Clip Score{" "}
-                        <span className="text-orange-500">
-                          {moment.confidence_score * 100}%
-                        </span>
-                      </div>
-                    </MinimalCard>
-                  )
-                )}
-              </div>
-            )}
-
-          {task.status.toUpperCase() === "FAILED" && task.errorMessage && (
+          {task.error && (
             <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-              <p className="font-medium mb-1">Error</p>
-              <p>{task.errorMessage}</p>
+              <p className="font-medium mb-1">Processing failed</p>
+              <p>{task.error}</p>
+            </div>
+          )}
+
+          {task.status === "COMPLETED" && task.clips.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Processing completed, but no clips matched this video.
+            </p>
+          )}
+
+          {task.clips.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {task.clips.map((clip) => (
+                <article key={clip.id} className="overflow-hidden rounded-xl border bg-background">
+                  {clip.thumbnailUrl && (
+                    <img
+                      src={clip.thumbnailUrl}
+                      alt={clip.title || "Generated clip"}
+                      className="w-full aspect-video object-cover"
+                    />
+                  )}
+                  <div className="space-y-3 p-4">
+                    <div>
+                      <h3 className="font-medium">{clip.title || "Generated clip"}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDuration(clip.duration)}
+                        {clip.score == null ? "" : ` · ${Math.round(clip.score * 100)}% score`}
+                      </p>
+                    </div>
+                    {clip.outputUrl && (
+                      <div className="flex gap-3 text-sm">
+                        <a
+                          className="text-primary underline underline-offset-4"
+                          href={clip.outputUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          View clip
+                        </a>
+                        <a
+                          className="text-primary underline underline-offset-4"
+                          href={clip.outputUrl}
+                          download={`${clip.title || "clip"}.mp4`}
+                        >
+                          Download
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              ))}
             </div>
           )}
         </div>

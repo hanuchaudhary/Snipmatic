@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { IconCheckFilled, IconLoader2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -7,11 +8,31 @@ import { useSession } from "@/lib/auth/auth.client";
 import { PaymentApi } from "@/lib/api/payment";
 import { PLAN_TIERS, PLANS, type PlanTier } from "@snipmatic/utils";
 import { cn } from "@/lib/utils";
+import { PlasticButton } from "./ui/plastic-button";
 
 export default function PricingSection() {
   const navigate = useNavigate();
   const { data: session } = useSession();
   const [loadingTier, setLoadingTier] = React.useState<PlanTier | null>(null);
+  const [openingPortal, setOpeningPortal] = React.useState(false);
+  const { data: account, isPending: isAccountPending } = useQuery({
+    queryKey: ["payment-account", session?.user?.id],
+    queryFn: PaymentApi.getAccount,
+    enabled: Boolean(session?.user),
+  });
+  const subscription = account?.billing.subscription;
+  const hasSubscription = Boolean(subscription && subscription.status !== "cancelled" && subscription.status !== "expired");
+
+  const handlePortal = async () => {
+    setOpeningPortal(true);
+    try {
+      const { url } = await PaymentApi.createPortal();
+      window.location.assign(url);
+    } catch {
+      toast.error("Unable to open billing. Please try again.");
+      setOpeningPortal(false);
+    }
+  };
 
   const handleCheckout = async (planTier: PlanTier) => {
     if (!session?.user) {
@@ -35,24 +56,26 @@ export default function PricingSection() {
   };
 
   return (
-    <div className="w-full py-20">
-      <div className="grid grid-cols-2">
-        <h2 className="heading">Pricing</h2>
+    <div className="w-full md:py-20 py-10 md:px-0 px-4">
+      <div className="md:grid grid-cols-2">
+        <h2 className="heading md:text-primary! text-muted-foreground!">Plans</h2>
         <div>
           <p className="heading">
-            <span>Monthly plans.</span>
+            <span>Pick a pace that matches</span>
             <br />
-            <span className="text-muted-foreground">Credits refresh each billing cycle.</span>
+            <span className="text-muted-foreground">how often you publish.</span>
           </p>
           <p className="subheading text-[1.2rem]! mt-4">
-            Choose the plan that's right for you and get started today with 100 credits. Credits refresh each billing cycle.
+            Every plan includes the complete workflow. Processing uses one credit
+            per video minute, with captions adding half a credit per minute.
           </p>
         </div>
       </div>
-      <div className="grid gap-4 grid-cols-2 mt-20">
+      <div className="grid md:grid-cols-2 grid-cols-1 md:gap-4 gap-2 md:mt-20 mt-10">
         {PLAN_TIERS.filter((tier) => tier !== "free").map((tier) => {
           const plan = PLANS[tier];
           const isLoading = loadingTier === tier;
+          const isCurrent = hasSubscription && subscription?.planTier === tier;
 
           return (
             <div
@@ -76,7 +99,7 @@ export default function PricingSection() {
               <ul className="space-y-3 mt-6 subheading text-[1.2rem]! text-primary!">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex gap-2">
-                    <div className="size-7 flex items-center justify-center bg-emerald-800/30 rounded-full">
+                    <div className="size-7 flex items-center justify-center dark:bg-emerald-800/30 bg-emerald-300 rounded-full">
                       <IconCheckFilled className="w-4 h-4 text-emerald-500!" />
                     </div>
                     <span>{feature}</span>
@@ -84,20 +107,23 @@ export default function PricingSection() {
                 ))}
               </ul>
 
-              <button
-                className="mt-auto w-full rounded-full bg-primary px-6 py-3 text-primary-foreground"
-                onClick={() => handleCheckout(tier)}
-                disabled={isLoading}
+              <PlasticButton
+                variant={plan.highlighted ? "emerald" : "primary"}
+                className="mt-auto w-full py-4"
+                onClick={() => hasSubscription ? void handlePortal() : void handleCheckout(tier)}
+                disabled={isLoading || openingPortal || (Boolean(session?.user) && isAccountPending)}
               >
-                {isLoading ? (
-                  <>
+                {Boolean(session?.user) && isAccountPending ? "Checking plan…" : isLoading || openingPortal ? (
+                  <span className="flex items-center justify-center gap-2">
                     <IconLoader2 className="animate-spin" />
-                    Redirecting
-                  </>
+                    {openingPortal ? "Opening billing" : "Redirecting"}
+                  </span>
                 ) : (
-                  "Subscribe"
+                  <span className="flex items-center justify-center gap-2">
+                    {isCurrent ? "Manage current plan" : hasSubscription ? "Change plan in billing" : `Choose ${plan.name}`}
+                  </span>
                 )}
-              </button>
+              </PlasticButton>
             </div>
           );
         })}

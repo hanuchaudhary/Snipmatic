@@ -55,13 +55,13 @@ export const TemplateGrid = ({
         )}
       >
         {templates.map((template) => {
-          const isSelected = selectedId === template.name;
+          const isSelected = selectedId === template.key || selectedId === template.name;
 
           return (
             <button
-              key={template.name}
+              key={template.key}
               type="button"
-              onClick={() => onSelect(template.name)}
+              onClick={() => onSelect(template.key)}
               className={cn(
                 "text-left transition-colors",
                 isSelected
@@ -71,10 +71,15 @@ export const TemplateGrid = ({
             >
               <div className="aspect-[4/3] overflow-hidden bg-muted">
                 {template.mediaType === "subtitle" ? (
-                  <img
+                  <video
                     src={template.previewUrl}
-                    alt={template.name}
                     className="h-full w-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    aria-label={`${template.name} subtitle preview`}
                   />
                 ) : template.mediaType === "video" ? (
                   <VideoTemplatePreview templateId={template.name} />
@@ -84,6 +89,7 @@ export const TemplateGrid = ({
                   </div>
                 )}
               </div>
+              <div className="p-2 text-xs font-medium">{template.name}</div>
             </button>
           );
         })}

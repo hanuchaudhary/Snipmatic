@@ -1,0 +1,14 @@
+{
+  "projectId": "123",
+  "userId": "123",
+  "source": "YOUTUBE",
+  "sourceUrl": "https://youtu.be/BbG1qc_Hnb4",
+  "sourceKey": null,
+  "processingType": "AI",
+  "fromDuration": 0,
+  "toDuration": 420,
+  "prompt": "",
+  "aspectRatio": "9:16",
+  "subtitlesEnabled": true,
+  "subtitleStyleKey": null
+}

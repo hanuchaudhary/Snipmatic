@@ -1,70 +1,67 @@
+import os
+import tempfile
 from pathlib import Path
 
 import modal
 
-from app.pipeline.subtitle import create_subtitles
-from app.pipeline.transcribe import transcribe
-from app.utils.ai import AI
-from app.utils.config import DOWNLOAD_PATH, PROCESS_PATH
-from app.utils.ffmpeg import FFMPEG
-from app.utils.youtube import download_video
-from app.utils.types import JobPayload
-
 ROOT = Path(__file__).resolve().parent.parent
+APP_DIR = Path(__file__).resolve().parent
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .apt_install("ffmpeg", "curl", "unzip", "ca-certificates")
+    .run_commands("curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh")
+    .pip_install_from_requirements(str(ROOT / "requirements.txt"))
+    .pip_install("nvidia-cublas-cu12", "nvidia-cudnn-cu12==9.*")
     .env(
         {
-            "DENO_INSTALL": "/root/.deno",
-            "PATH": "/root/.deno/bin:/usr/local/bin:/usr/bin:/bin",
+            "HF_HOME": "/root/.cache/huggingface",
+            "WHISPER_DEVICE": "cuda",
+            "WHISPER_COMPUTE_TYPE": "float16",
+            "LD_LIBRARY_PATH": "/usr/local/lib/python3.12/site-packages/nvidia/cublas/lib:/usr/local/lib/python3.12/site-packages/nvidia/cudnn/lib",
         }
     )
-    .run_commands("curl -fsSL https://deno.land/install.sh | sh")
-    .pip_install_from_requirements(str(ROOT / "requirements.txt"))
-    .add_local_dir(Path(__file__).resolve().parent, remote_path="/root/app")
-    .add_local_file(ROOT / "cookies.txt", remote_path="/root/cookies.txt")
+    .run_commands(
+        'python -c "from huggingface_hub import snapshot_download; snapshot_download(\'Systran/faster-whisper-small\')"'
+    )
+    .add_local_dir(APP_DIR, remote_path="/root/app")
 )
 
 app = modal.App("processor")
+processor_secret = modal.Secret.from_name(
+    os.environ.get("MODAL_PROCESSOR_SECRET", "processor-secrets"),
+    required_keys=[
+        "AI_API_KEY",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_REGION",
+        "S3_BUCKET_NAME",
+        "REDIS_URL",
+    ],
+)
+
 
 @app.function(
     image=image,
+    gpu="T4",
+    cpu=4,
+    memory=8192,
+    # ephemeral_disk=20 * 1024,
     timeout=60 * 60,
-    secrets=[
-        modal.Secret.from_name("custom-secret", required_keys=["AI_API_KEY"]),
-        modal.Secret.from_dotenv(ROOT),
-    ],
+    max_containers=4,
+    secrets=[processor_secret],
 )
-def process_video(payload: JobPayload):
-    job_id = payload.id
-    clip_type = payload.clipType
-    
-    video_info = download_video(payload.sourceKey, payload.source)
+def process_video(payload: dict):
+    from app.runner import run_pipeline
+    from app.utils.types import JobPayload
 
-    video_path = video_info.get("video_path")
-    audio_path = video_info.get("audio_path")
+    job = JobPayload.model_validate(payload)
+    with tempfile.TemporaryDirectory(prefix=f"clip-{job.projectId}-") as workspace:
+        return run_pipeline(job, workspace)
 
-    ffmpeg = FFMPEG()
-    ffmpeg.extract_audio(video_path, audio_path, payload.searchFrom, payload.searchTo)
 
-    transcript = transcribe(audio_path)
-
-    ai = AI()
-    moments = ai.identify_moments(transcript, payload.prompt or "")
-
-    ass_paths = create_subtitles(transcript, moments, DOWNLOAD_PATH)
-
-    clips_path = f"{PROCESS_PATH}/clips"
-    metadata = {
-        "moments": moments,
-        "aspect_ratio": payload.aspectRatio,
-        "subtitles_key": payload.subtitleStyleKey,
-        "subtitles": ass_paths,
-    }
-    ffmpeg.extract_clips(video_path, clips_path, metadata)
-    
 @app.local_entrypoint()
-def main():
-    print(process_video.remote("https://youtu.be/8DNQ8DYgCJE"))
+def main(payload_path: str):
+    import json
+    payload = json.loads(Path(payload_path).read_text(encoding="utf-8"))
+    print(process_video.remote(payload))

@@ -4,11 +4,9 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconCircleCheckFilled, IconRefreshAlert } from "@tabler/icons-react";
-import { LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,12 +15,11 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
+import { LabelInput } from "@/components/ui/label-input";
 import { resetPassword } from "@/lib/auth/auth.client";
+
+import { AuthLayout } from "./layout";
+import { PlasticButton } from "@/components/ui/plastic-button";
 
 const resetPasswordSchema = z
   .object({
@@ -94,174 +91,151 @@ export default function ResetPassword() {
 
   if (tokenError) {
     return (
-      <div className="relative flex min-h-screen w-full items-center justify-center">
-        <div className="relative mx-auto flex w-full max-w-lg flex-col justify-center px-6">
-          <div className="flex flex-col space-y-2">
-            <Link aria-label="Home" to="/" className="w-fit">
-              <Logo />
-            </Link>
-            <div className="space-y-2">
-              <h1 className="heading text-destructive">
-                Invalid reset link
-              </h1>
-              <p className="subheading">
-                This password reset link is invalid or has expired.
-              </p>
-            </div>
+      <AuthLayout
+        eyebrow="Account recovery"
+        title="Invalid or expired"
+        subtitle="reset link."
+        description="This password reset link is no longer valid. Request a new one to continue."
+        points={[]}
+      >
+        <div className="flex w-full flex-col gap-6">
+          <div>
+            <p className="text-2xl font-light tracking-tight text-destructive">
+              Link expired
+            </p>
+            <p className="mt-2 subheading text-[1.05rem]!">
+              This password reset link is invalid or has expired.
+            </p>
           </div>
 
-          <div className="relative my-8 flex w-full flex-col gap-3 py-8">
-            <Button
+          <div className="flex flex-col gap-3">
+            <PlasticButton
               onClick={() => navigate("/forgot-password")}
-              className="w-full"
+              variant="primary"
+              className="w-full rounded-full py-3"
             >
               <IconRefreshAlert data-icon="inline-start" />
               Request a new reset link
-            </Button>
-            <Button variant="outline" className="w-full">
+            </PlasticButton>
+            <Button variant="outline" className="w-full" asChild>
               <Link to="/login">Back to sign in</Link>
             </Button>
           </div>
-
-          <p className="text-center text-muted-foreground text-sm">
-            This site is protected by reCAPTCHA and the Google{" "}
-            <Link
-              className="underline underline-offset-4 hover:text-primary"
-              to="/privacy"
-            >
-              Privacy Policy
-            </Link>{" "}
-            and{" "}
-            <Link
-              className="underline underline-offset-4 hover:text-primary"
-              to="/terms"
-            >
-              Terms of Service
-            </Link>{" "}
-            apply.
-          </p>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center">
-      <div className="relative mx-auto flex w-full max-w-lg flex-col justify-center px-6">
+    <AuthLayout
+      eyebrow="Account recovery"
+      title={passwordReset ? "Password reset" : "Set a new"}
+      subtitle={passwordReset ? "successful." : "password."}
+      description={
+        passwordReset
+          ? "Your password has been updated. You can sign in with your new password now."
+          : "Choose a strong password you have not used before to secure your account."
+      }
+      points={
+        passwordReset
+          ? []
+          : [
+              "At least 6 characters long",
+              "Mix letters, numbers and symbols",
+              "Never reuse a password",
+            ]
+      }
+    >
+      <div className="flex w-full flex-col gap-6">
         {!passwordReset ? (
           <>
-            <div className="flex flex-col space-y-2">
-              <Link aria-label="Home" to="/" className="w-fit">
-                <Logo />
-              </Link>
-              <div className="space-y-2">
-                <h1 className="heading">
-                  Reset password
-                </h1>
-                <p className="subheading">
-                  Enter your new password below.
-                </p>
-              </div>
+            <div>
+              <p className="text-2xl font-light tracking-tight">
+                Reset password
+              </p>
+              <p className="mt-2 subheading text-[1.05rem]!">
+                Enter your new password below.
+              </p>
             </div>
 
-            <div className="relative my-8 flex w-full flex-col gap-4 py-8">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-3"
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-3"
+              >
+                <FormField
+                  control={form.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <LabelInput label="New password" type="password" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <LabelInput label="Confirm password" type="password" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  size={"lg"}
+                  variant={"rounded"}
+                  className="w-full"
+                  disabled={isLoading || !token}
                 >
-                  <FormField
-                    control={form.control}
-                    name="newPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <InputGroup>
-                            <InputGroupInput
-                              aria-label="New password"
-                              placeholder="Enter new password"
-                              type="password"
-                              {...field}
-                            />
-                            <InputGroupAddon align="inline-start">
-                              <LockIcon />
-                            </InputGroupAddon>
-                          </InputGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {isLoading ? "Resetting..." : "Reset password"}
+                </Button>
+              </form>
+            </Form>
 
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <InputGroup>
-                            <InputGroupInput
-                              aria-label="Confirm password"
-                              placeholder="Confirm new password"
-                              type="password"
-                              {...field}
-                            />
-                            <InputGroupAddon align="inline-start">
-                              <LockIcon />
-                            </InputGroupAddon>
-                          </InputGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading || !token}
-                  >
-                    {isLoading ? "Resetting..." : "Reset password"}
-                  </Button>
-                </form>
-              </Form>
-
-              <div className="text-center text-sm text-muted-foreground">
-                <Link
-                  to="/login"
-                  className="underline underline-offset-4 hover:text-primary"
-                >
-                  Back to sign in
-                </Link>
-              </div>
+            <div className="text-center text-sm text-muted-foreground">
+              <Link
+                to="/login"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Back to sign in
+              </Link>
             </div>
           </>
         ) : (
           <>
-            <div className="flex flex-col space-y-2">
-              <Link aria-label="Home" to="/" className="w-fit">
-                <Logo />
-              </Link>
-              <div className="space-y-2 text-center">
-                <IconCircleCheckFilled className="mx-auto h-12 w-12 text-emerald-500" />
-                <h1 className="heading">
-                  Password reset successful
-                </h1>
-                <p className="subheading">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <IconCircleCheckFilled className="h-12 w-12 text-emerald-500" />
+              <div>
+                <p className="text-2xl font-light tracking-tight">
+                  You're all set
+                </p>
+                <p className="mt-2 subheading text-[1.05rem]!">
                   You will be redirected to sign in in a few seconds.
                 </p>
               </div>
             </div>
 
-            <div className="relative my-8 flex w-full flex-col gap-3 py-8">
-              <Button onClick={() => navigate("/login")} className="w-full">
-                Go to sign in
-              </Button>
-            </div>
+            <Button
+              onClick={() => navigate("/login")}
+              className="w-full"
+              variant={"rounded"}
+              size={"lg"}
+            >
+              Go to sign in
+            </Button>
           </>
         )}
 
-        <p className="text-center text-muted-foreground text-sm">
+        <p className="text-center text-muted-foreground text-xs">
           This site is protected by reCAPTCHA and the Google{" "}
           <Link
             className="underline underline-offset-4 hover:text-primary"
@@ -279,6 +253,6 @@ export default function ResetPassword() {
           apply.
         </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

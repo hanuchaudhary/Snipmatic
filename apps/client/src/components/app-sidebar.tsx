@@ -1,6 +1,22 @@
 import { Link, useLocation } from "react-router";
 
 import {
+  IconChevronRight,
+  IconChartAreaLineFilled,
+  IconCrownFilled,
+  IconCreditCardFilled,
+  IconLayoutDashboardFilled,
+  IconUserFilled,
+  IconSettingsFilled,
+  IconVideoFilled,
+} from "@tabler/icons-react";
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -11,84 +27,124 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useSession } from "@/lib/auth/auth.client";
-import { TooltipButton } from "./ui/tooltip-button";
+
 import { ProfileDropdown } from "./ui/profile-dropdown";
-import { Analytics01Icon, ClapperboardIcon, Crown03Icon, Home04Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 
 const navItems = [
   {
     to: "/dashboard",
     label: "Dashboard",
-    icon: Home04Icon,
+    icon: IconLayoutDashboardFilled,
   },
   {
     to: "/clips",
     label: "Clips",
-    icon: ClapperboardIcon,
+    icon: IconVideoFilled,
   },
   {
     to: "/pricing",
     label: "Pricing",
-    icon: Crown03Icon,
+    icon: IconCrownFilled,
   },
+] as const;
+
+const settingItems = [
+  { to: "/settings/account", label: "Account", icon: IconUserFilled },
+  { to: "/settings/billing", label: "Billing", icon: IconCreditCardFilled },
 ] as const;
 
 export function AppSidebar() {
   const pathname = useLocation().pathname;
-  const { open, setOpen } = useSidebar()
-  const { data } = useSession()
-  const isAdmin = data?.user.role === "ADMIN"
+  const { state, isMobile, setOpenMobile } = useSidebar();
+  const { data } = useSession();
+  const isAdmin =
+    (data?.user as { role?: string } | undefined)?.role === "ADMIN";
+  const settingsActive = pathname.startsWith("/settings");
+  const closeMobile = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar">
+    <Sidebar collapsible="icon" variant="sidebar" className="border-none">
       <SidebarHeader>
-        <TooltipButton
-          tooltipText={open ? "Close sidebar" : "Open sidebar"}
-        >
-          <button
-            className="flex items-center cursor-pointer"
-            onClick={() => setOpen(!open)}
+        <div className="flex h-12 items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center">
+          <Link
+            to="/dashboard"
+            onClick={closeMobile}
+            className="flex min-w-0 items-center gap-2"
           >
-            <img src="/logo.png" className="size-12" alt="Snipmatic Logo" />
-            <span className="text-lg font-jost group-data-[collapsible=icon]:hidden">Snipmatic</span>
-          </button>
-        </TooltipButton>
+            <img src="/logo.png" className="size-8 shrink-0" alt="Snipmatic Logo" />
+            <span className="truncate text-lg font-medium tracking-tight group-data-[collapsible=icon]:hidden">Snipmatic</span>
+          </Link>
+          {isMobile || state === "expanded" ? (
+            <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:hidden" />
+          ) : null}
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          < SidebarGroupLabel>
-            Create
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Create</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map(({ to, label, icon: Icon }) => (
                 <SidebarMenuItem key={to}>
                   <SidebarMenuButton
                     className="text-[13px] font-normal!"
-                    render={<Link to={to} />}
+                    render={<Link to={to} onClick={closeMobile} />}
                     isActive={pathname === to}
+                    tooltip={label}
                   >
-                    <HugeiconsIcon
-                      icon={Icon}
-                      color="currentColor"
-                    />
+                    <Icon />
                     <span>{label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <Collapsible defaultOpen={settingsActive} className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger
+                    render={
+                      <SidebarMenuButton
+                        className="text-[13px] font-normal!"
+                        isActive={settingsActive}
+                        tooltip="Settings"
+                      />
+                    }
+                  >
+                    <IconSettingsFilled />
+                    <span>Settings</span>
+                    <IconChevronRight className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {settingItems.map(({ to, label, icon: Icon }) => (
+                        <SidebarMenuSubItem key={to}>
+                          <SidebarMenuSubButton
+                            render={<Link to={to} onClick={closeMobile} />}
+                            isActive={pathname === to}
+                          >
+                            <Icon />
+                            <span>{label}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         {isAdmin ? (
           <SidebarGroup>
-            <SidebarGroupLabel>
-              Admin
-            </SidebarGroupLabel>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -96,11 +152,9 @@ export function AppSidebar() {
                     className="text-[13px] font-normal!"
                     render={<Link to="/admin" />}
                     isActive={pathname === "/admin"}
+                    tooltip="Admin overview"
                   >
-                    <HugeiconsIcon
-                      icon={Analytics01Icon}
-                      color="currentColor"
-                    />
+                    <IconChartAreaLineFilled />
                     <span>Overview</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

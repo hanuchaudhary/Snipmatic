@@ -1,10 +1,10 @@
 import type {
-  ClipModel,
   PresignedUrlModel,
   PreviewModel,
   ProcessModel,
   ProjectModel,
 } from "@snipmatic/utils";
+
 import { api } from "../axios";
 
 export abstract class ClipApi {
@@ -13,8 +13,8 @@ export abstract class ClipApi {
     return res.data as PreviewModel["response"];
   }
 
-  static async presignedUrl({ filename }: PresignedUrlModel["body"]) {
-    const res = await api.post("/clip/presigned-url", { filename });
+  static async presignedUrl(body: PresignedUrlModel["body"]) {
+    const res = await api.post("/clip/presigned-url", body);
     return res.data as PresignedUrlModel["response"];
   }
 
@@ -31,10 +31,5 @@ export abstract class ClipApi {
   static async list(status: ProjectModel["listQuery"]["status"]) {
     const res = await api.get("/clip", { params: { status } });
     return res.data as ProjectModel["listResponse"];
-  }
-
-  static async updateClip(id: string, body: ClipModel["updateBody"]) {
-    const res = await api.patch(`/clip/output/${id}`, body);
-    return res.data as ClipModel["response"];
   }
 }

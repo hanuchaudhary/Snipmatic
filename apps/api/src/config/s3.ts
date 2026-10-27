@@ -18,17 +18,30 @@ export abstract class S3Service {
 
   static async presignedUrl({
     filename,
+    contentType,
     filepath = `raw/${filename}`,
   }: {
     filename: string;
+    contentType?: string;
     filepath?: string;
   }) {
     const uploadUrl = s3Client.presign(filepath, {
       method: "PUT",
       expiresIn: 3600,
-      type: filename.split(".").pop()?.toLowerCase() === "mp4" ? "video/*" : "image/*",
+      type:
+        contentType ??
+        (filename.split(".").pop()?.toLowerCase() === "mp4"
+          ? "video/mp4"
+          : "application/octet-stream"),
     });
 
     return uploadUrl;
+  }
+
+  static downloadUrl(key: string) {
+    return s3Client.presign(key, {
+      method: "GET",
+      expiresIn: 60 * 60,
+    });
   }
 }

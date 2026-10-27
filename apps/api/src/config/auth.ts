@@ -1,10 +1,15 @@
 import { prisma } from "@snipmatic/db";
-import { WEB_URL } from "@snipmatic/utils";
+import { BACKEND_URL, WEB_URL } from "@snipmatic/utils";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { openAPI } from "better-auth/plugins";
 
 import { resend } from "./resend";
+import { webOrigins } from "./origins";
+
+const useCrossSiteCookies =
+  new URL(BACKEND_URL).protocol === "https:" &&
+  webOrigins.some((origin) => new URL(origin).hostname !== new URL(BACKEND_URL).hostname);
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -77,8 +82,11 @@ export const auth = betterAuth({
     },
   },
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL,
-  trustedOrigins: ["http://localhost:3000", "http://localhost:5173", WEB_URL],
+  baseURL: BACKEND_URL,
+  trustedOrigins: webOrigins,
+  advanced: useCrossSiteCookies
+    ? { defaultCookieAttributes: { sameSite: "none", secure: true } }
+    : undefined,
   plugins: [openAPI()],
   logger: {
     level: "info",

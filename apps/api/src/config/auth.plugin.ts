@@ -31,9 +31,7 @@ export const withAuth = new Elysia({ name: "with-auth" }).macro({
       const session = await auth.api.getSession({
         headers,
       });
-
       if (!session) return status(401);
-
       return {
         user: session.user,
         session: session.session,

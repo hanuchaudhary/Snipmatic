@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class VideoSource(str, Enum):
@@ -8,7 +8,7 @@ class VideoSource(str, Enum):
     UPLOAD = "UPLOAD"
 
 
-class ClipType(str, Enum):
+class ProcessingType(str, Enum):
     AI = "AI"
     MANUAL = "MANUAL"
 
@@ -23,16 +23,6 @@ class JobStatus(str, Enum):
     TRACKING = "TRACKING"
     ANALYZING = "ANALYZING"
     FINDING_CLIPS = "FINDING_CLIPS"
-    GENERATING_SUBTITLES = "GENERATING_SUBTITLES"
-    GENERATING_CLIPS = "GENERATING_CLIPS"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-
-
-class ClipStatus(str, Enum):
-    QUEUED = "QUEUED"
-    GENERATING_SUBTITLES = "GENERATING_SUBTITLES"
-    RENDERING = "RENDERING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 
@@ -47,32 +37,29 @@ class AspectRatio(str, Enum):
 class JobPayload(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    id: str
+    projectId: str
     userId: str
     source: VideoSource
-    sourceKey: str
-    searchFrom: float | None = None
-    searchTo: float | None = None
-    title: str | None = None
-    thumbnail: str | None = None
-    aspectRatio: AspectRatio | None = None
-    subtitleStyleKey: str | None = None
+    sourceUrl: str | None = None
+    sourceKey: str | None = None
+    processingType: ProcessingType
+    fromDuration: float
+    toDuration: float
     prompt: str | None = None
-    clipType: ClipType
-
-
-class ClipPayload(BaseModel):
-    id: str
-    jobId: str
-    status: ClipStatus
-    from_: float = Field(alias="from")
-    to: float
-    aspectRatio: str | None = None
+    aspectRatio: AspectRatio
+    subtitlesEnabled: bool = False
     subtitleStyleKey: str | None = None
-    subtitlesKey: str | None = None
-    outputKey: str | None = None
-    thumbnail: str | None = None
-    duration: float | None = None
-    score: float | None = None
-    title: str | None = None
-    error: str | None = None
+
+    @model_validator(mode="after")
+    def validate_source_and_range(self):
+        if self.toDuration <= self.fromDuration:
+            raise ValueError("toDuration must be greater than fromDuration")
+        if self.source == VideoSource.YOUTUBE and not self.sourceUrl:
+            raise ValueError("sourceUrl is required for YouTube jobs")
+        if self.source == VideoSource.UPLOAD and not self.sourceKey:
+            raise ValueError("sourceKey is required for uploaded jobs")
+        return self
+
+    @property
+    def duration(self) -> float:
+        return self.toDuration - self.fromDuration

@@ -20,14 +20,6 @@ export const projectStatusSchema = z.enum([
   "FAILED",
 ]);
 
-export const clipStatusSchema = z.enum([
-  "QUEUED",
-  "GENERATING_SUBTITLES",
-  "RENDERING",
-  "COMPLETED",
-  "FAILED",
-]);
-
 export const projectListStatusSchema = z.enum(["PROCESSING", "COMPLETED"]);
 
 export const clipSchema = z.object({
@@ -35,44 +27,54 @@ export const clipSchema = z.object({
   projectId: z.string(),
   from: z.number(),
   to: z.number(),
-  duration: z.number().nullable(),
-  processingType: processingTypeSchema,
+  duration: z.number(),
   score: z.number().nullable(),
   title: z.string().nullable(),
-  status: clipStatusSchema,
-  progress: z.number(),
-  error: z.string().nullable(),
-  aspectRatio: z.string().nullable(),
-  subtitlesEnabled: z.boolean(),
-  subtitleStyleKey: z.string().nullable(),
   subtitlesKey: z.string().nullable(),
-  outputKey: z.string().nullable(),
+  outputKey: z.string(),
   thumbnailKey: z.string().nullable(),
-  settings: z.any().nullable(),
+  outputUrl: z.string().nullable().optional(),
+  thumbnailUrl: z.string().nullable().optional(),
+  subtitlesUrl: z.string().nullable().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+});
+
+export const projectConfigSchema = z.object({
+  projectId: z.string(),
+  processingType: processingTypeSchema,
+  fromDuration: z.number(),
+  toDuration: z.number(),
+  duration: z.number(),
+  prompt: z.string().nullable(),
+  aspectRatio: z.string(),
+  subtitlesEnabled: z.boolean(),
+  subtitleStyleKey: z.string().nullable(),
+});
+
+export const projectMetadataSchema = z.object({
+  projectId: z.string(),
+  source: videoSourceSchema,
+  sourceUrl: z.string().nullable(),
+  sourceKey: z.string().nullable(),
+  thumbnailKey: z.string().nullable(),
+  transcriptKey: z.string().nullable(),
+  audioKey: z.string().nullable(),
+  proxyKey: z.string().nullable(),
+  thumbnailUrl: z.string().nullable().optional(),
 });
 
 export const projectSchema = z.object({
   id: z.string(),
   userId: z.string(),
   title: z.string().nullable(),
-  source: videoSourceSchema,
-  sourceUrl: z.string().nullable(),
-  sourceKey: z.string().nullable(),
-  duration: z.number().nullable(),
-  thumbnailKey: z.string().nullable(),
   status: projectStatusSchema,
   progress: z.number(),
   error: z.string().nullable(),
-  prompt: z.string().nullable(),
-  fromDuration: z.number().nullable(),
-  toDuration: z.number().nullable(),
-  transcriptKey: z.string().nullable(),
-  audioKey: z.string().nullable(),
-  proxyKey: z.string().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+  config: projectConfigSchema,
+  metadata: projectMetadataSchema,
 });
 
 export const projectWithClipsSchema = projectSchema.extend({
@@ -155,11 +157,11 @@ export type PreviewModel = ModelTypes<typeof PreviewModel>;
 export const PresignedUrlModel = {
   body: z.object({
     filename: z.string(),
+    contentType: z.string().optional(),
   }),
   response: z.object({
     url: z.string(),
     key: z.string(),
-    publicUrl: z.string(),
   }),
   invalidFilename: z.literal("Invalid filename"),
 } as const;
@@ -167,25 +169,55 @@ export const PresignedUrlModel = {
 export type PresignedUrlModel = ModelTypes<typeof PresignedUrlModel>;
 
 export const ProcessModel = {
-  body: z.object({
-    thumbnailKey: z.string().optional(),
-    title: z.string().optional(),
+  body: z
+    .object({
+      thumbnailKey: z.string().optional(),
+      title: z.string().optional(),
 
-    source: videoSourceSchema,
-    sourceUrl: z.string().optional(),
-    sourceKey: z.string().optional(),
+      source: videoSourceSchema,
+      sourceUrl: z.string().optional(),
+      sourceKey: z.string().optional(),
 
-    fromDuration: z.number().optional(),
-    toDuration: z.number().optional(),
-    duration: z.number(),
+      fromDuration: z.number().optional(),
+      toDuration: z.number().optional(),
+      duration: z.number().positive(),
 
-    processingType: processingTypeSchema,
-    prompt: z.string().optional(),
+      processingType: processingTypeSchema,
+      prompt: z.string().optional(),
 
-    aspectRatio: aspectRatioIdSchema,
+      aspectRatio: aspectRatioIdSchema,
 
-    subtitleStyleKey: z.string().optional(),
-  }),
+      subtitleStyleKey: z.string().optional(),
+    })
+    .superRefine((value, context) => {
+      if (value.source === "YOUTUBE" && !value.sourceUrl) {
+        context.addIssue({
+          code: "custom",
+          path: ["sourceUrl"],
+          message: "YouTube URL is required",
+        });
+      }
+      if (value.source === "UPLOAD" && !value.sourceKey) {
+        context.addIssue({
+          code: "custom",
+          path: ["sourceKey"],
+          message: "Upload key is required",
+        });
+      }
+      const from = value.fromDuration ?? 0;
+      const to = value.toDuration ?? from + value.duration;
+      if (
+        from < 0 ||
+        to <= from ||
+        Math.abs(to - from - value.duration) > 0.01
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["toDuration"],
+          message: "Invalid processing range",
+        });
+      }
+    }),
   response: z.object({
     project: projectSchema,
   }),
@@ -194,6 +226,49 @@ export const ProcessModel = {
 } as const;
 
 export type ProcessModel = ModelTypes<typeof ProcessModel>;
+
+export const ProcessorJobModel = {
+  payload: z
+    .object({
+      projectId: z.string(),
+      userId: z.string(),
+      source: videoSourceSchema,
+      sourceUrl: z.string().nullable(),
+      sourceKey: z.string().nullable(),
+      processingType: processingTypeSchema,
+      fromDuration: z.number().min(0),
+      toDuration: z.number().positive(),
+      prompt: z.string().nullable(),
+      aspectRatio: aspectRatioIdSchema,
+      subtitlesEnabled: z.boolean(),
+      subtitleStyleKey: z.string().nullable(),
+    })
+    .superRefine((value, context) => {
+      if (value.toDuration <= value.fromDuration) {
+        context.addIssue({
+          code: "custom",
+          path: ["toDuration"],
+          message: "Invalid processing range",
+        });
+      }
+      if (value.source === "YOUTUBE" && !value.sourceUrl) {
+        context.addIssue({
+          code: "custom",
+          path: ["sourceUrl"],
+          message: "YouTube URL is required",
+        });
+      }
+      if (value.source === "UPLOAD" && !value.sourceKey) {
+        context.addIssue({
+          code: "custom",
+          path: ["sourceKey"],
+          message: "Upload key is required",
+        });
+      }
+    }),
+} as const;
+
+export type ProcessorJobModel = ModelTypes<typeof ProcessorJobModel>;
 
 export const ProjectModel = {
   params: z.object({
@@ -210,7 +285,7 @@ export const ProjectModel = {
     projects: z.array(projectWithClipsSchema),
   }),
   updateBody: z.object({
-    status: projectStatusSchema.optional(),
+    status: projectStatusSchema.exclude(["COMPLETED"]).optional(),
     progress: z.number().int().min(0).max(100).optional(),
     error: z.string().nullable().optional(),
     transcriptKey: z.string().nullable().optional(),
@@ -218,41 +293,44 @@ export const ProjectModel = {
     proxyKey: z.string().nullable().optional(),
     thumbnailKey: z.string().nullable().optional(),
     title: z.string().nullable().optional(),
-    duration: z.number().nullable().optional(),
   }),
+  completeBody: z.object({
+    clips: z
+      .array(
+        z
+          .object({
+            from: z.number().min(0),
+            to: z.number().positive(),
+            outputKey: z.string().trim().min(1),
+            duration: z.number().positive().optional(),
+            title: z.string().nullable().optional(),
+            score: z.number().nullable().optional(),
+            thumbnailKey: z.string().nullable().optional(),
+            subtitlesKey: z.string().nullable().optional(),
+          })
+          .refine((clip) => clip.to > clip.from, {
+            path: ["to"],
+            message: "Clip end must be after start",
+          })
+      )
+      .superRefine((clips, context) => {
+        const keys = new Set<string>();
+        for (const [index, clip] of clips.entries()) {
+          if (keys.has(clip.outputKey)) {
+            context.addIssue({
+              code: "custom",
+              path: [index, "outputKey"],
+              message: "Duplicate output key",
+            });
+          }
+          keys.add(clip.outputKey);
+        }
+      }),
+  }),
+  completeResponse: z.object({ project: projectWithClipsSchema }),
 } as const;
 
 export type ProjectModel = ModelTypes<typeof ProjectModel>;
-
-export const ClipModel = {
-  params: z.object({
-    id: z.string(),
-  }),
-  notFound: z.literal("Clip not found"),
-  response: z.object({
-    clip: clipSchema,
-  }),
-  updateBody: z.object({
-    status: clipStatusSchema.optional(),
-    progress: z.number().int().min(0).max(100).optional(),
-    from: z.number().optional(),
-    to: z.number().optional(),
-    duration: z.number().nullable().optional(),
-    processingType: processingTypeSchema.optional(),
-    score: z.number().nullable().optional(),
-    title: z.string().nullable().optional(),
-    error: z.string().nullable().optional(),
-    aspectRatio: z.string().nullable().optional(),
-    subtitlesEnabled: z.boolean().optional(),
-    subtitleStyleKey: z.string().nullable().optional(),
-    subtitlesKey: z.string().nullable().optional(),
-    outputKey: z.string().nullable().optional(),
-    thumbnailKey: z.string().nullable().optional(),
-    settings: z.any().nullable().optional(),
-  }),
-} as const;
-
-export type ClipModel = ModelTypes<typeof ClipModel>;
 
 export const sanitizeYoutubeUrl = (value: string) => {
   const parsed = youtubeUrlSchema.safeParse(value);

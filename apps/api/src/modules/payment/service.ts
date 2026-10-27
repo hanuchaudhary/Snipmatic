@@ -5,15 +5,14 @@ import {
   prisma,
 } from "@snipmatic/db";
 import { getPlanMonthlyCredits, PLANS, type PlanTier } from "@snipmatic/utils";
-import { WEB_URL } from "@snipmatic/utils";
+import type { UnwrapWebhookEvent } from "dodopayments/resources/webhooks";
 import { status } from "elysia";
-import type Stripe from "stripe";
 
 import {
-  getStripePriceId,
-  getStripeWebhookSecret,
-  stripe,
-} from "../../config/stripe";
+  getDodoClient,
+  getDodoProductId,
+  planTierForProduct,
+} from "../../config/dodo";
 import { planTierFromDb, planTierToDb } from "./utils";
 
 export abstract class PaymentService {
@@ -37,18 +36,81 @@ export abstract class PaymentService {
 
   static async getCredits(userId: string) {
     const billing = await this.getOrCreateBilling(userId);
-    console.log(billing);
     return {
       balance: billing.creditsBalance,
       planTier: planTierFromDb(billing.planTier),
     };
   }
 
+  static async getAccount(userId: string) {
+    await this.getOrCreateBilling(userId);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        billing: {
+          include: {
+            transactions: { orderBy: { createdAt: "desc" }, take: 8 },
+          },
+        },
+      },
+    });
+    if (!user || !user.billing) throw status(404, "Account not found");
+
+    const billing = user.billing;
+    const subscription = billing.dodoSubscriptionId
+      ? await getDodoClient().subscriptions.retrieve(billing.dodoSubscriptionId)
+      : null;
+
+    return {
+      user: {
+        name: user.name,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        role: user.role,
+        image: user.image,
+        createdAt: user.createdAt.toISOString(),
+      },
+      billing: {
+        balance: billing.creditsBalance,
+        planTier: planTierFromDb(billing.planTier),
+        hasBillingAccount: Boolean(billing.dodoCustomerId),
+        subscription: subscription
+          ? {
+              id: subscription.subscription_id,
+              planTier:
+                planTierForProduct(subscription.product_id) ??
+                planTierFromDb(billing.planTier),
+              status: subscription.status,
+              startedAt: subscription.created_at,
+              nextBillingDate: subscription.next_billing_date,
+              cancelAtPeriodEnd: subscription.cancel_at_next_billing_date,
+              amount: subscription.recurring_pre_tax_amount,
+              currency: subscription.currency,
+            }
+          : null,
+        recentActivity: billing.transactions.map((transaction) => ({
+          id: transaction.id,
+          amount: transaction.amount,
+          type: transaction.type,
+          description: transaction.description,
+          createdAt: transaction.createdAt.toISOString(),
+        })),
+      },
+    };
+  }
+
   static async createCheckoutSession(userId: string, planTier: PlanTier) {
     const billing = await this.getOrCreateBilling(userId);
-    const priceId = getStripePriceId(planTier);
-
-    let customerId = billing.stripeCustomerId;
+    if (billing.dodoSubscriptionId) {
+      throw status(
+        409,
+        "Manage your current subscription in the billing portal"
+      );
+    }
+    const productId = getDodoProductId(planTier);
+    const dodo = getDodoClient();
+    const webUrl = process.env.WEB_URL ?? "http://localhost:5173";
+    let customerId = billing.dodoCustomerId;
 
     if (!customerId) {
       const user = await prisma.user.findUnique({
@@ -58,69 +120,68 @@ export abstract class PaymentService {
       if (!user) {
         throw status(404, "User not found");
       }
+      let customer;
+      try {
+        customer = await dodo.customers.create({
+          email: user.email,
+          name: user.name,
+          metadata: { user_id: userId },
+        });
+        console.log(customer);
+      } catch (error) {
+        console.log(error);
+      }
 
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.name,
-        metadata: {
-          userId,
-        },
-      });
+      if (!customer) {
+        throw status(500, "Unable to create customer");
+      }
 
-      customerId = customer.id;
+      customerId = customer.customer_id;
 
       await prisma.userBilling.update({
         where: { userId },
         data: {
-          stripeCustomerId: customerId,
+          dodoCustomerId: customerId,
         },
       });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      success_url: `${WEB_URL}/pricing/success`,
-      cancel_url: `${WEB_URL}/pricing/cancel`,
-      client_reference_id: userId,
-      metadata: {
-        userId,
-        planTier,
-      },
-      subscription_data: {
-        metadata: {
-          userId,
-          planTier,
-        },
-      },
-    });
+    let session;
+    try {
+      session = await dodo.checkoutSessions.create({
+        product_cart: [{ product_id: productId, quantity: 1 }],
+        customer: { customer_id: customerId },
+        return_url: `${webUrl}/pricing/success`,
+        cancel_url: `${webUrl}/pricing/cancel`,
+        metadata: { userId, planTier },
+      });
+    } catch (error) {
+      console.log(error);
+    }
 
-    if (!session.url) {
+    console.log(session);
+    if (!session?.checkout_url) {
       throw status(500, "Unable to create checkout session");
     }
 
-    return { url: session.url };
+    return { url: session.checkout_url };
   }
 
   static async createPortalSession(userId: string) {
     const billing = await this.getOrCreateBilling(userId);
 
-    if (!billing.stripeCustomerId) {
-      throw status(400, "No Stripe customer found");
+    if (!billing.dodoCustomerId) {
+      throw status(400, "No Dodo customer found");
     }
 
-    const session = await stripe.billingPortal.sessions.create({
-      customer: billing.stripeCustomerId,
-      return_url: `${WEB_URL}/pricing`,
-    });
+    const session = await getDodoClient().customers.customerPortal.create(
+      billing.dodoCustomerId,
+      {
+        return_url: `${process.env.WEB_URL ?? "http://localhost:5173"}/pricing`,
+      }
+    );
 
-    return { url: session.url };
+    return { url: session.link };
   }
 
   static async grantCredits({
@@ -128,50 +189,56 @@ export abstract class PaymentService {
     amount,
     type,
     description,
-    stripeInvoiceId,
+    billingEventId,
     metadata,
   }: {
     userId: string;
     amount: number;
     type: CreditTransactionType;
     description?: string;
-    stripeInvoiceId?: string;
+    billingEventId?: string;
     metadata?: Prisma.InputJsonValue;
   }) {
-    if (stripeInvoiceId) {
-      const existing = await prisma.creditTransaction.findUnique({
-        where: { stripeInvoiceId },
-      });
-
-      if (existing) {
-        return existing;
-      }
-    }
-
     const billing = await this.getOrCreateBilling(userId);
 
-    return prisma.$transaction(async (tx) => {
-      const updatedBilling = await tx.userBilling.update({
-        where: { id: billing.id },
-        data: {
-          creditsBalance: {
-            increment: amount,
+    try {
+      return await prisma.$transaction(async (tx) => {
+        // The unique event key and balance change commit together.
+        const transaction = await tx.creditTransaction.create({
+          data: {
+            userId,
+            billingId: billing.id,
+            amount,
+            type,
+            description,
+            billingEventId,
+            metadata,
           },
-        },
-      });
+        });
+        await tx.userBilling.update({
+          where: { id: billing.id },
+          data: {
+            creditsBalance: {
+              increment: amount,
+            },
+          },
+        });
 
-      return tx.creditTransaction.create({
-        data: {
-          userId,
-          billingId: updatedBilling.id,
-          amount,
-          type,
-          description,
-          stripeInvoiceId,
-          metadata,
-        },
+        return transaction;
       });
-    });
+    } catch (error) {
+      if (
+        billingEventId &&
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        const existing = await prisma.creditTransaction.findUnique({
+          where: { billingEventId },
+        });
+        if (existing) return existing;
+      }
+      throw error;
+    }
   }
 
   static async deductCredits({
@@ -215,146 +282,130 @@ export abstract class PaymentService {
     });
   }
 
-  static async handleCheckoutCompleted(session: {
-    client_reference_id: string | null;
-    customer: string | null;
-    subscription: string | null;
-    metadata: Record<string, string> | null;
-  }) {
-    const userId = session.client_reference_id ?? session.metadata?.userId;
-    const planTier = session.metadata?.planTier as PlanTier | undefined;
-
-    if (!userId || !planTier) {
+  static async handleSubscriptionEvent(event: UnwrapWebhookEvent) {
+    if (
+      event.type !== "subscription.active" &&
+      event.type !== "subscription.renewed" &&
+      event.type !== "subscription.plan_changed" &&
+      event.type !== "subscription.cancelled" &&
+      event.type !== "subscription.expired" &&
+      event.type !== "subscription.on_hold" &&
+      event.type !== "subscription.paused"
+    )
       return;
+
+    const subscription = event.data;
+    const billing = await prisma.userBilling.findUnique({
+      where: { dodoCustomerId: subscription.customer.customer_id },
+    });
+    if (!billing)
+      throw new Error(
+        `Unknown Dodo customer: ${subscription.customer.customer_id}`
+      );
+
+    if (
+      event.type === "subscription.active" ||
+      event.type === "subscription.renewed"
+    ) {
+      const planTier = planTierForProduct(subscription.product_id);
+      if (!planTier)
+        throw new Error(`Unknown Dodo product: ${subscription.product_id}`);
+
+      if (
+        billing.dodoSubscriptionId &&
+        billing.dodoSubscriptionId !== subscription.subscription_id
+      ) {
+        throw new Error("Customer has another active subscription");
+      }
+
+      await prisma.userBilling.update({
+        where: { id: billing.id },
+        data: {
+          dodoSubscriptionId: subscription.subscription_id,
+          planTier: planTierToDb(planTier),
+        },
+      });
+
+      const billingEventId =
+        event.type === "subscription.active"
+          ? `dodo:activation:${subscription.subscription_id}`
+          : `dodo:renewal:${event.data.payment_id ?? ""}`;
+      if (event.type === "subscription.renewed" && !event.data.payment_id) {
+        throw new Error("Renewal webhook is missing payment_id");
+      }
+
+      await this.grantCredits({
+        userId: billing.userId,
+        amount: getPlanMonthlyCredits(planTier),
+        type: CreditTransactionType.SUBSCRIPTION_GRANT,
+        description: `${PLANS[planTier].name} subscription credits`,
+        billingEventId,
+        metadata: {
+          planTier,
+          source: event.type,
+          subscriptionId: subscription.subscription_id,
+        },
+      });
+    } else if (event.type === "subscription.plan_changed") {
+      const planTier = planTierForProduct(subscription.product_id);
+      if (
+        planTier &&
+        billing.dodoSubscriptionId === subscription.subscription_id
+      ) {
+        await prisma.userBilling.update({
+          where: { id: billing.id },
+          data: { planTier: planTierToDb(planTier) },
+        });
+      }
+    } else if (
+      event.type === "subscription.cancelled" ||
+      event.type === "subscription.expired" ||
+      event.type === "subscription.on_hold" ||
+      event.type === "subscription.paused"
+    ) {
+      if (billing.dodoSubscriptionId === subscription.subscription_id) {
+        await prisma.userBilling.update({
+          where: { id: billing.id },
+          data: {
+            dodoSubscriptionId:
+              event.type === "subscription.cancelled" ||
+              event.type === "subscription.expired"
+                ? null
+                : subscription.subscription_id,
+            planTier: DbPlanTier.FREE,
+          },
+        });
+      }
     }
-
-    await this.getOrCreateBilling(userId);
-
-    await prisma.userBilling.update({
-      where: { userId },
-      data: {
-        stripeCustomerId: session.customer ?? undefined,
-        stripeSubscriptionId: session.subscription ?? undefined,
-        planTier: planTierToDb(planTier),
-      },
-    });
-
-    await this.grantCredits({
-      userId,
-      amount: getPlanMonthlyCredits(planTier),
-      type: CreditTransactionType.SUBSCRIPTION_GRANT,
-      description: `${PLANS[planTier].name} subscription credits`,
-      metadata: {
-        planTier,
-        source: "checkout.session.completed",
-      },
-    });
   }
 
-  static async handleInvoicePaid(invoice: Stripe.Invoice) {
-    if (invoice.billing_reason === "subscription_create") {
-      return;
+  static async webhook(rawBody: string, headers: Headers) {
+    const webhookId = headers.get("webhook-id");
+    const signature = headers.get("webhook-signature");
+    const timestamp = headers.get("webhook-timestamp");
+    if (
+      !webhookId ||
+      !signature ||
+      !timestamp ||
+      !process.env.DODO_PAYMENTS_WEBHOOK_KEY
+    ) {
+      throw status(400, "Missing Dodo webhook configuration or headers");
     }
 
-    const customerId =
-      typeof invoice.customer === "string"
-        ? invoice.customer
-        : invoice.customer?.id;
-
-    if (!customerId) {
-      return;
+    let event: UnwrapWebhookEvent;
+    try {
+      event = getDodoClient().webhooks.unwrap(rawBody, {
+        headers: {
+          "webhook-id": webhookId,
+          "webhook-signature": signature,
+          "webhook-timestamp": timestamp,
+        },
+      });
+    } catch {
+      throw status(401, "Invalid Dodo webhook signature");
     }
 
-    const billing = await prisma.userBilling.findFirst({
-      where: {
-        stripeCustomerId: customerId,
-      },
-    });
-
-    if (!billing) {
-      return;
-    }
-
-    const planTier = planTierFromDb(billing.planTier);
-
-    await this.grantCredits({
-      userId: billing.userId,
-      amount: getPlanMonthlyCredits(planTier),
-      type: CreditTransactionType.SUBSCRIPTION_GRANT,
-      description: `${PLANS[planTier].name} renewal credits`,
-      stripeInvoiceId: invoice.id,
-      metadata: {
-        planTier,
-        source: "invoice.paid",
-      },
-    });
-  }
-
-  static async handleSubscriptionDeleted(subscription: {
-    id: string;
-    customer: string | null;
-  }) {
-    if (!subscription.customer) {
-      return;
-    }
-
-    const billing = await prisma.userBilling.findFirst({
-      where: {
-        stripeCustomerId:
-          typeof subscription.customer === "string"
-            ? subscription.customer
-            : subscription.customer,
-      },
-    });
-
-    if (!billing) {
-      return;
-    }
-
-    await prisma.userBilling.update({
-      where: { id: billing.id },
-      data: {
-        stripeSubscriptionId: null,
-        planTier: DbPlanTier.FREE,
-      },
-    });
-  }
-
-  static async webhook(rawBody: string, signature: string | null) {
-    if (!signature) {
-      throw status(400, "Missing Stripe signature");
-    }
-
-    const event = stripe.webhooks.constructEvent(
-      rawBody,
-      signature,
-      getStripeWebhookSecret()
-    );
-
-    switch (event.type) {
-      case "checkout.session.completed":
-        await this.handleCheckoutCompleted(
-          event.data.object as {
-            client_reference_id: string | null;
-            customer: string | null;
-            subscription: string | null;
-            metadata: Record<string, string> | null;
-          }
-        );
-        break;
-      case "invoice.paid":
-        await this.handleInvoicePaid(event.data.object as Stripe.Invoice);
-        break;
-      case "customer.subscription.deleted":
-        await this.handleSubscriptionDeleted(
-          event.data.object as {
-            id: string;
-            customer: string | null;
-          }
-        );
-        break;
-    }
-
+    await this.handleSubscriptionEvent(event);
     return { received: true };
   }
 }

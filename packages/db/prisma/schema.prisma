@@ -83,8 +83,8 @@ model Verification {
 model UserBilling {
   id                   String              @id @default(cuid())
   userId               String              @unique
-  stripeCustomerId     String?             @unique
-  stripeSubscriptionId String?             @unique
+  dodoCustomerId             String?        @unique
+  dodoSubscriptionId         String?        @unique
   planTier             PlanTier            @default(FREE)
   creditsBalance       Int                 @default(30)
   createdAt            DateTime            @default(now())
@@ -111,35 +111,11 @@ model CreditTransaction {
   description     String?
   metadata        Json?
   jobId           String?
-  stripeInvoiceId String?               @unique
+  billingEventId  String?               @unique
   createdAt       DateTime              @default(now())
   billing         UserBilling           @relation(fields: [billingId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
-}
-
-enum Status {
-  QUEUED
-  DOWNLOADING
-  PREPROCESSING
-  TRANSCRIBING
-  DIARIZING
-  DETECTING_FACES
-  TRACKING
-  ANALYZING
-  FINDING_CLIPS
-  GENERATING_SUBTITLES
-  GENERATING_CLIPS
-  COMPLETED
-  FAILED
-}
-
-enum ClipStatus {
-  QUEUED
-  GENERATING_SUBTITLES
-  RENDERING
-  COMPLETED
-  FAILED
 }
 
 enum VideoSource {
@@ -174,32 +150,46 @@ model Project {
 
   title String?
 
-  source    VideoSource
-  sourceUrl String?
-  sourceKey String?
-
-  duration     Float?
-  thumbnailKey String?
-
   status   ProjectStatus @default(QUEUED)
   progress Int           @default(0)
   error    String?
 
-  prompt       String?
-  fromDuration Float?
-  toDuration   Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  config   ProjectConfig?
+  metadata ProjectMetadata?
+  clips    Clip[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model ProjectConfig {
+  projectId        String         @id
+  project          Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  processingType   ProcessingType
+  fromDuration     Float
+  toDuration       Float
+  duration         Float
+  prompt           String?
+  aspectRatio      String
+  subtitlesEnabled Boolean        @default(false)
+  subtitleStyleKey String?
+}
+
+model ProjectMetadata {
+  projectId     String      @id
+  project       Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  source        VideoSource
+  sourceUrl     String?
+  sourceKey     String?
+  thumbnailKey  String?
   transcriptKey String?
   audioKey      String?
   proxyKey      String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  clips Clip[]
-
-  @@index([userId, createdAt])
-  @@index([status])
+  @@index([source])
 }
 
 model Clip {
@@ -211,33 +201,20 @@ model Clip {
   from Float
   to   Float
 
-  duration Float?
-
-  processingType ProcessingType
-
+  duration Float
   score Float?
 
   title String?
 
-  status   ClipStatus @default(QUEUED)
-  progress Int        @default(0)
-  error    String?
-
-  aspectRatio      String?
-  subtitlesEnabled Boolean @default(true)
-  subtitleStyleKey String?
-
   subtitlesKey String?
-  outputKey    String?
+  outputKey    String
   thumbnailKey String?
-
-  settings Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([projectId, createdAt])
-  @@index([status])
+  @@unique([projectId, outputKey])
 }
 
 // TODO
